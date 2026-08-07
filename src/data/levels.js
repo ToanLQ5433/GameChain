@@ -17,7 +17,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 7, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1]], B: [[3,3],[3,2],[2,2],[2,3],[1,3],[0,3],[0,2],[0,1]] }
       },
       {
         name: 'Vật Cản 2: Vách Ngăn Vô Hình',
@@ -26,7 +27,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#2a7b4c' }
-        ]
+        ],
+        solution: { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[1,0]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3]] }
       },
       {
         name: 'Vật Cản 3: Đẩy Đá Dọn Đường',
@@ -36,7 +38,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 9, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 5, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[0,1],[0,2],[0,3],[1,3],[2,3],[2,2]], B: [[3,3],[3,2],[3,1],[3,0],[2,0]] }
       }
     ]
   },
@@ -55,7 +58,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 6, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 10, color: '#2a7b4c' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[0,1],[0,2],[1,2]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3],[1,3],[0,3]] }
       },
       {
         name: 'Định Hướng 2: Mũi Tên Ép Lối',
@@ -64,7 +68,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[2,1],[2,0],[3,0],[3,1],[3,2]], B: [[3,3],[2,3],[2,2],[1,2],[1,3],[0,3],[0,2],[0,1]] }
       },
       {
         name: 'Định Hướng 3: Mũi Tên + Cổng Màu',
@@ -75,7 +80,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[2,1],[2,0],[3,0],[3,1],[3,2]], B: [[3,3],[2,3],[2,2],[1,2],[1,3],[0,3],[0,2],[0,1]] }
       }
     ]
   },
@@ -90,7 +96,8 @@ export const CATEGORIES = [
         name: 'Mật Mã 1: Ba Mốc Cơ Bản',
         size: 4,
         waypoints: { A: [{ r: 0, c: 3 }, { r: 3, c: 3 }, { r: 3, c: 0 }] },
-        anchors: [{ id: 'A', row: 0, col: 0, length: 10, color: '#1b5e8a' }]
+        anchors: [{ id: 'A', row: 0, col: 0, length: 10, color: '#1b5e8a' }],
+        solution: { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[2,3],[3,3],[3,2],[3,1],[3,0]] }
       },
       {
         name: 'Mật Mã 2: Vòng Xoáy Trung Tâm (1→5)',
@@ -100,7 +107,8 @@ export const CATEGORIES = [
             { r: 3, c: 4 }, { r: 0, c: 3 }, { r: 0, c: 0 }, { r: 4, c: 1 }, { r: 3, c: 3 }
           ]
         },
-        anchors: [{ id: 'A', row: 2, col: 2, length: 25, color: '#1b5e8a' }]
+        anchors: [{ id: 'A', row: 2, col: 2, length: 25, color: '#1b5e8a' }],
+        solution: { A: [[2,2],[3,2],[4,2],[4,3],[4,4],[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[0,1],[0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[2,3],[3,3]] }
       },
       {
         name: 'Mật Mã 3: Huyền Thoại 6x6 (1→7)',
@@ -111,7 +119,8 @@ export const CATEGORIES = [
             { r: 1, c: 4 }, { r: 4, c: 1 }, { r: 3, c: 3 }
           ]
         },
-        anchors: [{ id: 'A', row: 2, col: 2, length: 35, color: '#2a7b4c' }]
+        anchors: [{ id: 'A', row: 2, col: 2, length: 35, color: '#2a7b4c' }],
+        solution: { A: [[2,2],[2,1],[2,0],[3,0],[4,0],[5,0],[5,1],[5,2],[5,3],[5,4],[5,5],[4,5],[3,5],[2,5],[1,5],[0,5],[0,4],[0,3],[0,2],[0,1],[0,0],[1,0],[1,1],[1,2],[1,3],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[3,1],[3,2],[3,3]] }
       }
     ]
   },
@@ -129,7 +138,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 7, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 0, length: 9, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[2,2]], B: [[3,0],[2,0],[1,0],[1,1],[2,1],[3,1],[3,2],[3,3],[2,3]] }
       },
       {
         name: 'Công Tắc 2: Chốt Khoá Vĩnh Viễn',
@@ -138,7 +148,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 7, color: '#2a7b4c' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]], B: [[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]] }
       },
       {
         name: 'Công Tắc 3: Song Song Hai Cổng',
@@ -150,7 +161,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]], B: [[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2],[3,2]] }
       }
     ]
   },
@@ -169,7 +181,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#2a7b4c' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[1,2],[1,3],[0,3],[0,2],[0,1]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3]] }
       },
       {
         name: 'Bom Tĩnh 2: Song Song Hai Quả Bom',
@@ -179,7 +192,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 8, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[0,1],[0,2],[1,2],[1,1],[1,0],[2,0],[3,0]], B: [[3,3],[3,2],[3,1],[2,1],[2,2],[2,3],[1,3],[0,3]] }
       },
       {
         name: 'Bom Tĩnh 3: Đá Giả — Đá Thật',
@@ -190,7 +204,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 5, color: '#2a7b4c' }
-        ]
+        ],
+        solution: { A: [[0,0],[1,0],[1,1],[1,2],[2,2],[2,1],[2,0],[3,0]], B: [[3,3],[2,3],[1,3],[0,3],[0,2]] }
       }
     ]
   },
@@ -209,7 +224,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 9, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 2, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[2,1],[2,2]], B: [[3,3],[2,3]] }
       },
       {
         name: 'Tổng Hợp 2: Cổng Màu + Mật Mã Số',
@@ -217,7 +233,8 @@ export const CATEGORIES = [
         prisms: [{ r: 0, c: 2, color: 'blue' }],
         colorGates: [{ r: 2, c: 2, color: 'blue' }],
         waypoints: { A: [{ r: 0, c: 2 }, { r: 2, c: 2 }, { r: 3, c: 0 }] },
-        anchors: [{ id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' }]
+        anchors: [{ id: 'A', row: 0, col: 0, length: 8, color: '#1b5e8a' }],
+        solution: { A: [[0,0],[0,1],[0,2],[1,2],[2,2],[2,1],[2,0],[3,0]] }
       },
       {
         name: 'Tổng Hợp 3: Công Tắc + Đẩy Đá + Bom',
@@ -228,7 +245,8 @@ export const CATEGORIES = [
         anchors: [
           { id: 'A', row: 0, col: 0, length: 10, color: '#1b5e8a' },
           { id: 'B', row: 3, col: 3, length: 6, color: '#a82e2e' }
-        ]
+        ],
+        solution: { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[2,1],[2,2],[2,3]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[1,0]] }
       }
     ]
   }

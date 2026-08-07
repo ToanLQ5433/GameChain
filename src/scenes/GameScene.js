@@ -45,6 +45,7 @@ export default class GameScene extends Phaser.Scene {
     drawChartBackground(this, width, height);
 
     this.buildTopBar(width);
+    this.buildBuffBar(width, height);
     this.buildBottomBar(width, height);
 
     // Tách hẳn lớp tĩnh (nền ô, tường, mũi tên, lăng kính, mốc số — không đổi
@@ -95,11 +96,149 @@ export default class GameScene extends Phaser.Scene {
   }
 
   buildBottomBar(width, height) {
-    const y = height - 30;
-    makeButton(this, width / 2 - 74, y, 'Chơi Lại', { variant: 'teal', fontSize: '11px' })
+    makeButton(this, width / 2, height - 16, 'Chơi Lại', { variant: 'teal', fontSize: '11px' })
       .on('pointerdown', () => this.loadLevel());
-    makeButton(this, width / 2 + 74, y, 'Bỏ Qua (Demo)', { variant: 'teal', fontSize: '11px' })
-      .on('pointerdown', () => this.completeLevel(true));
+  }
+
+  // ---------------- Thanh Bổ Trợ (Buff) — GDD 3.1: "Dùng Buff (Hint/Freeze/Skip...)" ----------------
+  // Chỉ 3 buff được liệt kê chính thức trong GDD; không thêm buff ngoài phạm vi này.
+
+  buildBuffBar(width, height) {
+    const items = [
+      { key: 'hint', icon: '💡', name: 'Gợi Ý', cost: 30 },
+      { key: 'freeze', icon: '⏸️', name: 'Đóng Băng', cost: 25 },
+      { key: 'skip', icon: '⏩', name: 'Bỏ Qua', cost: 50 }
+    ];
+    const y = height - 78;
+    const gap = 8;
+    const chipW = (width - 24 - gap * (items.length - 1)) / items.length;
+    this.buffChips = {};
+    this.buffState = { freezeUsed: false };
+    items.forEach((item, i) => {
+      const x = 12 + chipW / 2 + i * (chipW + gap);
+      this.buffChips[item.key] = this.createBuffChip(x, y, chipW, item);
+    });
+  }
+
+  createBuffChip(x, y, w, item) {
+    const h = 52;
+    const g = this.add.graphics();
+    const drawBg = (enabled) => {
+      g.clear();
+      g.fillStyle(COLORS.cardBg, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+      g.lineStyle(1.5, COLORS.teal, enabled ? 0.9 : 0.25).strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+    };
+    drawBg(true);
+    const icon = this.add.text(0, -13, item.icon, { fontSize: '17px' }).setOrigin(0.5);
+    const name = this.add.text(0, 8, item.name, {
+      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#f4e8cf'
+    }).setOrigin(0.5);
+    const cost = this.add.text(0, 20, `${item.cost} Xu`, {
+      fontFamily: 'Cinzel', fontSize: '8px', color: '#f3c64f'
+    }).setOrigin(0.5);
+
+    const container = this.add.container(x, y, [g, icon, name, cost]);
+    container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
+    container.input.cursor = 'pointer';
+    container.on('pointerdown', () => {
+      this.tweens.add({ targets: container, scale: 0.94, duration: 60, yoyo: true });
+      this.useBuff(item.key, item.cost);
+    });
+    container.drawBg = drawBg;
+    container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, cost].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
+    return container;
+  }
+
+  refreshBuffChips() {
+    if (!this.buffChips) return;
+    Object.entries(this.buffChips).forEach(([key, chip]) => {
+      const usable = key !== 'freeze' || !this.buffState.freezeUsed;
+      chip.setEnabledLook(usable);
+    });
+  }
+
+  useBuff(key, cost) {
+    if (this.overlayContainer.visible) return;
+    if (key === 'freeze' && this.buffState.freezeUsed) {
+      this.showToast('⏸️ Đã Đóng Băng trong lượt này rồi!');
+      playSound('error', this.save.soundMuted);
+      return;
+    }
+    if (key === 'hint') { this.useHint(cost); return; }
+    if (this.save.coins < cost) {
+      this.showToast('🟡 Không đủ Xu cho Bổ Trợ này!');
+      playSound('error', this.save.soundMuted);
+      return;
+    }
+    if (key === 'freeze') this.useFreeze(cost);
+    else if (key === 'skip') this.useSkip(cost);
+  }
+
+  spendCoins(cost) {
+    this.save.coins -= cost;
+    saveState(this.save);
+    this.coinChip.setValueText(`🟡 ${this.save.coins}`);
+    this.refreshBuffChips();
+  }
+
+  useHint(cost) {
+    const chain = Object.values(this.engine.chains).find(c => !c.locked);
+    if (!chain) {
+      this.showToast('Mọi xích đã khoá xong!');
+      return;
+    }
+    const sol = this.levelDef.solution && this.levelDef.solution[chain.id];
+    if (!sol || chain.path.length >= sol.length) {
+      this.showToast('Không có gợi ý cho bước này.');
+      return;
+    }
+    if (this.save.coins < cost) {
+      this.showToast('🟡 Không đủ Xu cho Gợi Ý!');
+      playSound('error', this.save.soundMuted);
+      return;
+    }
+    this.spendCoins(cost);
+    const [r, c] = sol[chain.path.length];
+    this.showHintAt(r, c, chain.id);
+  }
+
+  showHintAt(r, c, chainId) {
+    const { x: cx, y: cy } = this.cellCenter(r, c);
+    const ring = this.add.circle(cx, cy, this.cellSize * 0.24, COLORS.gold, 0.35).setStrokeStyle(2, COLORS.gold, 1);
+    this.fxContainer.add(ring);
+    this.tweens.add({ targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.9, to: 0.2 }, yoyo: true, repeat: 3, duration: 380, onComplete: () => ring.destroy() });
+    playSound('lock', this.save.soundMuted);
+    this.statusText.setText(`💡 Gợi ý xích ${chainId}: bước kế tiếp tại ô (${r + 1}, ${c + 1})`);
+  }
+
+  useFreeze(cost) {
+    if (!this.levelDef.walls || !this.levelDef.walls.length) {
+      this.showToast('Màn này không có Vách Ngăn để đóng băng.');
+      return;
+    }
+    this.spendCoins(cost);
+    this.buffState.freezeUsed = true;
+    this.engine.freezeWalls = true;
+    this.drawStaticBoard();
+    this.refreshBuffChips();
+    playSound('switch', this.save.soundMuted);
+    this.showToast('⏸️ Đã tạm vô hiệu hoá Vách Ngăn cho lượt chơi này!');
+  }
+
+  useSkip(cost) {
+    this.spendCoins(cost);
+    this.completeLevel(true);
+  }
+
+  showToast(text) {
+    if (this.toastText) this.toastText.destroy();
+    const { width } = this.scale;
+    this.toastText = this.add.text(width / 2, 106, text, {
+      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
+      backgroundColor: '#2b1e16', padding: { x: 10, y: 5 }, align: 'center',
+      wordWrap: { width: width - 60 }
+    }).setOrigin(0.5, 0.5).setDepth(50);
+    this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });
   }
 
   // ---------------- Vòng đời level ----------------
@@ -111,6 +250,9 @@ export default class GameScene extends Phaser.Scene {
     this.overlayContainer.setVisible(false);
     this.overlayContainer.removeAll(true);
     this.fxContainer.removeAll(true);
+    if (this.toastText) { this.toastText.destroy(); this.toastText = null; }
+    this.buffState = { freezeUsed: false };
+    this.refreshBuffChips();
 
     this.levelNameText.setText(this.levelDef.name);
     this.mechDescText.setText(this.category.desc);
@@ -130,7 +272,7 @@ export default class GameScene extends Phaser.Scene {
   computeBoardMetrics() {
     const { width, height } = this.scale;
     const topOffset = 128;
-    const bottomOffset = 100;
+    const bottomOffset = 132;
     const marginX = 30;
     const size = this.engine.size;
 
@@ -246,8 +388,10 @@ export default class GameScene extends Phaser.Scene {
           g.lineBetween(p1.x, y, p1.x + cs, y);
         }
       };
-      drawAt(glow, 8, 0.25);
-      drawAt(line, 3, 1);
+      // Buff "Đóng Băng" đang bật -> vẽ Vách Ngăn mờ hẳn để báo đang vô hiệu hoá.
+      const frozen = !!e.freezeWalls;
+      drawAt(glow, 8, frozen ? 0.05 : 0.25);
+      drawAt(line, 3, frozen ? 0.2 : 1);
       this.boardStaticContainer.add([glow, line]);
     });
   }

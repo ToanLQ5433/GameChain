@@ -52,6 +52,9 @@ export class ChainEngine {
   isGateCell(r, c) { return this.switches.some(s => s.gateR === r && s.gateC === c); }
 
   hasWallBetween(r1, c1, r2, c2) {
+    // Buff "Đóng Băng" (GDD 3.1: Freeze — "khoá tạm 1 cơ chế") vô hiệu hoá
+    // Vách Ngăn trong phần còn lại của lượt chơi này.
+    if (this.freezeWalls) return false;
     return this.walls.some(w =>
       (w.r1 === r1 && w.c1 === c1 && w.r2 === r2 && w.c2 === c2) ||
       (w.r1 === r2 && w.c1 === c2 && w.r2 === r1 && w.c1 === c1)

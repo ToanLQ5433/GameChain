@@ -4,10 +4,12 @@ import { playSound } from '../utils/audio.js';
 import { saveState, isLevelCompleted, claimDailyQuestReward } from '../utils/storage.js';
 import { COLORS, drawChartBackground, drawPanel, makeButton, makeHudChip } from '../utils/theme.js';
 
+// Đúng 3 Buff được liệt kê trong GDD 3.1 ("Dùng Buff (Hint/Freeze/Skip...)") —
+// không thêm buff ngoài phạm vi tài liệu (VD "Mở Chuỗi Đã Vẽ" của bản demo
+// tham khảo Testgame.html không nằm trong GDD nên không đưa vào).
 const BUFF_ICONS = [
   { icon: '💡', name: 'Gợi Ý' },
-  { icon: '⏸️', name: 'Mở Tạm' },
-  { icon: '⏪', name: 'Mở Chuỗi' },
+  { icon: '⏸️', name: 'Đóng Băng' },
   { icon: '⏩', name: 'Bỏ Qua' }
 ];
 
@@ -156,7 +158,11 @@ export default class HomeScene extends Phaser.Scene {
       const doneCount = categoryDoneCount(this.save, cat);
       const isDone = doneCount === cat.levels.length;
       const isActive = cat.id === target.category.id;
-      const isLocked = !isDone && !isActive && idx > targetIdx;
+      // Không khoá cứng Đảo chưa tới: dự án hiện tổ chức level theo Category
+      // (mỗi category = 1 cơ chế lõi, độc lập), không phải cấu trúc "Đảo 8-10
+      // màn tổng hợp" của GDD 2.5 — nên không có căn cứ để chặn truy cập.
+      // Chỉ dùng màu/độ mờ để GỢI Ý thứ tự nên đi, luôn cho chạm vào bất kỳ
+      // Category nào để xem danh sách màn.
 
       if (idx > 0) {
         const prevX = marginX + step * (idx - 1);
@@ -170,19 +176,16 @@ export default class HomeScene extends Phaser.Scene {
       }
 
       const ringColor = isActive ? COLORS.gold : (isDone ? COLORS.teal : COLORS.tealDim);
-      const fillAlpha = isLocked ? 0.15 : 0.9;
-      const circle = this.add.circle(x, y, 18, isActive ? 0x3a2a05 : COLORS.cardBg, fillAlpha)
+      const circle = this.add.circle(x, y, 18, isActive ? 0x3a2a05 : COLORS.cardBg, 0.9)
         .setStrokeStyle(2, ringColor);
-      const iconTxt = this.add.text(x, y, isLocked ? '🔒' : cat.icon, {
-        fontSize: isLocked ? '13px' : '16px'
-      }).setOrigin(0.5);
-      if (isLocked) { circle.setAlpha(0.6); iconTxt.setAlpha(0.6); }
+      const iconTxt = this.add.text(x, y, cat.icon, { fontSize: '16px' }).setOrigin(0.5);
+      if (!isDone && !isActive) { circle.setAlpha(0.55); iconTxt.setAlpha(0.55); }
       if (isDone && !isActive) {
         this.add.text(x + 13, y - 13, '🚩', { fontSize: '11px' }).setOrigin(0.5);
       }
 
       this.add.text(x, y + 24, cat.title, {
-        fontFamily: 'Cinzel', fontSize: '7px', color: isLocked ? '#2f4a5e' : '#7fe9de', align: 'center',
+        fontFamily: 'Cinzel', fontSize: '7px', color: (!isDone && !isActive) ? '#4a7186' : '#7fe9de', align: 'center',
         wordWrap: { width: step - 4 }
       }).setOrigin(0.5, 0);
 
@@ -192,15 +195,8 @@ export default class HomeScene extends Phaser.Scene {
         });
       }
 
-      const hitZone = this.add.circle(x, y, 20, 0xffffff, 0.001).setInteractive({ useHandCursor: !isLocked });
-      hitZone.on('pointerdown', () => {
-        if (isLocked) {
-          this.showToast(width, `🔒 Đảo "${cat.title}" chưa mở — hoàn thành Đảo hiện tại trước đã!`);
-          playSound('error', this.save.soundMuted);
-          return;
-        }
-        this.scene.start('LevelSelect', { categoryId: cat.id });
-      });
+      const hitZone = this.add.circle(x, y, 20, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+      hitZone.on('pointerdown', () => this.scene.start('LevelSelect', { categoryId: cat.id }));
     });
   }
 
