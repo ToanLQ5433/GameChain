@@ -214,6 +214,29 @@ export class ChainEngine {
     const chain = this.chains[this.activeId];
     if (!chain) return;
     chain.path = chain.path.slice(0, Math.max(0, index) + 1);
+
+    // QUAN TRỌNG: phải tính lại waypointProgress/colorTag theo ĐÚNG path mới
+    // sau khi cắt — nếu không, 2 cờ này vẫn giữ giá trị ứng với path DÀI HƠN
+    // trước khi lùi. VD: đã chạm mốc số 3 (waypointProgress=3) rồi lùi dây
+    // qua khỏi mốc số 1, waypointProgress vẫn kẹt ở 3, nên step() từ chối
+    // ngay khi chạm lại mốc số 1 vì tưởng "sai thứ tự" (0 !== 3) — trong khi
+    // thực tế dây đã lùi hẳn về trước cả mốc đó. Tương tự với colorTag nếu
+    // lùi qua khỏi ô Lăng Kính đã đổi màu.
+    const wpList = this.waypoints[chain.id];
+    if (wpList) {
+      let progress = 0;
+      for (const p of chain.path) {
+        if (wpList[progress] && wpList[progress].r === p.r && wpList[progress].c === p.c) progress++;
+      }
+      chain.waypointProgress = progress;
+    }
+
+    let colorTag = null;
+    for (const p of chain.path) {
+      const prism = this.prisms.find(pr => pr.r === p.r && pr.c === p.c);
+      if (prism) colorTag = prism.color;
+    }
+    chain.colorTag = colorTag;
   }
 
   endDrag() {
