@@ -23,6 +23,8 @@ src/
   utils/
     audio.js                 # Âm thanh tổng hợp (Web Audio API)
     storage.js                # Lưu/đọc localStorage (coin, level đã qua)
+scripts/
+  verify-levels.mjs           # QA: phát lại lời giải tay qua Playwright, kiểm tra isWon()
 ```
 
 ## 5 Cơ chế lõi ↔ 6 Category
@@ -66,6 +68,26 @@ vercel --prod
 Cách 2 — deploy qua Git: push repo này lên GitHub rồi "Import Project" trên
 vercel.com, Vercel tự nhận `vercel.json` (buildCommand `npm run build`,
 outputDirectory `dist`), không cần cấu hình thêm.
+
+## Kiểm tra tự động (QA script)
+
+`scripts/verify-levels.mjs` phát lại lời giải tay đã thiết kế cho từng level
+(18 level = 6 category x 3) qua đúng `ChainEngine` thật chạy trong trình
+duyệt, xác nhận `isWon() === true` và không phát sinh lỗi console. Script
+dùng Playwright nên cần cài thêm (không có trong `devDependencies` vì không
+nằm trong bundle build):
+
+```bash
+npm i -D playwright
+npx playwright install chromium   # nếu chưa có sẵn Chromium
+
+npm run build && npm run preview  # mở server tại http://localhost:4173
+node scripts/verify-levels.mjs    # ở terminal khác, khi preview đang chạy
+```
+
+Có thể đổi URL server bằng biến môi trường `BASE_URL` (mặc định
+`http://localhost:4173`). Script exit code `0` nếu tất cả level giải được và
+không có lỗi console, `1` nếu có level nào fail.
 
 ## Việc còn để mở rộng sau (ngoài phạm vi demo này)
 
