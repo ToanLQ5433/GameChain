@@ -556,8 +556,11 @@ export default class GameScene extends Phaser.Scene {
         this.showLose('💥 Bạn đã chạm vào Bom còn nguyên vẹn! Lần sau hãy đẩy Push Rock vào Bom trước khi cho dây đi qua.');
       });
     } else {
+      // Không rung camera ở đây: BLOCKED xảy ra liên tục khi ngón tay lướt qua
+      // các ô không hợp lệ trong lúc kéo — rung camera dù rất nhẹ vẫn dồn dập
+      // thành cảm giác "rè rè" khó chịu suốt quá trình kéo. Chỉ cần âm thanh
+      // là đủ phản hồi "bị chặn".
       playSound('error', this.save.soundMuted);
-      this.cameras.main.shake(60, 0.0025);
     }
   }
 

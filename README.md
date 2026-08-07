@@ -1,8 +1,9 @@
 # Pirate Trails — Logic Chains (Demo Mobile 9:16)
 
 Bản demo web dựng lại đúng 5 cơ chế lõi đã chốt trong GDD, chia theo Category
-(mỗi cơ chế = 1 thể loại, cộng thêm 1 thể loại "Tổng Hợp" kết hợp nhiều cơ chế),
-giao diện dọc 9:16 kiểu game mobile, tách nhiều file theo Phaser 3 + Vite.
+(mỗi cơ chế = 1 thể loại, cộng thêm "Nhập Môn" — luật gốc không cơ chế — và
+"Tổng Hợp" kết hợp nhiều cơ chế = 7 category), giao diện dọc 9:16 kiểu game
+mobile, tách nhiều file theo Phaser 3 + Vite.
 
 ## Cấu trúc thư mục
 
@@ -13,24 +14,27 @@ src/
   style.css                # CSS khung điện thoại giả lập trên desktop
   scenes/
     BootScene.js           # Nạp save game rồi chuyển sang Home
-    HomeScene.js            # MÀN HÌNH CHÍNH — lưới 6 category
-    LevelSelectScene.js     # Danh sách level trong 1 category
-    GameScene.js             # MÀN HÌNH CHƠI — board + input kéo dây + HUD
+    HomeScene.js            # MÀN HÌNH CHÍNH — hải trình qua 7 category
+    LevelSelectScene.js     # Lưới số màn trong 1 category (30 màn, cuộn dọc)
+    GameScene.js             # MÀN HÌNH CHƠI — board + input kéo dây + HUD + Buff
   engine/
     ChainEngine.js           # Logic thuần túy 5 cơ chế lõi (không đụng Phaser)
   data/
-    levels.js                # 6 category x 3 level, đúng format engine cần
+    levels.js                # 7 category x 30 level — SINH TỰ ĐỘNG, xem bên dưới
   utils/
     audio.js                 # Âm thanh tổng hợp (Web Audio API)
     storage.js                # Lưu/đọc localStorage (coin, level đã qua)
+    theme.js                  # Bảng màu + component UI dùng chung mọi scene
 scripts/
+  gen-levels.mjs               # Sinh + kiểm tra src/data/levels.js (xem mục riêng)
   verify-levels.mjs           # QA: phát lại lời giải tay qua Playwright, kiểm tra isWon()
 ```
 
-## 5 Cơ chế lõi ↔ 6 Category
+## 5 Cơ chế lõi ↔ 7 Category
 
-| Category (id)     | Cơ chế (MEC)     | Nội dung |
+| Category (id)      | Cơ chế (MEC)     | Nội dung |
 |---|---|---|
+| `nhap-mon`         | CORE             | Luật gốc — nhiều xích cùng lúc, KHÔNG cơ chế phụ |
 | `vat-can`          | MEC-01           | Rock, Wall, Push Rock |
 | `dinh-huong-mau`   | MEC-02           | Arrow, Prism, ColorGate |
 | `mat-ma-so`        | MEC-03           | Waypoints theo thứ tự |
@@ -38,9 +42,10 @@ scripts/
 | `bom-tinh`         | MEC-05           | Bom tĩnh — chỉ phá bằng Push Rock |
 | `tong-hop`         | COMBO            | Kết hợp 2-3 cơ chế trong 1 màn |
 
-Thêm/sửa level: chỉnh trực tiếp `src/data/levels.js`, giữ đúng format field
-(`rocks`, `walls`, `pushRocks`, `switches`, `arrows`, `prisms`, `colorGates`,
-`waypoints`, `bombs`, `anchors`) — `ChainEngine` đọc đúng các field này.
+Mỗi category có 30 màn (210 màn tổng). **Không sửa tay `src/data/levels.js`**
+— file này do `scripts/gen-levels.mjs` sinh ra. Muốn thêm/đổi màn, sửa các
+hàm `gen*` trong script đó rồi chạy lại (xem mục "Sinh level tự động" bên
+dưới).
 
 ## Chạy thử local
 
@@ -69,11 +74,37 @@ Cách 2 — deploy qua Git: push repo này lên GitHub rồi "Import Project" tr
 vercel.com, Vercel tự nhận `vercel.json` (buildCommand `npm run build`,
 outputDirectory `dist`), không cần cấu hình thêm.
 
-## Kiểm tra tự động (QA script)
+## Sinh level tự động (`scripts/gen-levels.mjs`)
 
-`scripts/verify-levels.mjs` phát lại lời giải tay đã thiết kế cho từng level
-(18 level = 6 category x 3) qua đúng `ChainEngine` thật chạy trong trình
-duyệt, xác nhận `isWon() === true` và không phát sinh lỗi console. Script
+`src/data/levels.js` (210 màn) được sinh bằng thuật toán, không viết tay:
+mỗi màn xuất phát từ **1 đường đi Hamilton duy nhất** phủ toàn bộ ô khả dụng
+của bàn cờ, sau đó **cắt** đường đó thành N đoạn liên tiếp cho N xích. Vì
+đường Hamilton đi qua mỗi ô đúng 1 lần, việc cắt nó tự động đảm bảo:
+
+- **Phủ kín 100%** — không dư ô nào (đúng Win Condition ở GDD 3.3).
+- **Luôn giải được** — chính đường đã sinh ra LÀ lời giải, lưu lại ở trường
+  `solution` của từng màn (dùng cho Buff Gợi Ý và để tự kiểm tra).
+
+Các cơ chế (Mũi Tên, Waypoint, Công Tắc, Bom...) được gắn **lên trên** đường
+đi đã biết đó nên luôn nhất quán với lời giải. Bom/Push Rock dùng kỹ thuật
+ép đường đi xuất phát đúng 2 ô thẳng hàng với hố (bom) để hướng đẩy luôn khớp.
+
+Chạy lại sau khi sửa hàm sinh:
+
+```bash
+node scripts/gen-levels.mjs
+```
+
+Script tự kiểm tra toàn bộ 210 màn qua `ChainEngine` thật ngay trong Node
+(không cần trình duyệt) trước khi ghi đè `src/data/levels.js`, in ra
+`ALL LEVELS VERIFIED OK` hoặc liệt kê màn nào lỗi.
+
+## Kiểm tra tự động qua trình duyệt (QA script)
+
+`scripts/verify-levels.mjs` phát lại lời giải tay cho một số level mẫu qua
+đúng `ChainEngine` thật chạy trong trình duyệt (Playwright), xác nhận
+`isWon() === true` và không phát sinh lỗi console — dùng để kiểm tra thêm ở
+tầng UI/Phaser thật, bổ sung cho việc tự kiểm tra bằng Node ở trên. Script
 dùng Playwright nên cần cài thêm (không có trong `devDependencies` vì không
 nằm trong bundle build):
 
@@ -94,6 +125,6 @@ không có lỗi console, `1` nếu có level nào fail.
 - Level Timer System (Mục 3.8 GDD) — chưa gắn vào GameScene, có thể thêm
   1 đồng hồ đếm ngược ở top bar + `onTimerReachZero()` tương tự pseudocode GDD.
 - Reward/Progression đầy đủ theo Đảo (Mục 2.5 GDD) — bản demo chỉ có Coin
-  cơ bản + đánh dấu hoàn thành theo category, chưa có Mảnh Bản Đồ/Rương Đảo.
-- Buff Hint/Freeze — đã lược bỏ khỏi bản demo để giảm phạm vi; có thể thêm lại
-  bằng cách lưu kèm `solution` cho từng level trong `levels.js`.
+  cơ bản + Nhiệm Vụ Ngày + đánh dấu hoàn thành theo category, chưa có Mảnh
+  Bản Đồ/Rương Đảo thật hay khoá Đảo theo % hoàn thành (category hiện tại là
+  nhóm theo cơ chế, không phải "Đảo" 8-10 màn tổng hợp như GDD 2.5 mô tả).
