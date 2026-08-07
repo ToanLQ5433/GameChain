@@ -3,18 +3,12 @@ import { ChainEngine } from '../engine/ChainEngine.js';
 import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
+import { COLORS, drawChartBackground, drawPanel, makeButton, makeHudChip } from '../utils/theme.js';
 
-// Bảng màu đồng bộ với phong cách "hải đồ cổ" của HomeScene — thay cho nền
-// nâu/đen phẳng cũ để toàn bộ app nhìn liền một phong cách.
-const NAVY_DEEP = 0x0a1622;
-const CHART_LINE = 0x3a5f78;
-const GOLD = 0xd4af37;
-const GOLD_BRIGHT = 0xffd700;
-
-const COLORS = {
-  cellBg: 0x14283a,
-  cellBgLight: 0x1c3348,
-  cellBorder: 0x2f4a5e,
+const TILE = {
+  cellBg: 0x0a1d33,
+  cellBgLight: 0x123049,
+  cellBorder: 0x1c3a52,
   rock: 0x5c4a3e,
   rockBorder: 0x3d2b1f,
   pushRock: 0x8a7259,
@@ -22,45 +16,14 @@ const COLORS = {
   bombBorder: 0xa82e2e,
   gateClosedBg: 0x4a1414,
   gateOpenBg: 0x123a24,
-  switchDot: 0xd4af37,
-  wall: 0xffd700,
+  switchDot: COLORS.gold,
+  wall: COLORS.gold,
   prismRed: 0xa82e2e,
   prismBlue: 0x1b5e8a,
   prismGreen: 0x2a7b4c
 };
 
-const COLOR_HEX = { red: COLORS.prismRed, blue: COLORS.prismBlue, green: COLORS.prismGreen };
-
-// Nút bo góc dạng viên thuốc, có phản hồi nhấn (scale) — dùng chung cho mọi
-// nút trong scene để đồng bộ cảm giác "đã tay" thay vì Text phẳng vô hồn.
-function makePillButton(scene, x, y, label, opts = {}) {
-  const {
-    fontSize = '12px', bg = 0x2b1e16, border = CHART_LINE, textColor = '#f4e8cf',
-    paddingX = 14, paddingY = 7, originX = 0.5, originY = 0.5
-  } = opts;
-  const txt = scene.add.text(0, 0, label, {
-    fontFamily: 'Cinzel', fontSize, fontStyle: 'bold', color: textColor
-  }).setOrigin(0.5);
-  const w = txt.width + paddingX * 2, h = txt.height + paddingY * 2;
-  const container = scene.add.container(x, y);
-  const bgShape = scene.add.graphics();
-  bgShape.fillStyle(bg, 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-  bgShape.lineStyle(1.5, border, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-  container.add([bgShape, txt]);
-  // Container không có origin như Text/Sprite — hit-area mặc định neo góc
-  // trên-trái (0,0..w,h), trong khi nội dung được vẽ quanh tâm (-w/2..w/2).
-  // Phải khai rõ Rectangle căn tâm, nếu không vùng bấm sẽ lệch khỏi nút thấy được.
-  container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
-  container.input.cursor = 'pointer';
-  container.setPosition(
-    x - (originX - 0.5) * w,
-    y - (originY - 0.5) * h
-  );
-  container.on('pointerover', () => { bgShape.clear(); bgShape.fillStyle(0x3d2b1f, 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2); bgShape.lineStyle(1.5, GOLD_BRIGHT, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2); });
-  container.on('pointerout', () => { bgShape.clear(); bgShape.fillStyle(bg, 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2); bgShape.lineStyle(1.5, border, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2); });
-  container.on('pointerdown', () => scene.tweens.add({ targets: container, scale: 0.92, duration: 60, yoyo: true }));
-  return container;
-}
+const COLOR_HEX = { red: TILE.prismRed, blue: TILE.prismBlue, green: TILE.prismGreen };
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -79,7 +42,7 @@ export default class GameScene extends Phaser.Scene {
     this.save.lastLevelIndex = this.levelIndex;
     saveState(this.save);
 
-    this.drawChartBackground(width, height);
+    drawChartBackground(this, width, height);
 
     this.buildTopBar(width);
     this.buildBottomBar(width, height);
@@ -89,6 +52,7 @@ export default class GameScene extends Phaser.Scene {
     // bước kéo). Trước đây MỌI thứ bị xoá-vẽ-lại toàn bộ mỗi lần rê tay, gây
     // giật khi board lớn; giờ mỗi bước kéo chỉ chạm tới vài chục object động
     // thay vì toàn bộ lưới ô.
+    this.boardFrameContainer = this.add.container(0, 0);
     this.boardStaticContainer = this.add.container(0, 0);
     this.boardDynamicContainer = this.add.container(0, 0);
     this.chainContainer = this.add.container(0, 0);
@@ -105,47 +69,37 @@ export default class GameScene extends Phaser.Scene {
     this.input.on('pointerupoutside', this.onPointerUp, this);
   }
 
-  drawChartBackground(width, height) {
-    this.add.rectangle(0, 0, width, height, NAVY_DEEP).setOrigin(0);
-    const g = this.add.graphics();
-    g.lineStyle(1, 0x6fa8c9, 0.05);
-    for (let x = 0; x < width; x += 32) g.lineBetween(x, 0, x, height);
-    for (let y = 0; y < height; y += 32) g.lineBetween(0, y, width, y);
-  }
-
   // ---------------- UI khung ngoài ----------------
 
   buildTopBar(width) {
-    makePillButton(this, 12, 18, '← Danh sách', {
-      fontSize: '11px', originX: 0, bg: 0x2b1e16
-    }).on('pointerdown', () => this.scene.start('LevelSelect', { categoryId: this.categoryId }));
+    makeButton(this, 12, 24, '← Danh sách', { variant: 'ink', fontSize: '10px', originX: 0 })
+      .on('pointerdown', () => this.scene.start('LevelSelect', { categoryId: this.categoryId }));
 
-    this.coinText = this.add.text(width - 12, 10, `🟡 ${this.save.coins}`, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#ffd700',
-      backgroundColor: '#2b1e16', padding: { x: 8, y: 4 }
-    }).setOrigin(1, 0);
+    this.coinChip = makeHudChip(this, width - 12, 24, 'XU', `🟡 ${this.save.coins}`, { variant: 'gold', originX: 1 });
 
-    this.levelNameText = this.add.text(width / 2, 44, '', {
+    this.levelNameText = this.add.text(width / 2, 54, '', {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: 'bold', color: '#f4e8cf', align: 'center',
       wordWrap: { width: width - 40 }
     }).setOrigin(0.5, 0);
 
-    this.mechDescText = this.add.text(width / 2, 66, '', {
+    this.mechDescText = this.add.text(width / 2, 76, '', {
       fontFamily: 'Crimson Pro', fontSize: '10px', color: '#b8860b', align: 'center',
       wordWrap: { width: width - 40 }
     }).setOrigin(0.5, 0);
 
-    this.statusText = this.add.text(width / 2, 96, '', {
+    this.statusText = this.add.text(width / 2, 106, '', {
       fontFamily: 'Cinzel', fontSize: '11px', fontStyle: 'italic', color: '#d3be97'
     }).setOrigin(0.5, 0);
 
-    this.add.line(0, 0, 0, 108, width, 108, CHART_LINE, 0.6).setOrigin(0);
+    this.add.line(0, 0, 0, 118, width, 118, COLORS.teal, 0.25).setOrigin(0);
   }
 
   buildBottomBar(width, height) {
     const y = height - 30;
-    makePillButton(this, width / 2 - 70, y, 'Chơi Lại').on('pointerdown', () => this.loadLevel());
-    makePillButton(this, width / 2 + 70, y, 'Bỏ Qua (Demo)').on('pointerdown', () => this.completeLevel(true));
+    makeButton(this, width / 2 - 74, y, 'Chơi Lại', { variant: 'teal', fontSize: '11px' })
+      .on('pointerdown', () => this.loadLevel());
+    makeButton(this, width / 2 + 74, y, 'Bỏ Qua (Demo)', { variant: 'teal', fontSize: '11px' })
+      .on('pointerdown', () => this.completeLevel(true));
   }
 
   // ---------------- Vòng đời level ----------------
@@ -163,6 +117,7 @@ export default class GameScene extends Phaser.Scene {
     this.statusText.setText('Chạm vào 1 số và kéo qua các ô liền kề.');
 
     this.computeBoardMetrics();
+    this.drawBoardFrame();
     this.drawStaticBoard();
     this.redrawDynamic();
     this.redrawChains();
@@ -174,9 +129,9 @@ export default class GameScene extends Phaser.Scene {
 
   computeBoardMetrics() {
     const { width, height } = this.scale;
-    const topOffset = 116;
-    const bottomOffset = 96;
-    const marginX = 24;
+    const topOffset = 128;
+    const bottomOffset = 100;
+    const marginX = 30;
     const size = this.engine.size;
 
     const areaW = width - marginX * 2;
@@ -203,6 +158,18 @@ export default class GameScene extends Phaser.Scene {
     return { r, c };
   }
 
+  // ---------------- Khung gỗ quanh bàn cờ (theo style guide) ----------------
+
+  drawBoardFrame() {
+    this.boardFrameContainer.removeAll(true);
+    const pad = Math.max(10, Math.round(this.cellSize * 0.18));
+    const boardW = this.cellSize * this.engine.size, boardH = boardW;
+    const frame = drawPanel(this, this.boardOriginX - pad, this.boardOriginY - pad, boardW + pad * 2, boardH + pad * 2, {
+      radius: 16, fill: COLORS.wood, border: COLORS.gold, borderWidth: 3
+    });
+    this.boardFrameContainer.add(frame);
+  }
+
   // ---------------- Lớp TĨNH: nền ô, tường, mũi tên, lăng kính, mốc số ----
 
   drawStaticBoard() {
@@ -218,12 +185,12 @@ export default class GameScene extends Phaser.Scene {
       for (let c = 0; c < e.size; c++) {
         const { x, y } = this.cellToPixel(r, c);
         const isRock = e.isRock(r, c);
-        const fill = isRock ? COLORS.rock : COLORS.cellBg;
-        const border = isRock ? COLORS.rockBorder : COLORS.cellBorder;
+        const fill = isRock ? TILE.rock : TILE.cellBg;
+        const border = isRock ? TILE.rockBorder : TILE.cellBorder;
 
         tiles.fillStyle(fill, 1).fillRoundedRect(x + 1, y + 1, cs - 2, cs - 2, radius);
         // Dải sáng mỏng phía trên mỗi ô — gợi cảm giác nổi khối (depth) nhẹ.
-        tiles.fillStyle(COLORS.cellBgLight, isRock ? 0 : 0.5)
+        tiles.fillStyle(TILE.cellBgLight, isRock ? 0 : 0.6)
           .fillRoundedRect(x + 2, y + 2, cs - 4, Math.max(2, cs * 0.16), radius * 0.6);
         tiles.lineStyle(1, border, 0.9).strokeRoundedRect(x + 1, y + 1, cs - 2, cs - 2, radius);
 
@@ -254,7 +221,7 @@ export default class GameScene extends Phaser.Scene {
         Object.values(e.waypoints).forEach(list => {
           const idx = list.findIndex(w => w.r === r && w.c === c);
           if (idx !== -1) {
-            const badge = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.32, GOLD_BRIGHT).setStrokeStyle(2, 0x5c4314);
+            const badge = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.32, COLORS.gold).setStrokeStyle(2, COLORS.goldDim);
             const num = this.add.text(x + cs / 2, y + cs / 2, String(idx + 1), {
               fontFamily: 'Cinzel', fontSize: Math.round(cs * 0.32) + 'px', fontStyle: '900', color: '#2b1e16'
             }).setOrigin(0.5);
@@ -270,7 +237,7 @@ export default class GameScene extends Phaser.Scene {
       const glow = this.add.graphics();
       const line = this.add.graphics();
       const drawAt = (g, width, alpha) => {
-        g.lineStyle(width, COLORS.wall, alpha);
+        g.lineStyle(width, TILE.wall, alpha);
         if (w.r1 === w.r2) {
           const x = Math.max(p1.x, p2.x);
           g.lineBetween(x, p1.y, x, p1.y + cs);
@@ -295,16 +262,16 @@ export default class GameScene extends Phaser.Scene {
 
     e.switches.forEach(sw => {
       const { x, y } = this.cellToPixel(sw.r, sw.c);
-      const dot = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.22, COLORS.switchDot).setStrokeStyle(2, 0x5c4314);
+      const dot = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.22, TILE.switchDot).setStrokeStyle(2, COLORS.goldDim);
       const icon = this.add.text(x + cs / 2, y + cs / 2, sw.latch ? '📌' : '🔘', { fontSize: Math.round(cs * 0.3) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([dot, icon]);
 
       const { x: gx, y: gy } = this.cellToPixel(sw.gateR, sw.gateC);
       const open = e.isGateOpenAt(sw.gateR, sw.gateC);
       const g = this.add.graphics();
-      g.fillStyle(open ? COLORS.gateOpenBg : COLORS.gateClosedBg, 0.9)
+      g.fillStyle(open ? TILE.gateOpenBg : TILE.gateClosedBg, 0.9)
         .fillRoundedRect(gx + 3, gy + 3, cs - 6, cs - 6, radius);
-      g.lineStyle(2, open ? 0x2a7b4c : 0xa82e2e, 1).strokeRoundedRect(gx + 3, gy + 3, cs - 6, cs - 6, radius);
+      g.lineStyle(2, open ? COLORS.emerald : COLORS.ruby, 1).strokeRoundedRect(gx + 3, gy + 3, cs - 6, cs - 6, radius);
       const gicon = this.add.text(gx + cs / 2, gy + cs / 2, open ? '🔓' : '🔒', { fontSize: Math.round(cs * 0.38) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([g, gicon]);
     });
@@ -312,7 +279,7 @@ export default class GameScene extends Phaser.Scene {
     e.pushRocks.forEach(pr => {
       const { x, y } = this.cellToPixel(pr.r, pr.c);
       const g = this.add.graphics();
-      g.fillStyle(COLORS.pushRock, 1).fillRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
+      g.fillStyle(TILE.pushRock, 1).fillRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
       g.lineStyle(2, 0x5c4a3e, 1).strokeRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
       const icon = this.add.text(x + cs / 2, y + cs / 2, '🪨', { fontSize: Math.round(cs * 0.42) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([g, icon]);
@@ -323,8 +290,8 @@ export default class GameScene extends Phaser.Scene {
       const { x, y } = this.cellToPixel(b.r, b.c);
       const cx = x + cs / 2, cy = y + cs / 2;
       const g = this.add.graphics();
-      g.fillStyle(COLORS.bombBg, 1).fillRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
-      g.lineStyle(2, COLORS.bombBorder, 1).strokeRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
+      g.fillStyle(TILE.bombBg, 1).fillRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
+      g.lineStyle(2, TILE.bombBorder, 1).strokeRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
       const icon = this.add.text(cx, cy, '💣', { fontSize: Math.round(cs * 0.42) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([g, icon]);
       // Nhịp "tim đập" nhẹ trên bom còn nguyên — nhắc người chơi đây là hiểm hoạ,
@@ -363,7 +330,7 @@ export default class GameScene extends Phaser.Scene {
         // mobile hiện đại, thay vì hình tròn viền trắng phẳng lì.
         const glow = this.add.circle(x, y, thickness / 2 + 4, displayColor, 0.28);
         const bead = this.add.circle(x, y, thickness / 2, displayColor)
-          .setStrokeStyle(chain.locked ? 3 : 1.5, chain.locked ? GOLD_BRIGHT : 0xffffff, chain.locked ? 1 : 0.85);
+          .setStrokeStyle(chain.locked ? 3 : 1.5, chain.locked ? COLORS.gold : 0xffffff, chain.locked ? 1 : 0.85);
         this.chainContainer.add([glow, bead]);
         if (i === 0) {
           const remaining = chain.length - chain.path.length;
@@ -472,7 +439,7 @@ export default class GameScene extends Phaser.Scene {
     const chain = this.engine.getChain(this.engine.activeId);
     if (!chain) return;
     const { x, y } = this.cellCenter(chain.row, chain.col);
-    const ring = this.add.circle(x, y, this.cellSize * 0.3, GOLD_BRIGHT, 0.5);
+    const ring = this.add.circle(x, y, this.cellSize * 0.3, COLORS.gold, 0.5);
     this.fxContainer.add(ring);
     this.tweens.add({
       targets: ring, scale: 2.6, alpha: 0, duration: 420, ease: 'Cubic.Out',
@@ -509,7 +476,7 @@ export default class GameScene extends Phaser.Scene {
       this.cameras.main.shake(140, 0.006);
     }
 
-    const ring = this.add.circle(cx, cy, cs * 0.3, GOLD_BRIGHT, 0.4).setStrokeStyle(2, GOLD_BRIGHT, 0.9);
+    const ring = this.add.circle(cx, cy, cs * 0.3, COLORS.gold, 0.4).setStrokeStyle(2, COLORS.gold, 0.9);
     this.fxContainer.add(ring);
     this.tweens.add({
       targets: ring, scale: big ? 3.2 : 2.2, alpha: 0, duration: big ? 460 : 340, ease: 'Cubic.Out',
@@ -520,7 +487,7 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < chipCount; i++) {
       const angle = (i / chipCount) * Math.PI * 2 + Math.random() * 0.4;
       const dist = cs * (big ? 1.6 : 1.1) * (0.6 + Math.random() * 0.5);
-      const chip = this.add.circle(cx, cy, 2.5 + Math.random() * (big ? 4 : 2.5), big ? 0xff6a3d : 0xffd700, 0.95);
+      const chip = this.add.circle(cx, cy, 2.5 + Math.random() * (big ? 4 : 2.5), big ? 0xff6a3d : COLORS.gold, 0.95);
       this.fxContainer.add(chip);
       this.tweens.add({
         targets: chip,
@@ -558,30 +525,52 @@ export default class GameScene extends Phaser.Scene {
     if (!already && doneCount === this.category.levels.length) {
       this.registry.set('justCompletedCategory', this.categoryId);
     }
-    this.coinText.setText(`🟡 ${this.save.coins}`);
+    this.coinChip.setValueText(`🟡 ${this.save.coins}`);
     this.showWin(isSkip);
   }
 
   showWin(isSkip) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, NAVY_DEEP, 0.94).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.94).setOrigin(0);
 
-    const panelW = width - 60, panelH = 210;
-    const panel = this.add.graphics();
-    panel.fillStyle(0x122536, 0.96).fillRoundedRect(width / 2 - panelW / 2, height / 2 - panelH / 2, panelW, panelH, 16);
-    panel.lineStyle(2, GOLD, 1).strokeRoundedRect(width / 2 - panelW / 2, height / 2 - panelH / 2, panelW, panelH, 16);
+    const panelW = width - 56, panelH = 300;
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.cardBg, border: COLORS.gold, borderWidth: 3 });
 
-    const title = this.add.text(width / 2, height / 2 - 60, isSkip ? 'Đã Bỏ Qua Màn' : 'Giải Mã Thành Công!', {
-      fontFamily: 'Cinzel', fontSize: '22px', fontStyle: '900', color: '#ffd700'
+    const eyebrow = this.add.text(width / 2, panelY + 22, isSkip ? 'ĐÃ BỎ QUA' : 'CHIẾN THẮNG!', {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#f3c64f', letterSpacing: 2
     }).setOrigin(0.5);
-    const sub = this.add.text(width / 2, height / 2 - 24, isSkip ? '' : '+20 Xu', {
-      fontFamily: 'Cinzel', fontSize: '14px', color: '#f4e8cf'
+    const title = this.add.text(width / 2, panelY + 40, this.levelDef.name, {
+      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#f4e8cf', align: 'center',
+      wordWrap: { width: panelW - 40 }
+    }).setOrigin(0.5, 0);
+
+    const starsY = panelY + 92;
+    const stars = [];
+    for (let i = 0; i < 3; i++) {
+      const s = this.add.text(width / 2 + (i - 1) * 32, starsY, isSkip ? '☆' : '★', {
+        fontSize: '26px', color: '#f3c64f'
+      }).setOrigin(0.5).setScale(0);
+      stars.push(s);
+      this.tweens.add({ targets: s, scale: 1, duration: 260, delay: 200 + i * 130, ease: 'Back.Out' });
+    }
+
+    // Thẻ phần thưởng phát sáng — cùng ngôn ngữ "mảnh bản đồ" với Home.
+    const cardW = 96, cardH = 96, cardX = width / 2 - cardW / 2, cardY = starsY + 34;
+    const rewardFrame = drawPanel(this, cardX, cardY, cardW, cardH, { radius: 10, fill: COLORS.cardBgLight, border: COLORS.gold, borderWidth: 2 });
+    const rewardIcon = this.add.text(width / 2, cardY + cardH / 2, isSkip ? '📦' : this.category.icon, { fontSize: '40px' }).setOrigin(0.5);
+    if (!isSkip) {
+      this.tweens.add({ targets: [rewardFrame, rewardIcon], alpha: { from: 0.6, to: 1 }, yoyo: true, repeat: -1, duration: 700 });
+    }
+
+    const rewardText = this.add.text(width / 2, cardY + cardH + 12, isSkip ? '' : '+20 Xu', {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#f3c64f'
     }).setOrigin(0.5);
 
     const hasNext = this.levelIndex + 1 < this.category.levels.length;
-    const nextBtn = makePillButton(this, width / 2, height / 2 + 30, hasNext ? 'Màn Tiếp Theo' : 'Về Danh Sách', {
-      bg: 0xffd700, textColor: '#2b1e16', border: 0x8a6a10, fontSize: '13px'
+    const nextBtn = makeButton(this, width / 2, panelY + panelH - 46, hasNext ? 'Màn Tiếp Theo' : 'Về Danh Sách', {
+      variant: 'gold', fontSize: '13px'
     });
     nextBtn.on('pointerdown', () => {
       if (hasNext) {
@@ -591,17 +580,17 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    const homeBtn = makePillButton(this, width / 2, height / 2 + 76, 'Trang Chủ', { fontSize: '11px' });
+    const homeBtn = makeButton(this, width / 2, panelY + panelH - 12, 'Trang Chủ', { variant: 'ink', fontSize: '10px' });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
 
-    this.overlayContainer.add([bg, panel, title, sub, nextBtn, homeBtn]);
+    this.overlayContainer.add([bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn]);
     this.overlayContainer.setVisible(true);
 
     if (!isSkip) {
       playSound('win', false);
       for (let i = 0; i < 16; i++) {
         const x = width / 2 + (Math.random() - 0.5) * panelW;
-        const star = this.add.text(x, height / 2 - panelH / 2 - 10, '✨', { fontSize: (10 + Math.random() * 10) + 'px' }).setOrigin(0.5).setAlpha(0);
+        const star = this.add.text(x, panelY - 10, '✨', { fontSize: (10 + Math.random() * 10) + 'px' }).setOrigin(0.5).setAlpha(0);
         this.overlayContainer.add(star);
         this.tweens.add({
           targets: star, y: star.y + 140 + Math.random() * 80, alpha: { from: 1, to: 0 }, angle: Math.random() * 180,
@@ -614,24 +603,21 @@ export default class GameScene extends Phaser.Scene {
   showLose(text) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, NAVY_DEEP, 0.94).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.94).setOrigin(0);
 
     const panelW = width - 60, panelH = 220;
-    const panel = this.add.graphics();
-    panel.fillStyle(0x2a1414, 0.96).fillRoundedRect(width / 2 - panelW / 2, height / 2 - panelH / 2, panelW, panelH, 16);
-    panel.lineStyle(2, 0xa82e2e, 1).strokeRoundedRect(width / 2 - panelW / 2, height / 2 - panelH / 2, panelW, panelH, 16);
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0x2a1414, border: COLORS.ruby, borderWidth: 3 });
 
-    const title = this.add.text(width / 2, height / 2 - 70, '💥 Bạn Đã Thua!', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#a82e2e'
+    const title = this.add.text(width / 2, panelY + 40, '💥 Bạn Đã Thua!', {
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#e0605a'
     }).setOrigin(0.5);
-    const sub = this.add.text(width / 2, height / 2 - 24, text, {
+    const sub = this.add.text(width / 2, panelY + 86, text, {
       fontFamily: 'Crimson Pro', fontSize: '11px', color: '#f4e8cf', align: 'center',
       wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5);
 
-    const retryBtn = makePillButton(this, width / 2, height / 2 + 62, 'Chơi Lại Màn Này', {
-      bg: 0xffd700, textColor: '#2b1e16', border: 0x8a6a10, fontSize: '13px'
-    });
+    const retryBtn = makeButton(this, width / 2, panelY + panelH - 40, 'Chơi Lại Màn Này', { variant: 'gold', fontSize: '13px' });
     retryBtn.on('pointerdown', () => this.loadLevel());
 
     this.overlayContainer.add([bg, panel, title, sub, retryBtn]);

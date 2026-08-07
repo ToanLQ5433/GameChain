@@ -2,13 +2,7 @@ import Phaser from 'phaser';
 import { CATEGORIES, getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { saveState, isLevelCompleted, claimDailyQuestReward } from '../utils/storage.js';
-
-const GOLD = 0xd4af37;
-const GOLD_BRIGHT = 0xffd700;
-const NAVY_DEEP = 0x0a1622;
-const CHART_LINE = 0x3a5f78;
-const CHART_LINE_BRIGHT = 0x6fa8c9;
-const CARD_BG = 0x122536;
+import { COLORS, drawChartBackground, drawPanel, makeButton, makeHudChip } from '../utils/theme.js';
 
 const BUFF_ICONS = [
   { icon: '💡', name: 'Gợi Ý' },
@@ -47,6 +41,22 @@ function softlockWarningFor(levelDef) {
   return null;
 }
 
+// Đường nối giữa các Đảo trên "hải trình" — vẽ dạng chấm chấm như hải đồ vẽ
+// tay, thay vì 1 vạch liền vô hồn.
+function drawDottedPath(scene, x1, y1, x2, y2, color, alpha) {
+  const g = scene.add.graphics();
+  g.fillStyle(color, alpha);
+  const dx = x2 - x1, dy = y2 - y1;
+  const dist = Math.hypot(dx, dy);
+  const step = 7;
+  const count = Math.max(1, Math.floor(dist / step));
+  for (let i = 0; i <= count; i++) {
+    const t = i / count;
+    g.fillCircle(x1 + dx * t, y1 + dy * t, 1.4);
+  }
+  return g;
+}
+
 export default class HomeScene extends Phaser.Scene {
   constructor() { super('Home'); }
 
@@ -55,7 +65,7 @@ export default class HomeScene extends Phaser.Scene {
     const save = this.registry.get('save');
     this.save = save;
 
-    this.drawChartBackground(width, height);
+    drawChartBackground(this, width, height);
 
     const target = computeTarget(save);
     this.target = target;
@@ -75,48 +85,25 @@ export default class HomeScene extends Phaser.Scene {
     }
   }
 
-  drawChartBackground(width, height) {
-    this.add.rectangle(0, 0, width, height, NAVY_DEEP).setOrigin(0);
-    const g = this.add.graphics();
-    g.lineStyle(1, CHART_LINE_BRIGHT, 0.06);
-    for (let x = 0; x < width; x += 34) g.lineBetween(x, 0, x, height);
-    for (let y = 0; y < height; y += 34) g.lineBetween(0, y, width, y);
-  }
-
   buildTopBar(width, target) {
     // Khu vực người chơi (trái)
-    this.add.circle(28, 28, 18, GOLD).setStrokeStyle(2, GOLD_BRIGHT);
+    this.add.circle(28, 28, 18, COLORS.gold).setStrokeStyle(2, COLORS.goldBorder);
     this.add.text(28, 28, '🧭', { fontSize: '18px' }).setOrigin(0.5);
     this.add.text(50, 16, this.save.playerName, {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#ffd700',
-      wordWrap: { width: 110 }
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#f3c64f',
+      wordWrap: { width: 90 }
     }).setOrigin(0, 0);
     this.add.text(50, 36, 'Tân Thuỷ Thủ', {
       fontFamily: 'Crimson Pro', fontSize: '9px', fontStyle: 'italic', color: '#6fa8c9'
     }).setOrigin(0, 0);
 
-    // Thống kê tiến trình (giữa)
+    // Tiến trình Đảo (giữa) + Ví Coin (phải) — dạng HUD chip viền theo style guide.
     const doneInCat = categoryDoneCount(this.save, target.category);
     const pct = Math.round((doneInCat / target.category.levels.length) * 100);
-    this.add.text(width / 2, 14, 'TIẾN TRÌNH ĐẢO', {
-      fontFamily: 'Cinzel', fontSize: '8px', color: '#6fa8c9'
-    }).setOrigin(0.5, 0);
-    this.add.text(width / 2, 26, `${pct}%`, {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#ffd700'
-    }).setOrigin(0.5, 0);
+    makeHudChip(this, width / 2, 28, 'TIẾN TRÌNH ĐẢO', `${pct}%`, { variant: 'teal', minWidth: 90 });
+    this.coinChip = makeHudChip(this, width - 12, 28, 'XU', `🟡 ${this.save.coins}`, { variant: 'gold', originX: 1 });
 
-    // Ví Coin + nút +Xu (phải)
-    this.coinText = this.add.text(width - 12, 10, `🟡 ${this.save.coins}`, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#ffd700',
-      backgroundColor: '#2b1e16', padding: { x: 8, y: 4 }
-    }).setOrigin(1, 0);
-    const shopBtn = this.add.text(width - 12, 34, '+ Xu', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#eafff1',
-      backgroundColor: '#2a7b4c', padding: { x: 8, y: 3 }
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: true });
-    shopBtn.on('pointerdown', () => this.watchAd());
-
-    this.add.line(0, 0, 0, 58, width, 58, CHART_LINE, 0.6).setOrigin(0);
+    this.add.line(0, 0, 0, 58, width, 58, COLORS.teal, 0.25).setOrigin(0);
   }
 
   buildPrimaryAction(width, target) {
@@ -130,8 +117,9 @@ export default class HomeScene extends Phaser.Scene {
     }
 
     // Mảnh Bản Đồ — khung mờ ảo đại diện Đảo đang mở khoá.
-    this.fragmentBox = this.add.rectangle(width / 2, 145, 96, 96, CARD_BG, 0.9)
-      .setStrokeStyle(3, GOLD);
+    this.fragmentBox = drawPanel(this, width / 2 - 48, 97, 96, 96, {
+      radius: 10, fill: COLORS.cardBg, border: COLORS.gold, borderWidth: 3
+    });
     this.fragmentIcon = this.add.text(width / 2, 145, target.category.icon, { fontSize: '42px' }).setOrigin(0.5);
     this.add.text(width / 2, 145 + 60, target.category.title, {
       fontFamily: 'Cinzel', fontSize: '10px', color: '#6fa8c9'
@@ -140,16 +128,10 @@ export default class HomeScene extends Phaser.Scene {
     const ctaLabel = target.isResume
       ? `CHƠI TIẾP MÀN ${target.levelIndex + 1}`
       : `VÀO HẢI TRÌNH (MÀN ${target.levelIndex + 1})`;
-    const cta = this.add.text(width / 2, 232, ctaLabel, {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#2b1e16',
-      backgroundColor: '#ffd700', padding: { x: 20, y: 12 }
-    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-    cta.on('pointerover', () => cta.setBackgroundColor('#fff0a8'));
-    cta.on('pointerout', () => cta.setBackgroundColor('#ffd700'));
-    cta.on('pointerdown', () => {
+    makeButton(this, width / 2, 232, ctaLabel, { variant: 'gold', fontSize: '13px', onClick: () => {
       playSound('lock', this.save.soundMuted);
       this.scene.start('Game', { categoryId: target.category.id, levelIndex: target.levelIndex });
-    });
+    } });
   }
 
   playFragmentGlow() {
@@ -158,8 +140,7 @@ export default class HomeScene extends Phaser.Scene {
       alpha: { from: 1, to: 0.3 },
       yoyo: true,
       repeat: 3,
-      duration: 160,
-      onUpdate: () => this.fragmentBox.setStrokeStyle(3, GOLD_BRIGHT)
+      duration: 160
     });
   }
 
@@ -179,22 +160,29 @@ export default class HomeScene extends Phaser.Scene {
 
       if (idx > 0) {
         const prevX = marginX + step * (idx - 1);
-        const lineColor = idx <= targetIdx ? GOLD : CHART_LINE;
-        this.add.line(0, 0, prevX + 20, y, x - 20, y, lineColor, idx <= targetIdx ? 0.9 : 0.5)
-          .setOrigin(0).setLineWidth(2);
+        const lineColor = idx <= targetIdx ? COLORS.gold : COLORS.teal;
+        drawDottedPath(this, prevX + 20, y, x - 20, y, lineColor, idx <= targetIdx ? 0.9 : 0.35);
       }
 
-      const ringColor = isActive ? GOLD_BRIGHT : (isDone ? GOLD : CHART_LINE);
-      const fillAlpha = isLocked ? 0.15 : 0.35;
-      const circle = this.add.circle(x, y, 18, isActive ? 0x3a2a05 : CARD_BG, fillAlpha)
+      if (isActive) {
+        const halo = this.add.circle(x, y, 24, COLORS.gold, 0.18);
+        this.tweens.add({ targets: halo, scale: { from: 1, to: 1.4 }, alpha: { from: 0.22, to: 0 }, duration: 1100, repeat: -1 });
+      }
+
+      const ringColor = isActive ? COLORS.gold : (isDone ? COLORS.teal : COLORS.tealDim);
+      const fillAlpha = isLocked ? 0.15 : 0.9;
+      const circle = this.add.circle(x, y, 18, isActive ? 0x3a2a05 : COLORS.cardBg, fillAlpha)
         .setStrokeStyle(2, ringColor);
       const iconTxt = this.add.text(x, y, isLocked ? '🔒' : cat.icon, {
         fontSize: isLocked ? '13px' : '16px'
       }).setOrigin(0.5);
       if (isLocked) { circle.setAlpha(0.6); iconTxt.setAlpha(0.6); }
+      if (isDone && !isActive) {
+        this.add.text(x + 13, y - 13, '🚩', { fontSize: '11px' }).setOrigin(0.5);
+      }
 
       this.add.text(x, y + 24, cat.title, {
-        fontFamily: 'Cinzel', fontSize: '7px', color: isLocked ? '#3a5f78' : '#6fa8c9', align: 'center',
+        fontFamily: 'Cinzel', fontSize: '7px', color: isLocked ? '#2f4a5e' : '#7fe9de', align: 'center',
         wordWrap: { width: step - 4 }
       }).setOrigin(0.5, 0);
 
@@ -218,52 +206,50 @@ export default class HomeScene extends Phaser.Scene {
 
   buildSecondaryArea(width, height) {
     const panelY = 318;
-    this.add.line(0, 0, 0, panelY, width, panelY, CHART_LINE, 0.6).setOrigin(0);
+    this.add.line(0, 0, 0, panelY, width, panelY, COLORS.teal, 0.25).setOrigin(0);
 
     // ---- Nhiệm Vụ Ngày ----
     const q = this.save.dailyQuest;
     this.add.text(16, panelY + 10, 'NHIỆM VỤ NGÀY', {
-      fontFamily: 'Cinzel', fontSize: '9px', color: '#ffd700'
+      fontFamily: 'Cinzel', fontSize: '9px', color: '#f3c64f'
     }).setOrigin(0, 0);
     this.questLine = this.add.text(16, panelY + 26, this.questLineText(q), {
       fontFamily: 'Crimson Pro', fontSize: '11px', color: '#f4e8cf', wordWrap: { width: width - 32 }
     }).setOrigin(0, 0);
 
     const canClaim = q.newClearsToday >= q.target && !q.claimed;
-    this.claimBtn = this.add.text(width - 16, panelY + 26, canClaim ? 'Nhận +50 Xu' : (q.claimed ? 'Đã Nhận' : 'Chưa Đủ'), {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold',
-      color: canClaim ? '#2b1e16' : '#6fa8c9',
-      backgroundColor: canClaim ? '#ffd700' : '#122536',
-      padding: { x: 8, y: 4 }
-    }).setOrigin(1, 0).setInteractive({ useHandCursor: canClaim });
-    this.claimBtn.on('pointerdown', () => this.claimQuest(width, panelY));
+    this.claimBtn = makeButton(this, width - 16, panelY + 26, canClaim ? 'Nhận +50 Xu' : (q.claimed ? 'Đã Nhận' : 'Chưa Đủ'), {
+      variant: canClaim ? 'gold' : 'ink', fontSize: '9px', originX: 1,
+      onClick: () => this.claimQuest(width)
+    });
+    if (!canClaim) this.claimBtn.disableInteractive();
 
     // ---- Bổ Trợ (Buffs) — xem nhanh, dùng thật trong màn chơi ----
     const buffY = panelY + 58;
     this.add.text(16, buffY, 'BỔ TRỢ', {
-      fontFamily: 'Cinzel', fontSize: '9px', color: '#ffd700'
+      fontFamily: 'Cinzel', fontSize: '9px', color: '#f3c64f'
     }).setOrigin(0, 0);
     const chipW = (width - 32) / BUFF_ICONS.length;
     BUFF_ICONS.forEach((b, i) => {
       const x = 16 + chipW * i + chipW / 2;
       const y = buffY + 30;
-      const chip = this.add.rectangle(x, y, chipW - 6, 44, CARD_BG, 0.7).setStrokeStyle(1, CHART_LINE)
-        .setInteractive({ useHandCursor: true });
+      const g = this.add.graphics();
+      g.fillStyle(COLORS.cardBg, 0.9).fillRoundedRect(x - chipW / 2 + 3, y - 22, chipW - 6, 44, 8);
+      g.lineStyle(1.5, COLORS.teal, 0.7).strokeRoundedRect(x - chipW / 2 + 3, y - 22, chipW - 6, 44, 8);
+      const hit = this.add.rectangle(x, y, chipW - 6, 44, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
       this.add.text(x, y - 8, b.icon, { fontSize: '16px' }).setOrigin(0.5);
-      this.add.text(x, y + 12, b.name, { fontFamily: 'Cinzel', fontSize: '7px', color: '#6fa8c9' }).setOrigin(0.5);
-      chip.on('pointerdown', () => this.showToast(width, `${b.icon} Dùng "${b.name}" trực tiếp trong màn chơi bằng thanh Bổ Trợ ở đáy bàn cờ.`));
+      this.add.text(x, y + 12, b.name, { fontFamily: 'Cinzel', fontSize: '7px', color: '#7fe9de' }).setOrigin(0.5);
+      hit.on('pointerdown', () => this.showToast(width, `${b.icon} Dùng "${b.name}" trực tiếp trong màn chơi bằng thanh Bổ Trợ ở đáy bàn cờ.`));
     });
 
     // ---- Quảng cáo thưởng ----
-    const adY = buffY + 62;
-    const adBtn = this.add.text(width / 2, adY, '🎬 Xem QC Thưởng (+30 Xu)', {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: 'bold', color: '#eafff1',
-      backgroundColor: '#2a7b4c', padding: { x: 14, y: 8 }
-    }).setOrigin(0.5, 0).setInteractive({ useHandCursor: true });
-    adBtn.on('pointerdown', () => this.watchAd());
+    const adY = buffY + 68;
+    makeButton(this, width / 2, adY, '🎬 Xem QC Thưởng (+30 Xu)', {
+      variant: 'teal', fontSize: '11px', onClick: () => this.watchAd()
+    });
 
     this.add.text(width / 2, height - 14, 'Chạm 1 Đảo để xem danh sách màn chơi', {
-      fontFamily: 'Cinzel', fontSize: '9px', color: '#3a5f78'
+      fontFamily: 'Cinzel', fontSize: '9px', color: '#2f4a5e'
     }).setOrigin(0.5, 1);
   }
 
@@ -271,7 +257,7 @@ export default class HomeScene extends Phaser.Scene {
     return `Clear ${Math.min(q.newClearsToday, q.target)}/${q.target} màn MỚI hôm nay`;
   }
 
-  claimQuest(width, panelY) {
+  claimQuest(width) {
     const granted = claimDailyQuestReward(this.save);
     if (!granted) {
       playSound('error', this.save.soundMuted);
@@ -279,8 +265,8 @@ export default class HomeScene extends Phaser.Scene {
     }
     saveState(this.save);
     playSound('win', this.save.soundMuted);
-    this.coinText.setText(`🟡 ${this.save.coins}`);
-    this.claimBtn.setText('Đã Nhận').setColor('#6fa8c9').setBackgroundColor('#122536').disableInteractive();
+    this.coinChip.setValueText(`🟡 ${this.save.coins}`);
+    this.claimBtn.disableInteractive();
     this.showToast(width, '🟡 Đã nhận +50 Xu từ Nhiệm Vụ Ngày!');
   }
 
@@ -290,7 +276,7 @@ export default class HomeScene extends Phaser.Scene {
     this.time.delayedCall(700, () => {
       this.save.coins += 30;
       saveState(this.save);
-      this.coinText.setText(`🟡 ${this.save.coins}`);
+      this.coinChip.setValueText(`🟡 ${this.save.coins}`);
       playSound('lock', this.save.soundMuted);
       this.showToast(this.scale.width, '🟡 Bạn nhận được +30 Xu!');
     });
@@ -299,7 +285,7 @@ export default class HomeScene extends Phaser.Scene {
   showToast(width, text) {
     if (this.toastText) this.toastText.destroy();
     this.toastText = this.add.text(width / 2, 68, text, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#ffd700',
+      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
       backgroundColor: '#2b1e16', padding: { x: 10, y: 6 }, align: 'center',
       wordWrap: { width: width - 60 }
     }).setOrigin(0.5, 0).setDepth(50);
