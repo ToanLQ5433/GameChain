@@ -355,10 +355,18 @@ export default class GameScene extends Phaser.Scene {
         const colorGate = e.colorGates.find(g => g.r === r && g.c === c);
         if (prism || colorGate) {
           const tint = COLOR_HEX[(prism || colorGate).color] || 0xffffff;
+          // Cổng Màu chỉ là 1 ô mang màu quy định — bản thân màu đã nói lên
+          // đủ ý nghĩa (đi qua đúng màu mới lọt), không cần thêm icon nào
+          // (icon 🚧 trước đây gây hiểu lầm giống biển "khoá/chặn"). Chỉ Lăng
+          // Kính (🎨, ô chủ động đổi màu dây) mới cần icon vì nó là 1 HÀNH
+          // ĐỘNG, còn Cổng là ĐIỀU KIỆN thụ động.
+          tiles.fillStyle(tint, colorGate ? 0.22 : 0).fillRoundedRect(x + 2, y + 2, cs - 4, cs - 4, radius);
           tiles.lineStyle(2.5, tint, 1).strokeRoundedRect(x + 2, y + 2, cs - 4, cs - 4, radius);
-          this.boardStaticContainer.add(
-            this.add.text(x + cs / 2, y + cs / 2, prism ? '🎨' : '🚧', { fontSize: Math.round(cs * 0.4) + 'px' }).setOrigin(0.5)
-          );
+          if (prism) {
+            this.boardStaticContainer.add(
+              this.add.text(x + cs / 2, y + cs / 2, '🎨', { fontSize: Math.round(cs * 0.4) + 'px' }).setOrigin(0.5)
+            );
+          }
         }
 
         Object.values(e.waypoints).forEach(list => {
@@ -408,7 +416,8 @@ export default class GameScene extends Phaser.Scene {
     e.switches.forEach(sw => {
       const { x, y } = this.cellToPixel(sw.r, sw.c);
       const dot = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.22, TILE.switchDot).setStrokeStyle(2, COLORS.goldDim);
-      const icon = this.add.text(x + cs / 2, y + cs / 2, sw.latch ? '📌' : '🔘', { fontSize: Math.round(cs * 0.3) + 'px' }).setOrigin(0.5);
+      // 🔌 = công tắc thường, 📌 = biến thể Latch (giữ mở vĩnh viễn sau 1 lần) — đúng cặp icon tham khảo.
+      const icon = this.add.text(x + cs / 2, y + cs / 2, sw.latch ? '📌' : '🔌', { fontSize: Math.round(cs * 0.3) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([dot, icon]);
 
       const { x: gx, y: gy } = this.cellToPixel(sw.gateR, sw.gateC);

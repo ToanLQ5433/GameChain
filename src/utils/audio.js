@@ -44,7 +44,10 @@ export function playSound(type, muted) {
       setTimeout(() => tone(55, 'square', 0.3, 0.18), 40);
       setTimeout(() => tone(38, 'sawtooth', 0.35, 0.14), 90);
       break;
-    case 'error': tone(150, 'sawtooth', 0.15, 0.1); break;
+    // 'error' phát ra liên tục mỗi khi ngón tay lướt qua ô không hợp lệ TRONG
+    // LÚC KÉO (rất thường xuyên) — sóng sawtooth gắt trước đây dồn dập thành
+    // tiếng "rè" khó chịu. Đổi sang tiếng "tách" mềm, ngắn, nhỏ hơn nhiều.
+    case 'error': tone(210, 'sine', 0.04, 0.035); break;
     case 'win':
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
         setTimeout(() => tone(f, 'sine', 0.3, 0.12), i * 90);
