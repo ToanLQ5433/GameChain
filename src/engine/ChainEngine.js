@@ -9,7 +9,14 @@
 
 export class ChainEngine {
   constructor(levelDef) {
-    this.size = levelDef.size;
+    // Bàn cờ không bắt buộc là hình vuông: `rows`/`cols` cho khung chữ nhật,
+    // và `shape` (mảng chuỗi '0'/'1') để khoét thành hình bất kỳ (trái tim,
+    // ngôi sao, chữ thập...) bên trong khung đó. `size` vẫn được nhận cho
+    // tương thích ngược (khung vuông cũ, không shape).
+    this.rows = levelDef.rows || levelDef.size;
+    this.cols = levelDef.cols || levelDef.size;
+    this.size = Math.max(this.rows, this.cols); // dùng cho code cũ còn tham chiếu .size
+    this.shape = levelDef.shape || null;
     this.rocks = (levelDef.rocks || []).map(r => ({ ...r }));
     this.walls = levelDef.walls || [];
     this.pushRocks = (levelDef.pushRocks || []).map(r => ({ ...r }));
@@ -45,7 +52,14 @@ export class ChainEngine {
   getChain(id) { return this.chains[id]; }
   getAllChains() { return Object.values(this.chains); }
   isWon() { return this.getAllChains().every(c => c.locked); }
-  inBounds(r, c) { return r >= 0 && r < this.size && c >= 0 && c < this.size; }
+  inBounds(r, c) { return r >= 0 && r < this.rows && c >= 0 && c < this.cols; }
+  isVoid(r, c) {
+    if (!this.shape) return false;
+    if (r < 0 || r >= this.shape.length) return true;
+    const row = this.shape[r];
+    if (c < 0 || c >= row.length) return true;
+    return row[c] === '0';
+  }
   isRock(r, c) { return this.rocks.some(p => p.r === r && p.c === c); }
   isPushRock(r, c) { return this.pushRocks.some(p => p.r === r && p.c === c); }
   isBombAlive(r, c) { return this.bombs.some(b => b.r === r && b.c === c && !b.destroyed); }
@@ -83,6 +97,7 @@ export class ChainEngine {
   // bomb được xử lý riêng ở step() vì chạm bomb là LOSE chứ không đơn thuần BLOCKED).
   isOccupied(r, c, activeChainId) {
     if (!this.inBounds(r, c)) return true;
+    if (this.isVoid(r, c)) return true;
     if (this.isRock(r, c)) return true;
     if (this.isPushRock(r, c)) return true;
     if (this.isGateCell(r, c) && !this.isGateOpenAt(r, c)) return true;

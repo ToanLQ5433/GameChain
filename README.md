@@ -89,6 +89,17 @@ Các cơ chế (Mũi Tên, Waypoint, Công Tắc, Bom...) được gắn **lên 
 đi đã biết đó nên luôn nhất quán với lời giải. Bom/Push Rock dùng kỹ thuật
 ép đường đi xuất phát đúng 2 ô thẳng hàng với hố (bom) để hướng đẩy luôn khớp.
 
+**Bàn cờ không bắt buộc hình vuông**: mỗi màn có `rows`/`cols` riêng (nhiều
+tỉ lệ khung khác nhau, VD 4x7, 5x6...), và khoảng 1/4 số màn còn dùng thêm
+`shape` — mặt nạ `'0'/'1'` khoét bàn cờ thành trái tim, ngôi sao, kim cương,
+chữ thập, vòng nhẫn, chữ L, chữ T... (`ChainEngine.isVoid()` ẩn hẳn các ô
+`'0'`). Không có 2 lớp đa dạng này, DFS xác định sẽ luôn tạo đúng 1 kiểu
+đường "rắn bò" duy nhất cho mỗi kích thước — các màn cùng độ khó trông như
+chỉ xoay/lật lại cùng 1 hình vuông (lỗi đã gặp và sửa qua 2 lần góp ý).
+Mỗi màn còn dùng 1 seed riêng (`mulberry32`, xáo trộn điểm xuất phát + phá
+hoà Warnsdorff + vị trí chướng ngại + cách chia độ dài xích) và được đối
+chiếu chữ ký bàn cờ với mọi màn khác cùng thể loại — trùng thì tự sinh lại.
+
 Chạy lại sau khi sửa hàm sinh:
 
 ```bash
@@ -101,12 +112,15 @@ Script tự kiểm tra toàn bộ 210 màn qua `ChainEngine` thật ngay trong N
 
 ## Kiểm tra tự động qua trình duyệt (QA script)
 
-`scripts/verify-levels.mjs` phát lại lời giải tay cho một số level mẫu qua
+`scripts/verify-levels.mjs` phát lại **trường `solution` có sẵn trong từng
+màn** (không hardcode toạ độ tay — sẽ lỗi thời ngay khi sinh lại level) qua
 đúng `ChainEngine` thật chạy trong trình duyệt (Playwright), xác nhận
-`isWon() === true` và không phát sinh lỗi console — dùng để kiểm tra thêm ở
-tầng UI/Phaser thật, bổ sung cho việc tự kiểm tra bằng Node ở trên. Script
-dùng Playwright nên cần cài thêm (không có trong `devDependencies` vì không
-nằm trong bundle build):
+`isWon() === true` và không phát sinh lỗi console. Mặc định chỉ chạy mẫu
+màn đầu/giữa/cuối mỗi thể loại (đủ để bắt lỗi tích hợp UI/Phaser thật); đặt
+`SAMPLE=all` để chạy hết 210 màn qua trình duyệt (chậm hơn nhiều so với kiểm
+tra bằng Node thuần trong `gen-levels.mjs` ở trên — dùng khi cần chắc chắn
+tuyệt đối ở tầng Phaser thật). Script dùng Playwright nên cần cài thêm
+(không có trong `devDependencies` vì không nằm trong bundle build):
 
 ```bash
 npm i -D playwright

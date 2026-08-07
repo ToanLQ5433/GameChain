@@ -1,39 +1,32 @@
-// QA script: phát lại lời giải tay đã thiết kế cho từng level qua ChainEngine
-// THẬT (chạy trong trình duyệt qua Playwright), xác nhận isWon() === true và
-// không có lỗi console nào phát sinh. Không nằm trong bundle build.
+// QA script: phát lại lời giải (trường `solution` sinh kèm mỗi màn trong
+// src/data/levels.js) qua ChainEngine THẬT chạy trong trình duyệt, xác nhận
+// isWon() === true và không có lỗi console nào phát sinh. Không nằm trong
+// bundle build. Đây là lớp kiểm tra bổ sung ở tầng UI/Phaser thật — kiểm tra
+// chính (toàn bộ 210 màn, không cần trình duyệt) nằm ngay trong
+// scripts/gen-levels.mjs mỗi khi sinh lại level.
 import { chromium } from 'playwright';
+import { CATEGORIES } from '../src/data/levels.js';
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173';
+// Mặc định chỉ kiểm tra 1 màn đầu + 1 màn cuối mỗi thể loại (đủ để phát hiện
+// lỗi tích hợp UI/Phaser thật mà không phải chạy hết 210 màn qua trình duyệt
+// — việc đó đã làm nhanh hơn nhiều lần bằng Node thuần trong gen-levels.mjs).
+// Đặt SAMPLE=all để chạy toàn bộ.
+const SAMPLE = process.env.SAMPLE || 'edges';
 
-// [categoryId, levelIndex, { chainId: [[r,c], ...] bao gồm cả ô anchor gốc }]
-const SOLUTIONS = [
-  ['vat-can', 0, { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1]], B: [[3,3],[3,2],[2,2],[2,3],[1,3],[0,3],[0,2],[0,1]] }],
-  ['vat-can', 1, { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[1,0]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3]] }],
-  ['vat-can', 2, { A: [[0,0],[1,0],[1,1],[0,1],[0,2],[0,3],[1,3],[2,3],[2,2]], B: [[3,3],[3,2],[3,1],[3,0],[2,0]] }],
-
-  ['dinh-huong-mau', 0, { A: [[0,0],[1,0],[1,1],[0,1],[0,2],[1,2]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3],[1,3],[0,3]] }],
-  ['dinh-huong-mau', 1, { A: [[0,0],[1,0],[1,1],[2,1],[2,0],[3,0],[3,1],[3,2]], B: [[3,3],[2,3],[2,2],[1,2],[1,3],[0,3],[0,2],[0,1]] }],
-  ['dinh-huong-mau', 2, { A: [[0,0],[1,0],[1,1],[2,1],[2,0],[3,0],[3,1],[3,2]], B: [[3,3],[2,3],[2,2],[1,2],[1,3],[0,3],[0,2],[0,1]] }],
-
-  ['mat-ma-so', 0, { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[2,3],[3,3],[3,2],[3,1],[3,0]] }],
-  ['mat-ma-so', 1, { A: [[2,2],[3,2],[4,2],[4,3],[4,4],[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[0,1],[0,0],[1,0],[2,0],[3,0],[4,0],[4,1],[3,1],[2,1],[1,1],[1,2],[1,3],[2,3],[3,3]] }],
-  ['mat-ma-so', 2, { A: [[2,2],[2,1],[2,0],[3,0],[4,0],[5,0],[5,1],[5,2],[5,3],[5,4],[5,5],[4,5],[3,5],[2,5],[1,5],[0,5],[0,4],[0,3],[0,2],[0,1],[0,0],[1,0],[1,1],[1,2],[1,3],[1,4],[2,4],[3,4],[4,4],[4,3],[4,2],[4,1],[3,1],[3,2],[3,3]] }],
-
-  ['cong-tac', 0, { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[2,2]], B: [[3,0],[2,0],[1,0],[1,1],[2,1],[3,1],[3,2],[3,3],[2,3]] }],
-  ['cong-tac', 1, { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]], B: [[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]] }],
-  ['cong-tac', 2, { A: [[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]], B: [[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2],[3,2]] }],
-
-  ['bom-tinh', 0, { A: [[0,0],[1,0],[1,1],[1,2],[1,3],[0,3],[0,2],[0,1]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[2,1],[2,2],[2,3]] }],
-  ['bom-tinh', 1, { A: [[0,0],[0,1],[0,2],[1,2],[1,1],[1,0],[2,0],[3,0]], B: [[3,3],[3,2],[3,1],[2,1],[2,2],[2,3],[1,3],[0,3]] }],
-  ['bom-tinh', 2, { A: [[0,0],[1,0],[1,1],[1,2],[2,2],[2,1],[2,0],[3,0]], B: [[3,3],[2,3],[1,3],[0,3],[0,2]] }],
-
-  ['tong-hop', 0, { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[2,1],[2,2]], B: [[3,3],[2,3]] }],
-  ['tong-hop', 1, { A: [[0,0],[0,1],[0,2],[1,2],[2,2],[2,1],[2,0],[3,0]] }],
-  ['tong-hop', 2, { A: [[0,0],[0,1],[0,2],[0,3],[1,3],[1,2],[1,1],[2,1],[2,2],[2,3]], B: [[3,3],[3,2],[3,1],[3,0],[2,0],[1,0]] }]
-];
+function pickSamples() {
+  const out = [];
+  for (const cat of CATEGORIES) {
+    const idxs = SAMPLE === 'all'
+      ? cat.levels.map((_, i) => i)
+      : [...new Set([0, Math.floor(cat.levels.length / 2), cat.levels.length - 1])];
+    for (const i of idxs) out.push([cat.id, i, cat.levels[i].solution]);
+  }
+  return out;
+}
 
 async function run() {
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--no-sandbox'] });
+  const browser = await chromium.launch({ args: ['--no-sandbox'] });
   const page = await browser.newPage();
   const consoleErrors = [];
   page.on('console', msg => { if (msg.type() === 'error') consoleErrors.push(msg.text()); });
@@ -42,8 +35,9 @@ async function run() {
   await page.goto(BASE_URL, { waitUntil: 'load' });
   await page.waitForTimeout(400);
 
+  const samples = pickSamples();
   const results = [];
-  for (const [categoryId, levelIndex, chainPaths] of SOLUTIONS) {
+  for (const [categoryId, levelIndex, chainPaths] of samples) {
     await page.evaluate(({ categoryId, levelIndex }) => {
       window.game.scene.start('Game', { categoryId, levelIndex });
     }, { categoryId, levelIndex });
@@ -94,7 +88,7 @@ async function run() {
     console.log('\nConsole errors captured:');
     consoleErrors.forEach(e => console.log(' -', e));
   }
-  console.log(allOk ? '\nALL LEVELS SOLVABLE, NO CONSOLE ERRORS' : '\nSOME CHECKS FAILED');
+  console.log(allOk ? '\nALL SAMPLED LEVELS SOLVABLE, NO CONSOLE ERRORS' : '\nSOME CHECKS FAILED');
   process.exit(allOk ? 0 : 1);
 }
 

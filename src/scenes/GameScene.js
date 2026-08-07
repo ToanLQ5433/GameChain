@@ -274,15 +274,15 @@ export default class GameScene extends Phaser.Scene {
     const topOffset = 128;
     const bottomOffset = 132;
     const marginX = 30;
-    const size = this.engine.size;
+    const { rows, cols } = this.engine;
 
     const areaW = width - marginX * 2;
     const areaH = height - topOffset - bottomOffset;
-    const cell = Math.floor(Math.min(areaW / size, areaH / size));
+    const cell = Math.floor(Math.min(areaW / cols, areaH / rows));
 
     this.cellSize = cell;
-    this.boardOriginX = Math.round((width - cell * size) / 2);
-    this.boardOriginY = Math.round(topOffset + (areaH - cell * size) / 2);
+    this.boardOriginX = Math.round((width - cell * cols) / 2);
+    this.boardOriginY = Math.round(topOffset + (areaH - cell * rows) / 2);
   }
 
   cellToPixel(r, c) {
@@ -305,7 +305,7 @@ export default class GameScene extends Phaser.Scene {
   drawBoardFrame() {
     this.boardFrameContainer.removeAll(true);
     const pad = Math.max(10, Math.round(this.cellSize * 0.18));
-    const boardW = this.cellSize * this.engine.size, boardH = boardW;
+    const boardW = this.cellSize * this.engine.cols, boardH = this.cellSize * this.engine.rows;
     const frame = drawPanel(this, this.boardOriginX - pad, this.boardOriginY - pad, boardW + pad * 2, boardH + pad * 2, {
       radius: 16, fill: COLORS.wood, border: COLORS.gold, borderWidth: 3
     });
@@ -323,8 +323,9 @@ export default class GameScene extends Phaser.Scene {
     const tiles = this.add.graphics();
     this.boardStaticContainer.add(tiles);
 
-    for (let r = 0; r < e.size; r++) {
-      for (let c = 0; c < e.size; c++) {
+    for (let r = 0; r < e.rows; r++) {
+      for (let c = 0; c < e.cols; c++) {
+        if (e.isVoid(r, c)) continue; // Ẩn hẳn ô ngoài hình dạng bàn cờ (trái tim, sao...)
         const { x, y } = this.cellToPixel(r, c);
         const isRock = e.isRock(r, c);
         const fill = isRock ? TILE.rock : TILE.cellBg;

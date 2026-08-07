@@ -1,20 +1,22 @@
 // Generator sinh 30 màn/thể loại (7 thể loại = 210 màn), đảm bảo BẰNG THUẬT
 // TOÁN (không phải dò tay) rằng mỗi màn phủ kín 100% ô khả dụng: sinh 1 đường
-// đi Hamilton duy nhất qua toàn bộ ô trống của bàn cờ, rồi CẮT đường đó thành
-// N đoạn liên tiếp cho N xích — vì đường Hamilton đi qua mỗi ô đúng 1 lần,
-// việc cắt nó thành các đoạn liên tiếp tự động đảm bảo N xích phủ kín toàn bộ
-// ô, không chồng lấn, không dư ô — và bản thân đường đi CHÍNH LÀ lời giải nên
-// luôn giải được. Các cơ chế (mũi tên, waypoint, công tắc, bom...) được gắn
-// TRÊN đường đi đã biết, nên tự động nhất quán với lời giải.
+// đi Hamilton duy nhất qua toàn bộ ô khả dụng của bàn cờ, rồi CẮT đường đó
+// thành N đoạn liên tiếp cho N xích — vì đường Hamilton đi qua mỗi ô đúng 1
+// lần, việc cắt nó tự động đảm bảo N xích phủ kín toàn bộ, không chồng lấn,
+// không dư ô — và bản thân đường đi CHÍNH LÀ lời giải nên luôn giải được. Cơ
+// chế (mũi tên, waypoint, công tắc, bom...) được gắn TRÊN đường đã biết.
 //
-// MỖI MÀN dùng 1 seed RIÊNG (theo categoryId + index + số lần thử) để chọn
-// điểm xuất phát, phá vỡ hoà tại các bước Warnsdorff, vị trí chướng ngại vật
-// và cách chia độ dài xích — nếu không có yếu tố ngẫu nhiên này, DFS xác định
-// (deterministic) sẽ luôn trả về CÙNG MỘT đường đi cho cùng (size, chains),
-// khiến rất nhiều màn trong cùng 1 mốc độ khó trông giống hệt nhau (lỗi đã
-// gặp ở bản sinh đầu tiên — VD Bom Tĩnh chỉ có 2/30 bàn cờ thật sự khác nhau).
-// Sau khi sinh xong, script còn ĐỐI CHIẾU CHỮ KÝ toàn bộ màn trong cùng 1
-// thể loại và sinh lại (đổi seed) bất kỳ màn nào trùng với màn khác.
+// Bàn cờ KHÔNG bắt buộc là hình vuông: mỗi màn có `rows`/`cols` riêng (nhiều
+// tỉ lệ khung khác nhau) và một phần dùng thêm `shape` (mặt nạ '0'/'1') để
+// khoét thành trái tim, ngôi sao, kim cương, chữ thập, vòng nhẫn, chữ L, chữ
+// T... — nếu không có bước này, mọi màn cùng kích thước chỉ là CÙNG 1 hình
+// vuông được xoay/lật khác góc xuất phát, chơi cảm giác giống hệt nhau (lỗi
+// người dùng phản ánh ở bản trước).
+//
+// Mỗi màn còn dùng 1 seed RIÊNG để xáo trộn điểm xuất phát, phá hoà giữa các
+// bước Warnsdorff, chọn vị trí chướng ngại và cách chia độ dài xích. Sau khi
+// sinh xong, script đối chiếu CHỮ KÝ toàn bộ màn trong cùng thể loại và sinh
+// lại (đổi seed) bất kỳ màn nào trùng với màn khác.
 //
 // Chạy: node scripts/gen-levels.mjs (ghi thẳng đè lên src/data/levels.js).
 
@@ -30,8 +32,7 @@ const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
 const DIR_NAME = (dr, dc) => (dr === -1 ? 'UP' : dr === 1 ? 'DOWN' : dc === -1 ? 'LEFT' : 'RIGHT');
 const key = (r, c) => r + '_' + c;
 
-// ---------------- RNG có seed (mulberry32) — để tái lập được nhưng vẫn khác
-// nhau giữa các màn ----------------
+// ---------------- RNG có seed (mulberry32) ----------------
 
 function hashSeed(str) {
   let h = 1779033703 ^ str.length;
@@ -41,7 +42,6 @@ function hashSeed(str) {
   }
   return h >>> 0;
 }
-
 function mulberry32(seed) {
   let a = seed;
   return function () {
@@ -51,7 +51,6 @@ function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-
 function shuffle(arr, rng) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -62,10 +61,132 @@ function shuffle(arr, rng) {
 }
 function pick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
 
+// ---------------- Thư viện hình dạng bàn cờ (mặt nạ '0'/'1') ----------------
+// '1' = ô dùng được, '0' = ô khoét bỏ (void, ẩn hẳn khỏi bàn cờ).
+
+function maskFromRows(rows) { return rows; }
+
+const HEART_5 = maskFromRows(['01100', '11110', '11111', '01110', '00100']);
+const STAR_5 = maskFromRows(['00100', '11111', '01110', '11011', '10001']);
+
+function shapeDiamond(n) {
+  const mid = (n - 1) / 2;
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    for (let c = 0; c < n; c++) row += (Math.abs(r - mid) + Math.abs(c - mid) <= mid) ? '1' : '0';
+    rows.push(row);
+  }
+  return rows;
+}
+function shapeCross(n) {
+  const armW = Math.max(2, Math.floor(n / 3));
+  const lo = Math.floor((n - armW) / 2), hi = lo + armW - 1;
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    for (let c = 0; c < n; c++) row += ((c >= lo && c <= hi) || (r >= lo && r <= hi)) ? '1' : '0';
+    rows.push(row);
+  }
+  return rows;
+}
+function shapeRing(n) {
+  const hs = Math.max(1, n - 4);
+  const lo = Math.floor((n - hs) / 2), hi = lo + hs - 1;
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    for (let c = 0; c < n; c++) row += (r >= lo && r <= hi && c >= lo && c <= hi) ? '0' : '1';
+    rows.push(row);
+  }
+  return rows;
+}
+function shapeL(n) {
+  const arm = Math.max(2, Math.floor(n / 2));
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    for (let c = 0; c < n; c++) row += (c < arm || r >= n - arm) ? '1' : '0';
+    rows.push(row);
+  }
+  return rows;
+}
+function shapeT(n) {
+  const armW = Math.max(2, Math.floor(n / 3));
+  const lo = Math.floor((n - armW) / 2), hi = lo + armW - 1;
+  const topH = Math.max(2, Math.floor(n / 3));
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    for (let c = 0; c < n; c++) row += (r < topH || (c >= lo && c <= hi)) ? '1' : '0';
+    rows.push(row);
+  }
+  return rows;
+}
+function shapeZigzag(n) {
+  const bandW = Math.max(2, Math.floor(n / 2));
+  const rows = [];
+  for (let r = 0; r < n; r++) {
+    let row = '';
+    const lo = r < n / 2 ? 0 : n - bandW;
+    const hi = r < n / 2 ? bandW - 1 : n - 1;
+    for (let c = 0; c < n; c++) row += (c >= lo && c <= hi) ? '1' : '0';
+    rows.push(row);
+  }
+  return rows;
+}
+
+const SHAPE_LIB = [
+  { name: 'heart', n: 5, mask: HEART_5 },
+  { name: 'star', n: 5, mask: STAR_5 },
+  { name: 'diamond6', n: 6, mask: shapeDiamond(6) },
+  { name: 'diamond7', n: 7, mask: shapeDiamond(7) },
+  { name: 'cross7', n: 7, mask: shapeCross(7) },
+  { name: 'ring7', n: 7, mask: shapeRing(7) },
+  { name: 'L6', n: 6, mask: shapeL(6) },
+  { name: 'T7', n: 7, mask: shapeT(7) },
+  { name: 'zigzag6', n: 6, mask: shapeZigzag(6) }
+];
+
+function maskToHoleSet(mask) {
+  const s = new Set();
+  mask.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === '0') s.add(key(r, c)); });
+  return s;
+}
+function maskCellCount(mask) { return mask.reduce((s, row) => s + [...row].filter(ch => ch === '1').length, 0); }
+function maskFirstUsableCells(mask) {
+  const cells = [];
+  mask.forEach((row, r) => { for (let c = 0; c < row.length; c++) if (row[c] === '1') cells.push([r, c]); });
+  return cells;
+}
+
+// Kế hoạch khung bàn cờ cho 1 màn: luân phiên giữa CHỮ NHẬT (nhiều tỉ lệ
+// khác nhau, không chỉ hình vuông) và HÌNH DẠNG ĐẶC BIỆT (mặt nạ) — nếu chỉ
+// dùng 1 kiểu khung xuyên suốt, các màn cùng "độ khó" sẽ luôn là cùng 1 hình
+// vuông xoay/lật khác góc, cảm giác như nhau dù toạ độ khác nhau.
+function boardPlan(idx, rng, { allowShape = true, minCells = 12, maxCells = 64, minSide = 3 } = {}) {
+  const targetCells = Math.round(minCells + (maxCells - minCells) * Math.min(1, idx / 27));
+  const useShape = allowShape && idx % 4 === 3; // 1 trong 4 màn dùng hình đặc biệt
+  if (useShape) {
+    const candidates = SHAPE_LIB.filter(s => Math.abs(maskCellCount(s.mask) - targetCells) < targetCells * 0.6);
+    const shape = pick(candidates.length ? candidates : SHAPE_LIB, rng);
+    return { rows: shape.n, cols: shape.n, shape: shape.mask, label: shape.name };
+  }
+  // Chữ nhật: chọn (rows, cols) sao cho rows*cols gần targetCells, tỉ lệ dài
+  // rộng đổi ngẫu nhiên (không luôn vuông). `minSide` chặn bàn cờ quá hẹp (VD
+  // 3xN) — với cơ chế Đẩy Đá/Bom, bàn quá hẹp thường không đủ chỗ để đặt cặp
+  // ô thẳng hàng O-N-Bom theo bất kỳ hướng nào, khiến việc kiến tạo thất bại.
+  const aspect = 0.6 + rng() * 0.9; // rows/cols trong khoảng ~[0.6, 1.5]
+  let cols = Math.max(minSide, Math.round(Math.sqrt(targetCells / aspect)));
+  let rows = Math.max(minSide, Math.round(targetCells / cols));
+  cols = Math.min(7, cols); rows = Math.min(7, rows);
+  return { rows, cols, shape: null, label: `${rows}x${cols}` };
+}
+
 // ---------------- Hamiltonian path finder (DFS + Warnsdorff + rng tie-break) --
 
-function findHamPath(size, holeSet, start, forcedPrefix, rng) {
-  const total = size * size - holeSet.size;
+function findHamPath(rows, cols, holeSet, start, forcedPrefix, rng) {
+  const total = rows * cols - holeSet.size;
   const visited = new Set();
   const path = [];
 
@@ -73,7 +194,7 @@ function findHamPath(size, holeSet, start, forcedPrefix, rng) {
     const out = [];
     for (const [dr, dc] of DIRS) {
       const nr = r + dr, nc = c + dc;
-      if (nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+      if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
       const k = key(nr, nc);
       if (holeSet.has(k) || visited.has(k)) continue;
       out.push([nr, nc]);
@@ -82,14 +203,10 @@ function findHamPath(size, holeSet, start, forcedPrefix, rng) {
   }
 
   let steps = 0;
-  const LIMIT = 200000;
+  const LIMIT = 90000;
   function dfs(r, c) {
     if (++steps > LIMIT) return false;
     if (path.length === total) return true;
-    // Warnsdorff (ưu tiên ô ít lựa chọn kế tiếp nhất) + jitter ngẫu nhiên nhỏ
-    // để phá hoà giữa các ô cùng "độ khó" — đây là nguồn đa dạng hoá đường đi
-    // chính, nếu không mọi lần gọi với cùng (size, holeSet, start) sẽ luôn ra
-    // đúng 1 đường y hệt nhau.
     let options = nbrs(r, c).map(([nr, nc]) => [nr, nc, nbrs(nr, nc).length + rng() * 0.9]);
     options.sort((a, b) => a[2] - b[2]);
     for (const [nr, nc] of options) {
@@ -118,21 +235,19 @@ function findHamPath(size, holeSet, start, forcedPrefix, rng) {
   return dfs(lr, lc) ? path : null;
 }
 
-function cornerStarts(size) {
-  return [[0, 0], [0, size - 1], [size - 1, 0], [size - 1, size - 1]];
-}
+function boxCorners(rows, cols) { return [[0, 0], [0, cols - 1], [rows - 1, 0], [rows - 1, cols - 1]]; }
 
-// Tìm 1 đường Hamilton hợp lệ trên lưới size x size trừ các ô hole. Thử các
-// điểm xuất phát theo THỨ TỰ NGẪU NHIÊN (seed riêng/màn) — đây là nguồn đa
-// dạng hoá thứ 2: 2 màn cùng size/hole vẫn ra hình dạng đường đi khác nhau vì
-// xuất phát từ góc khác + hoà bị phá khác nhau ở mỗi bước DFS.
-function generatePath(size, holeSet, forcedPrefix, rng) {
-  const starts = forcedPrefix
-    ? [forcedPrefix[0]]
-    : shuffle([...cornerStarts(size), [Math.floor(size / 2), Math.floor(size / 2)]], rng);
+// Tìm 1 đường Hamilton hợp lệ trên khung rows x cols trừ các ô trong holeSet
+// (chướng ngại + ô ngoài hình dạng). Thử các điểm xuất phát theo THỨ TỰ NGẪU
+// NHIÊN (seed riêng/màn) để 2 màn cùng khung vẫn ra hình dạng đường đi khác.
+function generatePath(rows, cols, holeSet, forcedPrefix, rng) {
+  if (forcedPrefix) return findHamPath(rows, cols, holeSet, forcedPrefix[0], forcedPrefix.slice(1), rng);
+  const allCorners = boxCorners(rows, cols).filter(([r, c]) => !holeSet.has(key(r, c)));
+  const usable = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!holeSet.has(key(r, c))) usable.push([r, c]);
+  const starts = shuffle([...allCorners, ...shuffle(usable, rng).slice(0, 2)], rng);
   for (const start of starts) {
-    const rest = forcedPrefix ? forcedPrefix.slice(1) : null;
-    const p = findHamPath(size, holeSet, start, rest, rng);
+    const p = findHamPath(rows, cols, holeSet, start, null, rng);
     if (p) return p;
   }
   return null;
@@ -142,16 +257,17 @@ function generatePath(size, holeSet, forcedPrefix, rng) {
 
 function cutPath(path, chainCount, rng, minLen = 4) {
   const total = path.length;
+  const safeMin = Math.min(minLen, Math.max(2, Math.floor(total / chainCount / 2)));
   const weights = Array.from({ length: chainCount }, () => 0.6 + rng());
   const wsum = weights.reduce((a, b) => a + b, 0);
-  const lens = weights.map(w => Math.max(minLen, Math.floor((w / wsum) * total)));
+  const lens = weights.map(w => Math.max(safeMin, Math.floor((w / wsum) * total)));
   let diff = total - lens.reduce((a, b) => a + b, 0);
   const order = shuffle([...Array(chainCount).keys()], rng);
   let guard = 0;
   while (diff !== 0 && guard++ < chainCount * 2000) {
     const i = order[guard % chainCount];
     if (diff > 0) { lens[i]++; diff--; }
-    else if (lens[i] > minLen) { lens[i]--; diff++; }
+    else if (lens[i] > safeMin) { lens[i]--; diff++; }
   }
   const segs = [];
   let idx = 0;
@@ -173,61 +289,68 @@ function segsToAnchorsAndSolution(segs) {
   return { anchors, solution };
 }
 
+function baseLevel(plan) {
+  const lvl = { rows: plan.rows, cols: plan.cols };
+  if (plan.shape) lvl.shape = plan.shape;
+  return lvl;
+}
+
 // ---------------- Kiến tạo cặp Push Rock -> Bom/hố (ép hướng đẩy thẳng) -----
 
-// Chọn 1 ô "hole" H nằm sâu trong lưới (không viền) cùng 2 ô O,N thẳng hàng
-// với H sao cho O->N->H thẳng hàng; ép đường Hamilton XUẤT PHÁT đúng tại O rồi
-// bước ngay sang N — nhờ vậy N luôn có "hướng đi vào" đã biết trước, trùng
-// đúng hướng cần đẩy đá vào H.
-function planPushInto(size, rng) {
+function planPushInto(rows, cols, holeSet, rng) {
   const hCells = [];
-  for (let r = 1; r < size - 1; r++) for (let c = 1; c < size - 1; c++) hCells.push([r, c]);
+  for (let r = 1; r < rows - 1; r++) for (let c = 1; c < cols - 1; c++) if (!holeSet.has(key(r, c))) hCells.push([r, c]);
   const plans = [];
   for (const h of hCells) {
     for (const [dr, dc] of DIRS) {
       const n = [h[0] - dr, h[1] - dc];
       const o = [h[0] - 2 * dr, h[1] - 2 * dc];
-      if (o[0] < 0 || o[0] >= size || o[1] < 0 || o[1] >= size) continue;
-      if (n[0] < 0 || n[0] >= size || n[1] < 0 || n[1] >= size) continue;
+      if (o[0] < 0 || o[0] >= rows || o[1] < 0 || o[1] >= cols) continue;
+      if (n[0] < 0 || n[0] >= rows || n[1] < 0 || n[1] >= cols) continue;
+      if (holeSet.has(key(...n)) || holeSet.has(key(...o))) continue;
       plans.push({ h, n, o });
     }
   }
   return shuffle(plans, rng);
 }
 
-function buildWithPushInto(size, chainCount, rng, extraHoles = []) {
-  const plans = planPushInto(size, rng);
+function buildWithPushInto(rows, cols, chainCount, rng) {
+  const plans = planPushInto(rows, cols, new Set(), rng);
   for (const plan of plans) {
-    const holeSet = new Set([key(...plan.h), ...extraHoles.map(([r, c]) => key(r, c))]);
-    const path = generatePath(size, holeSet, [plan.o, plan.n], rng);
+    const holeSet = new Set([key(...plan.h)]);
+    const path = generatePath(rows, cols, holeSet, [plan.o, plan.n], rng);
     if (path) return { path, pushSource: plan.n, holeCell: plan.h };
   }
   return null;
 }
 
-// Thử nhiều phương án (size, số xích) trước khi bỏ cuộc — để KHÔNG BAO GIỜ
-// phải rơi vào cơ chế khác (VD Vật Cản) chỉ vì 1 tổ hợp (size, chains) cụ thể
-// không tìm được đường ép đẩy. Ưu tiên giữ đúng size/chains đề nghị trước,
-// rồi mới nới lỏng dần.
-function buildWithPushIntoRobust(size, chains, rng) {
+// Thử nhiều phương án (rows, cols, số xích) trước khi bỏ cuộc — để KHÔNG BAO
+// GIỜ phải rơi vào cơ chế khác chỉ vì 1 tổ hợp cụ thể không tìm được đường ép
+// đẩy. Ưu tiên giữ đúng kích thước đề nghị trước, rồi mới nới lỏng dần.
+function buildWithPushIntoRobust(rows, cols, chains, rng) {
   const attempts = [
-    [size, chains],
-    [size, Math.max(2, chains - 1)],
-    [size - 1, chains],
-    [size - 1, Math.max(2, chains - 1)],
-    [size + 1, chains]
+    [rows, cols, chains],
+    [rows, cols, Math.max(2, chains - 1)],
+    [rows - 1, cols, chains],
+    [rows, cols - 1, chains],
+    [rows + 1, cols, chains],
+    [rows, cols + 1, chains],
+    [rows + 1, cols + 1, chains],
+    [4, 5, Math.max(2, chains - 1)],
+    [5, 4, Math.max(2, chains - 1)],
+    [4, 4, 2] // phương án cuối cùng luôn khả thi — chỉ 1 hướng đẩy cũng đủ trên 4x4
   ];
-  for (const [s, c] of attempts) {
-    if (s < 4) continue;
-    const built = buildWithPushInto(s, c, rng);
-    if (built) return { ...built, size: s, chains: c };
+  for (const [r, c, ch] of attempts) {
+    if (r < 4 || c < 4) continue;
+    const built = buildWithPushInto(r, c, ch, rng);
+    if (built) return { ...built, rows: r, cols: c, chains: ch };
   }
   return null;
 }
 
-function randomHoles(size, count, rng) {
+function randomHoles(rows, cols, count, rng, exclude = new Set()) {
   const cells = [];
-  for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) cells.push([r, c]);
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!exclude.has(key(r, c))) cells.push([r, c]);
   return shuffle(cells, rng).slice(0, count);
 }
 
@@ -238,21 +361,17 @@ function chainWord(n) { return n === 2 ? 'Song Xích' : n === 3 ? 'Tam Xích' : 
 // ================= 1. NHẬP MÔN (không cơ chế) =================
 
 function genNhapMon(idx, rng) {
-  const plan = [
-    ...Array(6).fill({ size: 3, chains: 2 }),
-    ...Array(6).fill({ size: 4, chains: 2 }),
-    ...Array(6).fill({ size: 4, chains: 3 }),
-    ...Array(6).fill({ size: 5, chains: 3 }),
-    ...Array(4).fill({ size: 5, chains: 4 }),
-    ...Array(2).fill({ size: 6, chains: 4 })
-  ][idx];
-  const { size, chains } = plan;
-  const path = generatePath(size, new Set(), null, rng);
-  const segs = cutPath(path, chains, rng, Math.max(3, Math.floor((size * size) / chains / 2)));
+  const chainsPlan = [2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5][idx];
+  const plan = boardPlan(idx, rng, { minCells: 9, maxCells: 42 });
+  const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+  const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+  if (!path) throw new Error(`genNhapMon(${idx}): không tìm được đường trên khung ${plan.label}`);
+  const segs = cutPath(path, chainsPlan, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
   return {
-    name: `Nhập Môn ${idx + 1}: ${chainWord(chains)} ${size}x${size}`,
-    size, anchors, solution
+    ...baseLevel(plan),
+    name: `Nhập Môn ${idx + 1}: ${chainWord(chainsPlan)} ${plan.label}`,
+    anchors, solution
   };
 }
 
@@ -260,37 +379,42 @@ function genNhapMon(idx, rng) {
 
 function genVatCan(idx, rng) {
   const tier = idx < 8 ? 'rock' : idx < 16 ? 'wall' : idx < 24 ? 'push' : 'mix';
-  const size = idx < 10 ? 4 : idx < 22 ? 5 : 6;
   const chains = idx < 14 ? 2 : 3;
 
   if (tier === 'rock' || (tier === 'mix' && idx % 2 === 0)) {
+    const plan = boardPlan(idx, rng, { allowShape: false, minCells: 14, maxCells: 40 });
     const rockCount = idx < 5 ? 1 : 2;
     for (let attempt = 0; attempt < 40; attempt++) {
-      const holes = randomHoles(size, rockCount, rng);
+      const holes = randomHoles(plan.rows, plan.cols, rockCount, rng);
       const holeSet = new Set(holes.map(([r, c]) => key(r, c)));
-      const path = generatePath(size, holeSet, null, rng);
+      const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
       if (path) {
         const segs = cutPath(path, chains, rng);
         const { anchors, solution } = segsToAnchorsAndSolution(segs);
         return {
+          ...baseLevel(plan),
           name: `Vật Cản ${idx + 1}: ${rockCount > 1 ? 'Nhiều Tảng Đá' : 'Tảng Đá Chặn Đường'}`,
-          size, rocks: holes.map(([r, c]) => ({ r, c })), anchors, solution
+          rocks: holes.map(([r, c]) => ({ r, c })), anchors, solution
         };
       }
     }
   }
 
   if (tier === 'wall' || tier === 'mix') {
-    const path = generatePath(size, new Set(), null, rng);
+    const plan = boardPlan(idx, rng, { minCells: 14, maxCells: 40 });
+    const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+    const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+    if (!path) throw new Error(`genVatCan(${idx}) wall: không tìm được đường trên khung ${plan.label}`);
     const inPath = new Set();
     for (let i = 0; i < path.length - 1; i++) inPath.add(path[i][0] + ',' + path[i][1] + '>' + path[i + 1][0] + ',' + path[i + 1][1]);
     const usedEdge = (r1, c1, r2, c2) => inPath.has(`${r1},${c1}>${r2},${c2}`) || inPath.has(`${r2},${c2}>${r1},${c1}`);
     const candidateEdges = [];
-    for (let r = 0; r < size; r++) {
-      for (let c = 0; c < size; c++) {
+    for (let r = 0; r < plan.rows; r++) {
+      for (let c = 0; c < plan.cols; c++) {
+        if (holeSet.has(key(r, c))) continue;
         for (const [dr, dc] of [[0, 1], [1, 0]]) {
           const r2 = r + dr, c2 = c + dc;
-          if (r2 >= size || c2 >= size) continue;
+          if (r2 >= plan.rows || c2 >= plan.cols || holeSet.has(key(r2, c2))) continue;
           if (!usedEdge(r, c, r2, c2)) candidateEdges.push({ r1: r, c1: c, r2, c2 });
         }
       }
@@ -299,17 +423,19 @@ function genVatCan(idx, rng) {
     const walls = shuffle(candidateEdges, rng).slice(0, wallCount);
     const segs = cutPath(path, chains, rng);
     const { anchors, solution } = segsToAnchorsAndSolution(segs);
-    return { name: `Vật Cản ${idx + 1}: Vách Ngăn Vô Hình`, size, walls, anchors, solution };
+    return { ...baseLevel(plan), name: `Vật Cản ${idx + 1}: Vách Ngăn Vô Hình`, walls, anchors, solution };
   }
 
   // push
-  const built = buildWithPushIntoRobust(size, chains, rng);
+  const rectPlan = boardPlan(idx, rng, { allowShape: false, minCells: 14, maxCells: 36, minSide: 4 });
+  const built = buildWithPushIntoRobust(rectPlan.rows, rectPlan.cols, chains, rng);
   if (built) {
     const segs = cutPath(built.path, built.chains, rng);
     const { anchors, solution } = segsToAnchorsAndSolution(segs);
     return {
+      rows: built.rows, cols: built.cols,
       name: `Vật Cản ${idx + 1}: Đẩy Đá Dọn Đường`,
-      size: built.size, pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }], anchors, solution
+      pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }], anchors, solution
     };
   }
   throw new Error(`genVatCan(${idx}): không tìm được cấu trúc hợp lệ`);
@@ -320,9 +446,11 @@ function genVatCan(idx, rng) {
 const PRISM_COLORS = ['red', 'blue', 'green'];
 
 function genDinhHuong(idx, rng) {
-  const size = idx < 10 ? 4 : idx < 22 ? 5 : 6;
   const chains = idx < 16 ? 2 : 3;
-  const path = generatePath(size, new Set(), null, rng);
+  const plan = boardPlan(idx, rng, { minCells: 14, maxCells: 40 });
+  const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+  const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+  if (!path) throw new Error(`genDinhHuong(${idx}): không tìm được đường trên khung ${plan.label}`);
   const segs = cutPath(path, chains, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
 
@@ -331,8 +459,6 @@ function genDinhHuong(idx, rng) {
   const colorGates = [];
   const color = pick(PRISM_COLORS, rng);
 
-  // Mũi tên: khoá 1 bước bất kỳ trong đoạn đầu của 1 xích theo ĐÚNG hướng
-  // thật của lời giải (luôn nhất quán, không tạo ngã rẽ sai).
   const arrowChainIdx = Math.floor(rng() * segs.length);
   const arrowChain = segs[arrowChainIdx];
   if (arrowChain.length > 2) {
@@ -342,7 +468,6 @@ function genDinhHuong(idx, rng) {
     arrows.push({ r, c, dir: DIR_NAME(nr - r, nc - c) });
   }
 
-  // Lăng Kính + Cổng Màu trên 1 xích khác (hoặc cùng xích nếu chỉ có 1).
   const colorChainIdx = segs.length > 1 ? (arrowChainIdx + 1) % segs.length : 0;
   const colorChain = segs[colorChainIdx];
   if (colorChain.length > 4) {
@@ -357,7 +482,6 @@ function genDinhHuong(idx, rng) {
   }
 
   if (idx >= 20 && segs.length > 2) {
-    // Tier khó: thêm 1 mũi tên nữa trên 1 xích khác.
     const c3idx = (colorChainIdx + 1) % segs.length;
     const c3 = segs[c3idx];
     if (c3.length > 2) {
@@ -368,17 +492,20 @@ function genDinhHuong(idx, rng) {
   }
 
   return {
+    ...baseLevel(plan),
     name: `Định Hướng ${idx + 1}: ${arrows.length && colorGates.length ? 'Mũi Tên + Cổng Màu' : arrows.length ? 'Mũi Tên Ép Lối' : 'Nhuộm Màu Qua Cổng'}`,
-    size, arrows, prisms, colorGates, anchors, solution
+    arrows, prisms, colorGates, anchors, solution
   };
 }
 
 // ================= 4. MẬT MÃ SỐ (Waypoints) =================
 
 function genMatMa(idx, rng) {
-  const size = idx < 8 ? 4 : idx < 18 ? 5 : idx < 26 ? 6 : 7;
   const chains = 1; // Mật Mã Số cổ điển dùng 1 xích dài phủ toàn bàn cờ.
-  const path = generatePath(size, new Set(), null, rng);
+  const plan = boardPlan(idx, rng, { minCells: 14, maxCells: 44 });
+  const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+  const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+  if (!path) throw new Error(`genMatMa(${idx}): không tìm được đường trên khung ${plan.label}`);
   const segs = cutPath(path, chains, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
 
@@ -389,7 +516,7 @@ function genMatMa(idx, rng) {
     const jitter = Math.round((rng() - 0.5) * (chain.length / wpCount) * 0.6);
     wpIdxs.push(Math.max(1, Math.min(chain.length - 1, Math.round((i / wpCount) * (chain.length - 1)) + jitter)));
   }
-  wpIdxs[wpIdxs.length - 1] = chain.length - 1; // mốc cuối PHẢI là ô cuối
+  wpIdxs[wpIdxs.length - 1] = chain.length - 1;
   wpIdxs.sort((a, b) => a - b);
   const seen = new Set();
   const waypoints = { A: [] };
@@ -400,15 +527,17 @@ function genMatMa(idx, rng) {
     waypoints.A.push({ r, c });
   });
 
-  return { name: `Mật Mã ${idx + 1}: ${waypoints.A.length} Mốc Số`, size, waypoints, anchors, solution };
+  return { ...baseLevel(plan), name: `Mật Mã ${idx + 1}: ${waypoints.A.length} Mốc Số`, waypoints, anchors, solution };
 }
 
 // ================= 5. CÔNG TẮC (Switch -> Gate, ±Latch) =================
 
 function genCongTac(idx, rng) {
-  const size = idx < 10 ? 4 : idx < 22 ? 5 : 6;
   const chains = 2;
-  const path = generatePath(size, new Set(), null, rng);
+  const plan = boardPlan(idx, rng, { minCells: 14, maxCells: 40 });
+  const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+  const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+  if (!path) throw new Error(`genCongTac(${idx}): không tìm được đường trên khung ${plan.label}`);
   const segs = cutPath(path, chains, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
 
@@ -425,23 +554,24 @@ function genCongTac(idx, rng) {
   const latch = idx % 3 === 2;
 
   return {
+    ...baseLevel(plan),
     name: `Công Tắc ${idx + 1}: ${latch ? 'Chốt Khoá Vĩnh Viễn' : crossChain ? 'Mở Khoá Chéo Xích' : 'Mở Khoá Cơ Bản'}`,
-    size, switches: [{ r: swR, c: swC, gateR: gR, gateC: gC, latch }], anchors, solution
+    switches: [{ r: swR, c: swC, gateR: gR, gateC: gC, latch }], anchors, solution
   };
 }
 
 // ================= 6. BOM TĨNH (Push Rock phá Bom) =================
 
 function genBomTinh(idx, rng) {
-  const size = idx < 10 ? 4 : idx < 22 ? 5 : 6;
   const chains = idx < 16 ? 2 : 3;
-  const built = buildWithPushIntoRobust(size, chains, rng);
+  const plan = boardPlan(idx, rng, { allowShape: false, minCells: 14, maxCells: 36, minSide: 4 });
+  const built = buildWithPushIntoRobust(plan.rows, plan.cols, chains, rng);
   if (!built) throw new Error(`genBomTinh(${idx}): không tìm được cấu trúc Push+Bomb hợp lệ`);
   const segs = cutPath(built.path, built.chains, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
   return {
+    rows: built.rows, cols: built.cols,
     name: `Bom Tĩnh ${idx + 1}: Phá Bom`,
-    size: built.size,
     pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
     bombs: [{ r: built.holeCell[0], c: built.holeCell[1] }],
     anchors, solution
@@ -451,21 +581,16 @@ function genBomTinh(idx, rng) {
 // ================= 7. TỔNG HỢP (kết hợp 2-3 cơ chế) =================
 
 function genTongHop(idx, rng) {
-  const size = idx < 10 ? 4 : idx < 22 ? 5 : 6;
   const chains = 2;
   const mode = idx % 3;
 
   if (mode === 0) {
-    // Công Tắc + Đẩy Đá: switch mở gate dẫn tới ô có push rock.
-    const built = buildWithPushIntoRobust(size, chains, rng);
+    const plan = boardPlan(idx, rng, { allowShape: false, minCells: 14, maxCells: 36, minSide: 4 });
+    const built = buildWithPushIntoRobust(plan.rows, plan.cols, chains, rng);
     if (built) {
       const segs = cutPath(built.path, built.chains, rng);
       const { anchors, solution } = segsToAnchorsAndSolution(segs);
       const swChain = segs[0];
-      // Cổng KHÔNG được trùng ô Push Rock/Bom: nhánh xử lý Push Rock trong
-      // engine luôn được kiểm tra TRƯỚC nhánh Cổng (xem ChainEngine.step()),
-      // nên đặt Cổng đè lên đúng ô đó sẽ khiến điều kiện Cổng bị bỏ qua hoàn
-      // toàn, vô hiệu hoá cơ chế Công Tắc một cách âm thầm.
       const pushIdx = swChain.findIndex(([r, c]) => r === built.pushSource[0] && c === built.pushSource[1]);
       const swIdx = pushIdx === 1 ? 0 : 1;
       let gateIdx = Math.min(swChain.length - 2, swIdx + 2 + Math.floor(rng() * 2));
@@ -474,8 +599,9 @@ function genTongHop(idx, rng) {
       const [swR, swC] = swChain[swIdx];
       const [gR, gC] = swChain[gateIdx];
       return {
+        rows: built.rows, cols: built.cols,
         name: `Tổng Hợp ${idx + 1}: Công Tắc + Đẩy Đá`,
-        size: built.size, switches: [{ r: swR, c: swC, gateR: gR, gateC: gC }],
+        switches: [{ r: swR, c: swC, gateR: gR, gateC: gC }],
         pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
         anchors, solution
       };
@@ -483,33 +609,34 @@ function genTongHop(idx, rng) {
   }
 
   if (mode === 1) {
-    // Cổng Màu + Mật Mã Số trên 1 xích.
-    const path = generatePath(size, new Set(), null, rng);
-    const segs = cutPath(path, 1, rng);
-    const { anchors, solution } = segsToAnchorsAndSolution(segs);
-    const chain = segs[0];
-    const color = pick(PRISM_COLORS, rng);
-    const pIdx = 1, gIdx = 2 + Math.floor(rng() * 2);
-    const wpIdxs = [gIdx, Math.min(chain.length - 2, gIdx + 1 + Math.floor(rng() * Math.max(1, chain.length - gIdx - 2))), chain.length - 1];
-    const waypoints = { A: [...new Set(wpIdxs)].sort((a, b) => a - b).map(i => ({ r: chain[i][0], c: chain[i][1] })) };
-    return {
-      name: `Tổng Hợp ${idx + 1}: Cổng Màu + Mật Mã Số`,
-      size,
-      prisms: [{ r: chain[pIdx][0], c: chain[pIdx][1], color }],
-      colorGates: [{ r: chain[gIdx][0], c: chain[gIdx][1], color }],
-      waypoints, anchors, solution
-    };
+    const plan = boardPlan(idx, rng, { minCells: 14, maxCells: 40 });
+    const holeSet = plan.shape ? maskToHoleSet(plan.shape) : new Set();
+    const path = generatePath(plan.rows, plan.cols, holeSet, null, rng);
+    if (path) {
+      const segs = cutPath(path, 1, rng);
+      const { anchors, solution } = segsToAnchorsAndSolution(segs);
+      const chain = segs[0];
+      const color = pick(PRISM_COLORS, rng);
+      const pIdx = 1, gIdx = 2 + Math.floor(rng() * 2);
+      const wpIdxs = [gIdx, Math.min(chain.length - 2, gIdx + 1 + Math.floor(rng() * Math.max(1, chain.length - gIdx - 2))), chain.length - 1];
+      const waypoints = { A: [...new Set(wpIdxs)].sort((a, b) => a - b).map(i => ({ r: chain[i][0], c: chain[i][1] })) };
+      return {
+        ...baseLevel(plan),
+        name: `Tổng Hợp ${idx + 1}: Cổng Màu + Mật Mã Số`,
+        prisms: [{ r: chain[pIdx][0], c: chain[pIdx][1], color }],
+        colorGates: [{ r: chain[gIdx][0], c: chain[gIdx][1], color }],
+        waypoints, anchors, solution
+      };
+    }
   }
 
   // mode 2: Công Tắc + Đẩy Đá + Bom
-  const built = buildWithPushIntoRobust(size, chains, rng);
+  const plan2 = boardPlan(idx, rng, { allowShape: false, minCells: 14, maxCells: 36, minSide: 4 });
+  const built = buildWithPushIntoRobust(plan2.rows, plan2.cols, chains, rng);
   if (!built) throw new Error(`genTongHop(${idx}) mode2: không tìm được cấu trúc Push+Bomb hợp lệ`);
   const segs = cutPath(built.path, built.chains, rng);
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
   const pushChainIdx = segs.findIndex(s => s.some(([r, c]) => r === built.pushSource[0] && c === built.pushSource[1]));
-  // Đặt Cổng trên xích KHÔNG chứa Push Rock/Bom (an toàn tuyệt đối khỏi việc
-  // Cổng bị nhánh xử lý Push Rock trong engine "che khuất" — xem ghi chú ở
-  // mode 0). Công Tắc đặt ở đầu chính xích đó.
   const gateChainIdx = pushChainIdx === 0 && segs.length > 1 ? 1 : 0;
   const gateChain = segs[gateChainIdx];
   const gIdx = Math.min(gateChain.length - 2, 2 + Math.floor(rng() * 2));
@@ -519,8 +646,8 @@ function genTongHop(idx, rng) {
   const swIdx = pushIdx === 0 ? Math.min(swChain.length - 1, 1) : 0;
   const [swR, swC] = swChain[swIdx];
   return {
+    rows: built.rows, cols: built.cols,
     name: `Tổng Hợp ${idx + 1}: Công Tắc + Đẩy Đá + Bom`,
-    size: built.size,
     switches: [{ r: swR, c: swC, gateR: gR, gateC: gC }],
     pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
     bombs: [{ r: built.holeCell[0], c: built.holeCell[1] }],
@@ -541,7 +668,7 @@ const CATEGORY_SPECS = [
 ];
 
 const LEVELS_PER_CATEGORY = 30;
-const MAX_ATTEMPTS = 25;
+const MAX_ATTEMPTS = 10;
 
 function verifyLevel(levelDef) {
   const engine = new ChainEngine(levelDef);
@@ -561,13 +688,11 @@ function verifyLevel(levelDef) {
   return null;
 }
 
-// Chữ ký "hình dạng bàn cờ" dùng để phát hiện trùng lặp — cố tình bỏ qua
-// name/solution/color (thứ tự vẽ hay tên gọi không làm 2 màn khác nhau về
-// bản chất chơi).
+// Chữ ký "hình dạng bàn cờ" dùng để phát hiện trùng lặp.
 function boardSignature(lvl) {
   const norm = (arr) => (arr || []).map(o => JSON.stringify(o)).sort();
   return JSON.stringify({
-    size: lvl.size,
+    rows: lvl.rows, cols: lvl.cols, shape: lvl.shape || null,
     anchors: norm((lvl.anchors || []).map(a => ({ row: a.row, col: a.col, length: a.length }))),
     rocks: norm(lvl.rocks), walls: norm(lvl.walls), pushRocks: norm(lvl.pushRocks),
     bombs: norm(lvl.bombs), switches: norm(lvl.switches), arrows: norm(lvl.arrows),
@@ -584,7 +709,6 @@ function tryGen(spec, i, seedSalt) {
 
 const categories = [];
 let totalFail = 0;
-let totalDupFixed = 0;
 for (const spec of CATEGORY_SPECS) {
   const levels = [];
   const usedSignatures = new Set();
@@ -597,7 +721,7 @@ for (const spec of CATEGORY_SPECS) {
       if (vErr) { err = vErr; continue; }
       const s = boardSignature(res.lvl);
       if (usedSignatures.has(s)) {
-        if (attempt === MAX_ATTEMPTS - 1) { lvl = res.lvl; sig = s; totalDupFixed++; } // hết lượt thử, đành chấp nhận
+        if (attempt === MAX_ATTEMPTS - 1) { lvl = res.lvl; sig = s; }
         err = 'duplicate signature';
         continue;
       }
@@ -617,17 +741,16 @@ for (const spec of CATEGORY_SPECS) {
 }
 
 console.log(totalFail ? `\n${totalFail} LEVELS FAILED VERIFICATION` : '\nALL LEVELS VERIFIED OK');
-if (totalDupFixed) console.log(`${totalDupFixed} levels could not reach a fully unique signature after ${MAX_ATTEMPTS} attempts (accepted anyway).`);
 
 // ---------------- Ghi ra src/data/levels.js ----------------
 
 let out = `// File này được sinh tự động bởi scripts/gen-levels.mjs — KHÔNG sửa tay.
 // Mỗi màn được kiến tạo từ 1 đường đi Hamilton duy nhất qua toàn bộ ô khả
-// dụng của bàn cờ rồi cắt thành N đoạn cho N xích, nên LUÔN phủ kín 100% ô
-// (đúng Win Condition ở GDD 3.3) và LUÔN có lời giải (chính là đường đã sinh,
-// lưu lại trong trường \`solution\` của từng màn để dùng cho Buff Gợi Ý). Mỗi
-// màn dùng 1 seed ngẫu nhiên riêng và đã được đối chiếu để không trùng bàn cờ
-// với màn khác trong cùng thể loại.
+// dụng của bàn cờ (rows x cols, có thể khoét theo \`shape\`) rồi cắt thành N
+// đoạn cho N xích, nên LUÔN phủ kín 100% ô (đúng Win Condition ở GDD 3.3) và
+// LUÔN có lời giải (chính là đường đã sinh, lưu ở trường \`solution\` — dùng
+// cho Buff Gợi Ý). Mỗi màn dùng 1 seed riêng và đã đối chiếu để không trùng
+// bàn cờ với màn khác trong cùng thể loại.
 
 export const CATEGORIES = ${JSON.stringify(categories, null, 2)};
 
