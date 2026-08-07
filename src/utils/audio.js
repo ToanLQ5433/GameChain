@@ -33,6 +33,17 @@ export function playSound(type, muted) {
     case 'switch': tone(240, 'square', 0.08, 0.06); break;
     case 'push': tone(200, 'triangle', 0.1, 0.08); break;
     case 'bomb': tone(110, 'sawtooth', 0.3, 0.15); break;
+    // 'crack' — phá bom thành công bằng Push Rock: gọn, giòn, tích cực.
+    case 'crack':
+      tone(680, 'square', 0.05, 0.12);
+      setTimeout(() => tone(180, 'sawtooth', 0.18, 0.14), 30);
+      break;
+    // 'explode' — chạm trực tiếp Bom = thua: rền và nặng hơn 'bomb' thường.
+    case 'explode':
+      tone(90, 'sawtooth', 0.45, 0.22);
+      setTimeout(() => tone(55, 'square', 0.3, 0.18), 40);
+      setTimeout(() => tone(38, 'sawtooth', 0.35, 0.14), 90);
+      break;
     case 'error': tone(150, 'sawtooth', 0.15, 0.1); break;
     case 'win':
       [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
