@@ -4,6 +4,7 @@ const DAILY_QUEST_REWARD = 50;
 
 const defaultState = {
   coins: 100,
+  gems: 0, // Tiền tệ phụ (GDD 3.8: "dùng Coin/Gem mua thêm giờ") — hiện chỉ hiển thị, chưa có nguồn thu/tiêu trong bản demo.
   streak: 0,
   soundMuted: false,
   playerName: 'Nhà Giải Mã Hải Hành',
@@ -12,6 +13,9 @@ const defaultState = {
   // Màn chơi gần nhất — dùng để nút "Chơi Tiếp" ở Home resume đúng chỗ.
   lastCategoryId: null,
   lastLevelIndex: null,
+  // Category đang xem trên bản đồ Hải Trình ở Home (độc lập với lastCategoryId
+  // — cho phép lướt xem category khác mà không đổi điểm resume thật).
+  viewedCategoryId: null,
   dailyQuest: { date: '', newClearsToday: 0, target: DAILY_QUEST_TARGET, claimed: false }
 };
 
