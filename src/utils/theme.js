@@ -53,8 +53,12 @@ export function makeButton(scene, x, y, label, opts = {}) {
 
   const palette = {
     gold: { bg: COLORS.gold, border: COLORS.goldDim, text: '#2b1e16', hoverBg: 0xffe07a },
+    // Outline-only, light-cyan text — only reads on a dark scene background.
     teal: { bg: null, border: COLORS.teal, text: '#8fe8de', hoverBg: 0x0d2a28 },
-    ink: { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 }
+    ink: { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 },
+    // Solid fill, white text — the one to use on light/parchment backgrounds
+    // where the outline-only 'teal' variant would have no contrast.
+    tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x18d4bd }
   }[variant];
 
   const txt = scene.add.text(0, 0, label, {
@@ -127,4 +131,22 @@ export function makeHudChip(scene, x, y, label, value, opts = {}) {
   container.setValueText = (v) => valueTxt.setText(v);
   container._valueTxt = valueTxt;
   return container;
+}
+
+// White pill chip (coloured icon circle + bold value) — used for Coins/Gems
+// on every light-background HUD (Home, Shop, in-level top bar). `rightEdgeX`
+// is the chip's right edge, so callers can chain several chips right-to-left
+// without them overlapping.
+export function makeStatChip(scene, rightEdgeX, y, icon, value, accentColor) {
+  const w = 64, h = 30;
+  const xLeft = rightEdgeX - w;
+  const g = scene.add.graphics();
+  g.fillStyle(0xffffff, 1).fillRoundedRect(xLeft, y, w, h, 15);
+  g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(xLeft, y, w, h, 15);
+  scene.add.circle(xLeft + 15, y + h / 2, 11, accentColor).setStrokeStyle(2, COLORS.woodDark);
+  scene.add.text(xLeft + 15, y + h / 2, icon, { fontSize: '11px' }).setOrigin(0.5);
+  const valTxt = scene.add.text(xLeft + 33, y + h / 2, String(value), {
+    fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+  }).setOrigin(0, 0.5);
+  return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
 }

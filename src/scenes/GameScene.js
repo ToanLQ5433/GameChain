@@ -5,27 +5,35 @@ import { playSound } from '../utils/audio.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
 import { getNextLevel } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, drawChartBackground, drawPanel, makeButton, makeHudChip } from '../utils/theme.js';
+import { COLORS, drawPanel, makeButton, makeStatChip } from '../utils/theme.js';
 
+// Bright parchment/teal palette — matches Home & Shop instead of the old
+// dark navy "chart" theme, so the whole app reads as one consistently
+// cheerful game instead of a bright menu bookending a gloomy board screen.
 const TILE = {
-  cellBg: 0x0a1d33,
-  cellBgLight: 0x123049,
-  cellBorder: 0x1c3a52,
-  rock: 0x5c4a3e,
-  rockBorder: 0x3d2b1f,
-  pushRock: 0x8a7259,
-  bombBg: 0x3a1414,
-  bombBorder: 0xa82e2e,
-  gateClosedBg: 0x4a1414,
-  gateOpenBg: 0x123a24,
+  cellBg: 0xfdf6e3,
+  cellBgLight: 0xffffff,
+  cellBorder: 0xd9c49a,
+  rock: 0x8a7259,
+  rockBorder: 0x4a2c11,
+  pushRock: 0xc9a876,
+  bombBg: 0xffe0dc,
+  bombBorder: 0xee4343,
+  gateClosedBg: 0xffe0dc,
+  gateOpenBg: 0xdcf7e3,
   switchDot: COLORS.gold,
-  wall: COLORS.gold,
-  prismRed: 0xa82e2e,
-  prismBlue: 0x1b5e8a,
-  prismGreen: 0x2a7b4c
+  wall: COLORS.woodDark,
+  prismRed: 0xee4343,
+  prismBlue: 0x2a8bf2,
+  prismGreen: 0x1db99b
 };
 
 const COLOR_HEX = { red: TILE.prismRed, blue: TILE.prismBlue, green: TILE.prismGreen };
+
+// One small boat icon per chain id (A-E) — purely cosmetic, shown at the
+// moving head of a chain once it has left its anchor, echoing the reference
+// mockup's "ship sailing along the route" without changing any game logic.
+const SHIP_ICONS = { A: '⛵', B: '🚢', C: '🛶', D: '🛥️', E: '⚓' };
 
 export default class GameScene extends Phaser.Scene {
   constructor() { super('Game'); }
@@ -44,7 +52,7 @@ export default class GameScene extends Phaser.Scene {
     this.save.lastLevelIndex = this.levelIndex;
     saveState(this.save);
 
-    drawChartBackground(this, width, height);
+    this.drawBackground(width, height);
 
     this.buildTopBar(width);
     this.buildDifficultyChip(width);
@@ -73,39 +81,80 @@ export default class GameScene extends Phaser.Scene {
     this.input.on('pointerupoutside', this.onPointerUp, this);
   }
 
+  // ---------------- Sky background (matches Home/Shop) ----------------
+
+  drawBackground(width, height) {
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(0xfff3d6, 0xfff3d6, 0xf3e3b8, 0xf3e3b8, 1);
+    bg.fillRect(0, 0, width, height);
+    const grid = this.add.graphics();
+    grid.lineStyle(1, COLORS.woodDark, 0.05);
+    for (let x = 0; x < width; x += 32) grid.lineBetween(x, 0, x, height);
+    for (let y = 0; y < height; y += 32) grid.lineBetween(0, y, width, y);
+  }
+
   // ---------------- UI khung ngoài ----------------
 
   buildTopBar(width) {
-    makeButton(this, 12, 24, '← Home', { variant: 'ink', fontSize: '10px', originX: 0 })
+    const backSize = 34, backY = 10;
+    const backBg = this.add.graphics();
+    backBg.fillStyle(COLORS.teal, 1).fillRoundedRect(12, backY, backSize, backSize, 10);
+    backBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, backY, backSize, backSize, 10);
+    this.add.text(12 + backSize / 2, backY + backSize / 2, '🏠', { fontSize: '16px' }).setOrigin(0.5);
+    this.add.rectangle(12 + backSize / 2, backY + backSize / 2, backSize + 6, backSize + 6, 0xffffff, 0.001)
+      .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => this.scene.start('Home'));
 
-    this.coinChip = makeHudChip(this, width - 12, 24, 'COINS', `🟡 ${this.save.coins}`, { variant: 'gold', originX: 1 });
+    // Lives (❤️ 5/5) — decorative, matching Home's HUD; this demo has no
+    // life-loss mechanic, so the number is fixed on every screen that shows it.
+    const heartsX = 12 + backSize + 8, heartsW = 56;
+    const hg = this.add.graphics();
+    hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, backY, heartsW, backSize, 15);
+    hg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(heartsX, backY, heartsW, backSize, 15);
+    this.add.text(heartsX + 13, backY + backSize / 2, '❤️', { fontSize: '10px' }).setOrigin(0.5);
+    this.add.text(heartsX + 27, backY + backSize / 2, '5/5', {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#2b1e16'
+    }).setOrigin(0, 0.5);
 
-    this.levelNameText = this.add.text(width / 2, 54, '', {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: 'bold', color: '#f4e8cf', align: 'center',
-      wordWrap: { width: width - 40 }
+    this.coinChip = makeStatChip(this, width - 12, backY, '🟡', this.save.coins, COLORS.gold);
+
+    this.bannerY = backY + backSize + 8;
+    const bannerH = 30;
+    const banner = this.add.graphics();
+    banner.fillStyle(COLORS.gold, 1).fillRoundedRect(12, this.bannerY, width - 24, bannerH, 14);
+    banner.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, this.bannerY, width - 24, bannerH, 14);
+    this.levelNameText = this.add.text(width / 2, this.bannerY + bannerH / 2, '', {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#2b1e16', align: 'center',
+      wordWrap: { width: width - 56 }
+    }).setOrigin(0.5);
+
+    const hintY = this.bannerY + bannerH + 6, hintH = 34;
+    const hintBg = this.add.graphics();
+    hintBg.fillStyle(COLORS.parchment, 1).fillRoundedRect(12, hintY, width - 24, hintH, 12);
+    hintBg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(12, hintY, width - 24, hintH, 12);
+    this.mechDescText = this.add.text(width / 2, hintY + hintH / 2, '', {
+      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#42281d', align: 'center',
+      wordWrap: { width: width - 44 }
+    }).setOrigin(0.5);
+
+    const statusY = hintY + hintH + 8;
+    this.statusText = this.add.text(width / 2, statusY, '', {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'italic', color: '#78350f'
     }).setOrigin(0.5, 0);
 
-    this.mechDescText = this.add.text(width / 2, 76, '', {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#b8860b', align: 'center',
-      wordWrap: { width: width - 40 }
-    }).setOrigin(0.5, 0);
-
-    this.statusText = this.add.text(width / 2, 106, '', {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: 'italic', color: '#d3be97'
-    }).setOrigin(0.5, 0);
-
-    this.add.line(0, 0, 0, 118, width, 118, COLORS.teal, 0.25).setOrigin(0);
+    this.headerBottom = statusY + 16;
   }
 
-  // Only rendered for "hard"/"superhard" levels — easy/normal levels show no tag at all.
+  // Only rendered for "hard"/"superhard" levels — easy/normal levels show no
+  // tag at all. Stamped like a ribbon across the top-right of the level
+  // banner, same visual language as the Shop's pack ribbons.
   buildDifficultyChip(width) {
     if (this.difficultyChip) { this.difficultyChip.destroy(); this.difficultyChip = null; }
     const difficulty = getDifficulty(this.categoryId, this.levelIndex);
     if (!difficulty) return;
     const style = DIFFICULTY_STYLE[difficulty];
     const w = style.label.length * 6 + 22, h = 16;
-    const x = width - 12 - w, y = 42;
+    const x = width - 12 - w, y = this.bannerY - 6;
     const g = this.add.graphics();
     g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 8);
     g.lineStyle(1.5, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 8);
@@ -116,7 +165,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   buildBottomBar(width, height) {
-    makeButton(this, width / 2, height - 16, 'Replay', { variant: 'teal', fontSize: '11px' })
+    makeButton(this, width / 2, height - 16, 'Replay', { variant: 'tealSolid', fontSize: '11px', shadow: true })
       .on('pointerdown', () => this.loadLevel());
   }
 
@@ -145,16 +194,16 @@ export default class GameScene extends Phaser.Scene {
     const g = this.add.graphics();
     const drawBg = (enabled) => {
       g.clear();
-      g.fillStyle(COLORS.cardBg, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 10);
-      g.lineStyle(1.5, COLORS.teal, enabled ? 0.9 : 0.25).strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+      g.fillStyle(0xffffff, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+      g.lineStyle(2, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
     };
     drawBg(true);
     const icon = this.add.text(0, -13, item.icon, { fontSize: '17px' }).setOrigin(0.5);
     const name = this.add.text(0, 8, item.name, {
-      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#f4e8cf'
+      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#42281d'
     }).setOrigin(0.5);
     const costText = this.add.text(0, 20, '', {
-      fontFamily: 'Cinzel', fontSize: '8px', color: '#f3c64f'
+      fontFamily: 'Cinzel', fontSize: '8px', color: '#ee4343'
     }).setOrigin(0.5);
 
     const container = this.add.container(x, y, [g, icon, name, costText]);
@@ -172,7 +221,7 @@ export default class GameScene extends Phaser.Scene {
     container.updateCost = () => {
       const count = this.save.buffs[item.key] || 0;
       costText.setText(count > 0 ? `Free ×${count}` : `${item.cost} Coins`);
-      costText.setColor(count > 0 ? '#7fe9de' : '#f3c64f');
+      costText.setColor(count > 0 ? '#12826c' : '#ee4343');
     };
     container.updateCost();
     return container;
@@ -202,7 +251,7 @@ export default class GameScene extends Phaser.Scene {
   spendCoins(cost) {
     this.save.coins -= cost;
     saveState(this.save);
-    this.coinChip.setValueText(`🟡 ${this.save.coins}`);
+    this.coinChip.setValue(this.save.coins);
     this.refreshBuffChips();
   }
 
@@ -310,7 +359,7 @@ export default class GameScene extends Phaser.Scene {
 
   computeBoardMetrics() {
     const { width, height } = this.scale;
-    const topOffset = 128;
+    const topOffset = this.headerBottom + 6;
     const bottomOffset = 132;
     const marginX = 30;
     const { rows, cols } = this.engine;
@@ -531,6 +580,14 @@ export default class GameScene extends Phaser.Scene {
             fontFamily: 'Cinzel', fontSize: Math.round(cs * 0.3) + 'px', fontStyle: '900', color: '#ffffff'
           }).setOrigin(0.5);
           this.chainContainer.add(txt);
+        } else if (i === chain.path.length - 1 && !chain.locked) {
+          // Cosmetic-only: a small boat rides the moving head while a chain
+          // is still sailing toward its length, echoing the reference
+          // mockup's "ship" — no gameplay logic involved.
+          const ship = this.add.text(x, y, SHIP_ICONS[chain.id] || '⛵', {
+            fontSize: Math.round(cs * 0.32) + 'px'
+          }).setOrigin(0.5);
+          this.chainContainer.add(ship);
         }
         // Hạt vừa mới thêm ở cuối dây trong lượt kéo này -> nảy nhẹ (juice).
         if (i === chain.path.length - 1 && chain.path.length > prevLen) {
@@ -721,24 +778,24 @@ export default class GameScene extends Phaser.Scene {
     if (!already && doneCount === this.category.levels.length) {
       this.registry.set('justCompletedCategory', this.categoryId);
     }
-    this.coinChip.setValueText(`🟡 ${this.save.coins}`);
+    this.coinChip.setValue(this.save.coins);
     this.showWin(isSkip);
   }
 
   showWin(isSkip) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.94).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
 
     const panelW = width - 56, panelH = 300;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
-    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.cardBg, border: COLORS.gold, borderWidth: 3 });
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
 
     const eyebrow = this.add.text(width / 2, panelY + 22, isSkip ? 'SKIPPED' : 'VICTORY!', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#f3c64f', letterSpacing: 2
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#12826c', letterSpacing: 2
     }).setOrigin(0.5);
     const title = this.add.text(width / 2, panelY + 40, this.levelDef.name, {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#f4e8cf', align: 'center',
+      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#42281d', align: 'center',
       wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5, 0);
 
@@ -746,7 +803,7 @@ export default class GameScene extends Phaser.Scene {
     const stars = [];
     for (let i = 0; i < 3; i++) {
       const s = this.add.text(width / 2 + (i - 1) * 32, starsY, isSkip ? '☆' : '★', {
-        fontSize: '26px', color: '#f3c64f'
+        fontSize: '26px', color: '#ffc200', stroke: '#4a2c11', strokeThickness: 2
       }).setOrigin(0.5).setScale(0);
       stars.push(s);
       this.tweens.add({ targets: s, scale: 1, duration: 260, delay: 200 + i * 130, ease: 'Back.Out' });
@@ -754,14 +811,14 @@ export default class GameScene extends Phaser.Scene {
 
     // Thẻ phần thưởng phát sáng — cùng ngôn ngữ "mảnh bản đồ" với Home.
     const cardW = 96, cardH = 96, cardX = width / 2 - cardW / 2, cardY = starsY + 34;
-    const rewardFrame = drawPanel(this, cardX, cardY, cardW, cardH, { radius: 10, fill: COLORS.cardBgLight, border: COLORS.gold, borderWidth: 2 });
+    const rewardFrame = drawPanel(this, cardX, cardY, cardW, cardH, { radius: 10, fill: 0xffffff, border: COLORS.gold, borderWidth: 2 });
     const rewardIcon = this.add.text(width / 2, cardY + cardH / 2, isSkip ? '📦' : this.category.icon, { fontSize: '40px' }).setOrigin(0.5);
     if (!isSkip) {
       this.tweens.add({ targets: [rewardFrame, rewardIcon], alpha: { from: 0.6, to: 1 }, yoyo: true, repeat: -1, duration: 700 });
     }
 
     const rewardText = this.add.text(width / 2, cardY + cardH + 12, isSkip ? '' : '+20 Coins', {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#f3c64f'
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#c68a00'
     }).setOrigin(0.5);
 
     const next = getNextLevel(this.categoryId, this.levelIndex);
@@ -799,17 +856,17 @@ export default class GameScene extends Phaser.Scene {
   showLose(text) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.94).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
 
     const panelW = width - 60, panelH = 220;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
-    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0x2a1414, border: COLORS.ruby, borderWidth: 3 });
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
     const title = this.add.text(width / 2, panelY + 40, '💥 You Lost!', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#e0605a'
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 86, text, {
-      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#f4e8cf', align: 'center',
+      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center',
       wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5);
 

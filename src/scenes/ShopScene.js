@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { playSound } from '../utils/audio.js';
 import { saveState } from '../utils/storage.js';
-import { COLORS } from '../utils/theme.js';
+import { COLORS, makeStatChip } from '../utils/theme.js';
 
 // Real Shop screen for the systems this demo actually tracks: Coins, the 3
 // real Buffs (Hint/Freeze/Skip, same keys GameScene's buff bar already
@@ -59,11 +59,14 @@ export default class ShopScene extends Phaser.Scene {
     this.buildBottomNav(width, height);
   }
 
+  // Same bright sky gradient as Home — the shop used to be a dark navy page
+  // sitting oddly between two light screens; this keeps the whole app's
+  // brightness consistent instead of the shop reading as a different, gloomier app.
   drawBackground(width, height) {
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x1c3a52, 0x1c3a52, 0x0a1d33, 0x0a1d33, 1);
+    bg.fillGradientStyle(0x5fc4f0, 0x5fc4f0, 0x0b4f78, 0x0b4f78, 1);
     bg.fillRect(0, 0, width, height);
-    // Diagonal gold/parchment canopy stripe under the header, echoing a
+    // Diagonal gold/wood canopy stripe under the header, echoing a
     // market-stall awning without borrowing the reference's purple accent.
     const stripes = this.add.graphics();
     stripes.fillStyle(COLORS.gold, 1);
@@ -80,7 +83,8 @@ export default class ShopScene extends Phaser.Scene {
 
   buildTopBar(width) {
     this.add.text(14, 20, 'SHOP', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f'
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f',
+      stroke: '#4a2c11', strokeThickness: 3
     }).setOrigin(0, 0.5);
 
     const closeSize = 34, closeX = width - 14 - closeSize, closeY = 12;
@@ -91,9 +95,9 @@ export default class ShopScene extends Phaser.Scene {
       .on('pointerdown', () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); });
 
     const gemRightEdge = closeX - 8;
-    this.gemChip = this.makeStatChip(gemRightEdge, 12, '💎', this.save.gems, COLORS.teal);
+    this.gemChip = makeStatChip(this, gemRightEdge, 12, '💎', this.save.gems, COLORS.teal);
     const coinRightEdge = this.gemChip.rightEdge - 16;
-    this.coinChip = this.makeStatChip(coinRightEdge, 12, '🟡', this.save.coins, COLORS.gold);
+    this.coinChip = makeStatChip(this, coinRightEdge, 12, '🟡', this.save.coins, COLORS.gold);
 
     // "+" shortcut — jumps straight to the Gold Shop grid, same affordance
     // players expect from tapping the "+" next to a currency pill. Sits in
@@ -107,20 +111,6 @@ export default class ShopScene extends Phaser.Scene {
         const target = Phaser.Math.Clamp(this.viewTop - this.goldShopY, Math.min(this.viewTop, this.viewTop + (this.viewBottom - this.viewTop) - this.contentHeight), this.viewTop);
         this.tweens.add({ targets: this.content, y: target, duration: 350, ease: 'Cubic.Out' });
       });
-  }
-
-  makeStatChip(rightEdgeX, y, icon, value, accentColor) {
-    const w = 64, h = 30;
-    const xLeft = rightEdgeX - w;
-    const g = this.add.graphics();
-    g.fillStyle(0xffffff, 1).fillRoundedRect(xLeft, y, w, h, 15);
-    g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(xLeft, y, w, h, 15);
-    this.add.circle(xLeft + 15, y + h / 2, 11, accentColor).setStrokeStyle(2, COLORS.woodDark);
-    this.add.text(xLeft + 15, y + h / 2, icon, { fontSize: '11px' }).setOrigin(0.5);
-    const valTxt = this.add.text(xLeft + 33, y + h / 2, String(value), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
-    }).setOrigin(0, 0.5);
-    return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
   }
 
   // ---------------- Scrollable content ----------------

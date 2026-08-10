@@ -3,7 +3,7 @@ import { playSound } from '../utils/audio.js';
 import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward } from '../utils/storage.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, makeButton } from '../utils/theme.js';
+import { COLORS, makeButton, makeStatChip } from '../utils/theme.js';
 
 // Single continuous "Voyage" path across ALL 210 levels (all categories
 // merged into one track, per product decision — the player never picks a
@@ -101,24 +101,9 @@ export default class HomeScene extends Phaser.Scene {
     });
 
     const gemRightEdge = gearX - 8;
-    this.gemChip = this.makeStatChip(gemRightEdge, 14, '💎', this.save.gems, COLORS.teal);
+    this.gemChip = makeStatChip(this, gemRightEdge, 14, '💎', this.save.gems, COLORS.teal);
     const coinRightEdge = this.gemChip.rightEdge - 8;
-    this.coinChip = this.makeStatChip(coinRightEdge, 14, '🟡', this.save.coins, COLORS.gold);
-  }
-
-  // rightEdgeX: right edge of the chip, so chips can be laid out right-to-left without overlapping.
-  makeStatChip(rightEdgeX, y, icon, value, accentColor) {
-    const w = 64, h = 30;
-    const xLeft = rightEdgeX - w;
-    const g = this.add.graphics();
-    g.fillStyle(0xffffff, 1).fillRoundedRect(xLeft, y, w, h, 15);
-    g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(xLeft, y, w, h, 15);
-    this.add.circle(xLeft + 15, y + h / 2, 11, accentColor).setStrokeStyle(2, COLORS.woodDark);
-    this.add.text(xLeft + 15, y + h / 2, icon, { fontSize: '11px' }).setOrigin(0.5);
-    const valTxt = this.add.text(xLeft + 33, y + h / 2, String(value), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
-    }).setOrigin(0, 0.5);
-    return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
+    this.coinChip = makeStatChip(this, coinRightEdge, 14, '🟡', this.save.coins, COLORS.gold);
   }
 
   // ---------------- Daily Quest event bar ----------------
