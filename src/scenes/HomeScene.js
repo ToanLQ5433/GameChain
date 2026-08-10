@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { playSound } from '../utils/audio.js';
-import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward } from '../utils/storage.js';
+import {
+  saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward,
+  resolveDailyCheckIn, claimDailyCheckIn
+} from '../utils/storage.js';
 import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
@@ -21,8 +24,10 @@ const ROAD_COLOR = 0x4a2c11;
 const ROAD_COLOR_LOCKED = 0x6b4423;
 const ROAD_STRIPE = 0xfef08a;
 const ROAD_STRIPE_LOCKED = 0x8a7550;
-const NODE_SPACING = 84;
-const NODE_R = 27;
+const NODE_SPACING = 150;
+const NODE_R = 42;
+const NODE_R_CURRENT = 52;
+const NODE_TOP_PAD = 70;
 
 function totalCompleted(save) {
   return Object.values(save.completedLevels || {}).reduce((s, arr) => s + arr.length, 0);
@@ -253,8 +258,11 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Voyage path (all levels, one continuous track) ----------------
 
   buildMap(width, height) {
-    this.mapViewTop = 92;
-    this.mapViewBottom = height - 150;
+    // Ngay dưới Quest Bar, và ngay trên đỉnh nút Play CTA — mask cắt gọn
+    // đường đi/level node để khi vuốt cuộn, chúng KHÔNG BAO GIỜ trượt lòi ra
+    // che Top HUD hay chèn xuống dưới CTA/Nav Bar.
+    this.mapViewTop = 90;
+    this.mapViewBottom = height - 145;
     this.mapCenterX = width / 2;
 
     this.mapMaskShape = this.make.graphics({ x: 0, y: 0 }, false);
@@ -264,10 +272,16 @@ export default class HomeScene extends Phaser.Scene {
     this.pathContainer.setMask(this.mapMaskShape.createGeometryMask());
 
     this.rebuildMapContent();
-    this.setupMapScroll(52, width - 104);
+    this.setupMapScroll(64, width - 128);
   }
 
-  laneX(globalIndex) { return this.mapCenterX + 0.24 * (this.mapCenterX - 28) * Math.sin(globalIndex * 1.15); }
+  // Biên độ uốn lượn bị khống chế cứng ở ±90px (dải trung tâm rộng 180px)
+  // để đường đi không bao giờ tràn sang đè lên nút Daily Check-in / No Ads
+  // ở 2 bên màn hình, dù màn hình có rộng tới đâu.
+  laneX(globalIndex) {
+    const amplitude = Math.min(90, 0.15 * (this.mapCenterX - 28));
+    return this.mapCenterX + amplitude * Math.sin(globalIndex * 1.15);
+  }
 
   rebuildMapContent() {
     this.pathContainer.removeAll(true);
@@ -280,7 +294,7 @@ export default class HomeScene extends Phaser.Scene {
     for (let i = total - 1; i >= 0; i--) {
       const item = flat[i];
       const pos = total - 1 - i;
-      const y = pos * NODE_SPACING + 50;
+      const y = pos * NODE_SPACING + NODE_TOP_PAD;
       const x = this.laneX(i);
       const done = isLevelCompleted(this.save, item.categoryId, item.levelIndex);
       const isCurrent = i === currentGlobalIdx;
@@ -288,7 +302,7 @@ export default class HomeScene extends Phaser.Scene {
 
       if (pos > 0) {
         const prevItem = flat[i + 1];
-        const py = (pos - 1) * NODE_SPACING + 50;
+        const py = (pos - 1) * NODE_SPACING + NODE_TOP_PAD;
         const px = this.laneX(prevItem.globalIndex);
         this.drawRoadSegment(px, py, x, y, locked);
       }
@@ -296,21 +310,21 @@ export default class HomeScene extends Phaser.Scene {
       this.pathContainer.add(this.buildNode(x, y, item, { done, isCurrent, locked }));
     }
 
-    this.totalPathHeight = total * NODE_SPACING + 40;
+    this.totalPathHeight = total * NODE_SPACING + NODE_TOP_PAD;
     this.scrollToCurrent();
   }
 
   drawRoadSegment(px, py, x, y, locked) {
     const base = this.add.graphics();
-    base.lineStyle(11, locked ? ROAD_COLOR_LOCKED : ROAD_COLOR, locked ? 0.55 : 1);
+    base.lineStyle(18, locked ? ROAD_COLOR_LOCKED : ROAD_COLOR, locked ? 0.55 : 1);
     base.lineBetween(px, py, x, y);
     this.pathContainer.add(base);
 
     const dash = this.add.graphics();
-    dash.lineStyle(4, locked ? ROAD_STRIPE_LOCKED : ROAD_STRIPE, locked ? 0.35 : 0.9);
+    dash.lineStyle(6, locked ? ROAD_STRIPE_LOCKED : ROAD_STRIPE, locked ? 0.35 : 0.9);
     const dist = Phaser.Math.Distance.Between(px, py, x, y);
     const dx = dist > 0 ? (x - px) / dist : 0, dy = dist > 0 ? (y - py) / dist : 0;
-    const segLen = 7, gapLen = 6;
+    const segLen = 10, gapLen = 8;
     let d = 0;
     while (d < dist) {
       const ed = Math.min(d + segLen, dist);
@@ -322,64 +336,59 @@ export default class HomeScene extends Phaser.Scene {
 
   buildNode(x, y, item, { done, isCurrent, locked }) {
     const group = this.add.container(x, y);
-    const r = isCurrent ? NODE_R + 6 : NODE_R;
+    const r = isCurrent ? NODE_R_CURRENT : NODE_R;
 
     if (isCurrent) {
-      const halo = this.add.circle(0, 0, r + 10, COLORS.gold, 0.25);
+      const halo = this.add.circle(0, 0, r + 12, COLORS.gold, 0.25);
       this.tweens.add({ targets: halo, scale: { from: 1, to: 1.3 }, alpha: { from: 0.3, to: 0 }, duration: 1000, repeat: -1 });
       group.add(halo);
     }
 
     const fill = isCurrent ? CURRENT_BG : done ? PASSED_BG : LOCK_BG;
     const border = isCurrent ? CURRENT_BORDER : done ? PASSED_BORDER : LOCK_BORDER;
-    const circle = this.add.circle(0, 0, r, fill).setStrokeStyle(isCurrent ? 4 : 3, border);
+    const circle = this.add.circle(0, 0, r, fill).setStrokeStyle(isCurrent ? 5 : 4, border);
     group.add(circle);
 
     if (done) {
-      group.add(this.add.text(0, 0, '✓', { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5));
+      group.add(this.add.text(0, 0, '✓', {
+        fontFamily: 'Cinzel', fontSize: '32px', fontStyle: '900', color: '#ffffff'
+      }).setOrigin(0.5));
     } else if (locked) {
-      group.add(this.drawLockIcon());
-      group.add(this.add.text(0, 16, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5));
+      // Khoá và số level tách 2 dòng riêng (y:-10 / y:+10) — không bao giờ
+      // đè lên nhau, khác với bản cũ vẽ cả 2 gần như cùng tâm.
+      group.add(this.add.text(0, -10, '🔒', { fontSize: '12px' }).setOrigin(0.5));
+      group.add(this.add.text(0, 10, String(item.globalIndex + 1), {
+        fontFamily: 'Cinzel', fontSize: '26px', fontStyle: '900', color: '#ffffff'
+      }).setOrigin(0.5));
     } else {
-      group.add(this.add.text(0, 0, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#2b1e16' }).setOrigin(0.5));
+      group.add(this.add.text(0, 0, String(item.globalIndex + 1), {
+        fontFamily: 'Cinzel', fontSize: '26px', fontStyle: '900', color: '#2b1e16'
+      }).setOrigin(0.5));
     }
 
     const difficulty = getDifficulty(item.categoryId, item.levelIndex);
     if (difficulty) {
       const style = DIFFICULTY_STYLE[difficulty];
-      const bx = r * 0.66, by = -r * 0.66;
-      const badgeBg = this.add.circle(bx, by, 10, style.color).setStrokeStyle(2, 0xffffff);
-      const badgeIcon = this.add.text(bx, by, style.icon, { fontSize: '11px' }).setOrigin(0.5);
+      const bx = r * 0.7, by = -r * 0.7;
+      const badgeBg = this.add.circle(bx, by, 12, style.color).setStrokeStyle(2, 0xffffff);
+      const badgeIcon = this.add.text(bx, by, style.icon, { fontSize: '13px' }).setOrigin(0.5);
       group.add([badgeBg, badgeIcon]);
     }
 
     if (isCurrent) {
-      const avatar = this.add.text(0, -r - 16, '⛵', { fontSize: '22px' }).setOrigin(0.5);
-      this.tweens.add({ targets: avatar, y: { from: -r - 20, to: -r - 12 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      const avatar = this.add.text(0, -r - 20, '⛵', { fontSize: '24px' }).setOrigin(0.5);
+      this.tweens.add({ targets: avatar, y: { from: -r - 24, to: -r - 16 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       group.add(avatar);
     }
 
-    this.nodeHit.push({ item, x, y, r: r + 6, done, isCurrent, locked });
+    this.nodeHit.push({ item, x, y, r: r + 8, done, isCurrent, locked });
     return group;
-  }
-
-  drawLockIcon() {
-    const lock = this.add.graphics();
-    const s = 16;
-    lock.fillStyle(0xf4e8cf, 1).fillRoundedRect(-s / 2, 0, s, s * 0.68, 3);
-    lock.lineStyle(2.5, 0xf4e8cf, 1);
-    lock.beginPath();
-    lock.arc(0, 0, s * 0.32, Math.PI, 0, false);
-    lock.strokePath();
-    lock.fillStyle(0x442711, 1).fillCircle(0, s * 0.32, 2.2);
-    lock.setPosition(0, -8);
-    return lock;
   }
 
   scrollToCurrent() {
     const total = this.flatLevels.length;
     const pos = total - 1 - this.currentGlobalIdx;
-    const targetY = pos * NODE_SPACING + 50;
+    const targetY = pos * NODE_SPACING + NODE_TOP_PAD;
     const viewH = this.mapViewBottom - this.mapViewTop - 16;
     let offset = viewH * 0.62 - targetY;
     const minY = Math.min(0, viewH - this.totalPathHeight);
@@ -438,20 +447,15 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Floating side-menu (Offers) ----------------
 
   buildSideMenu(width) {
-    const startY = this.mapViewTop + 62;
-    const cardSize = 68;
+    const dailyX = 36, dailyY = this.mapViewTop + 130;
+    this.buildDailyCheckInButton(dailyX, dailyY);
 
-    // Watch Ad for Coins (Trái) — real mocked rewarded-ad flow, not a
-    // "coming soon" placeholder.
-    this.buildOfferCard(14 + cardSize / 2, startY, cardSize, {
-      bg: COLORS.gold, icon: '📺', label: `+${AD_COINS_REWARD} Xu`,
-      onClick: () => { playSound('switch', this.save.soundMuted); this.watchAdForCoins(); }
-    });
-
-    // No Ads Floating Offer (Phải) — a big diagonal "ADS" stamp reads as a
-    // "banned/no-ads" sticker once owned==false; flips to a plain ✓ once bought.
+    // No Ads Floating Offer (Phải) — cùng hàng Y với nút Daily bên trái. A
+    // big diagonal "ADS" stamp reads as a "banned/no-ads" sticker once
+    // owned==false; flips to a plain ✓ once bought.
     const owned = !!this.save.adsRemoved;
-    this.buildOfferCard(width - 14 - cardSize / 2, startY, cardSize, {
+    const cardSize = 68;
+    this.buildOfferCard(width - 14 - cardSize / 2, dailyY, cardSize, {
       bg: owned ? COLORS.teal : 0xf43f5e,
       icon: owned ? '✓' : null,
       stamp: owned ? null : 'ADS',
@@ -462,6 +466,58 @@ export default class HomeScene extends Phaser.Scene {
         this.scene.start('Shop');
       }
     });
+  }
+
+  // "Điểm danh hàng ngày" — icon lịch 44x44px, viền gỗ tối, tag "Daily" bên
+  // dưới, và một chấm đỏ báo chưa nhận thưởng hôm nay ở góc trên-phải icon.
+  buildDailyCheckInButton(x, y) {
+    resolveDailyCheckIn(this.save);
+    const size = 44;
+    const box = this.add.container(x, y);
+
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x2b1e16, 0.35).fillRoundedRect(-size / 2, -size / 2 + 4, size, size, 12);
+    const bg = this.add.graphics();
+    bg.fillStyle(COLORS.wood, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 12);
+    bg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-size / 2, -size / 2, size, size, 12);
+    box.add([shadow, bg]);
+    box.add(this.add.text(0, -2, '📅', { fontSize: '22px' }).setOrigin(0.5));
+
+    const chipW = size, chipH = 18, chipY = size / 2 + 4;
+    const chip = this.add.graphics();
+    chip.fillStyle(0x36324c, 1).fillRoundedRect(-chipW / 2, chipY, chipW, chipH, 8);
+    chip.lineStyle(2, 0x975e55, 1).strokeRoundedRect(-chipW / 2, chipY, chipW, chipH, 8);
+    box.add(chip);
+    box.add(this.add.text(0, chipY + chipH / 2, 'Daily', {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#ffffff'
+    }).setOrigin(0.5));
+
+    const dot = this.add.circle(size / 2 - 4, -size / 2 + 4, 5, 0xef4444).setStrokeStyle(1.5, 0xffffff);
+    box.add(dot);
+    this.dailyCheckInDot = dot;
+    dot.setVisible(!this.save.dailyCheckIn.claimed);
+
+    const hit = this.add.rectangle(0, chipH / 2, size + 12, size + chipH + 12, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    box.add(hit);
+    hit.on('pointerdown', () => {
+      this.tweens.add({ targets: box, scale: 0.94, duration: 60, yoyo: true });
+      this.claimDailyLoginReward();
+    });
+  }
+
+  claimDailyLoginReward() {
+    resolveDailyCheckIn(this.save);
+    if (this.save.dailyCheckIn.claimed) {
+      playSound('switch', this.save.soundMuted);
+      this.showToast('📅 Bạn đã điểm danh hôm nay rồi — quay lại vào ngày mai!');
+      return;
+    }
+    if (!claimDailyCheckIn(this.save)) return;
+    saveState(this.save);
+    this.coinChip.setValue(this.save.coins);
+    if (this.dailyCheckInDot) this.dailyCheckInDot.setVisible(false);
+    playSound('win', this.save.soundMuted);
+    this.showToast('🎉 Nhận thưởng điểm danh thành công!');
   }
 
   // Square icon card + navy label chip below — shared shape for the two
@@ -518,9 +574,9 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- CTA / Play Level Button (Chỉnh theo đúng Yêu cầu Mockup) ----------------
 
   buildCTA(width, height) {
-    this.ctaY = this.mapViewBottom + 36;
+    this.ctaY = this.mapViewBottom + 34;
     const btnW = Math.min(width * 0.8, 260);
-    const btnH = 58;
+    const btnH = 62;
     const x = width / 2;
     const y = this.ctaY;
 
@@ -573,11 +629,12 @@ export default class HomeScene extends Phaser.Scene {
     shine.fillRoundedRect(-btnW / 2 + 6, -btnH / 2 + 4, btnW - 12, btnH / 2 - 2, { tl: 14, tr: 14, bl: 4, br: 4 });
     this.ctaContainer.add(shine);
 
-    // 4. Nhãn Level
+    // 4. Nhãn Level — level thường: giữa nút (y:0, 22px). Có Tag độ khó: đẩy
+    // lên (y:-8, 20px) để chừa chỗ cho pill Tag ngay dưới, không đè lên nhau.
     const strokeColor = '#' + shadowColor.toString(16).padStart(6, '0');
-    const levelLabel = this.add.text(0, diffTagText ? -7 : 0, `Level ${levelNum}`, {
+    const levelLabel = this.add.text(0, diffTagText ? -8 : 0, `Level ${levelNum}`, {
       fontFamily: 'Cinzel',
-      fontSize: '22px',
+      fontSize: diffTagText ? '20px' : '22px',
       fontStyle: '900',
       color: '#fef2d4',
       stroke: strokeColor,
@@ -585,9 +642,10 @@ export default class HomeScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.ctaContainer.add(levelLabel);
 
-    // 5. Badge/Tag Thể hiện Độ khó (khi là Hard hoặc Super Hard)
+    // 5. Badge/Tag Thể hiện Độ khó (khi là Hard hoặc Super Hard) — pill nhỏ
+    // ngay dưới Level label (y:12), không chồng lấp vì Level đã được đẩy lên.
     if (diffTagText) {
-      const tagContainer = this.add.container(0, 16);
+      const tagContainer = this.add.container(0, 12);
       const tagW = diffTagText.length * 8 + 16;
       const tagH = 15;
       const tagBg = this.add.graphics();

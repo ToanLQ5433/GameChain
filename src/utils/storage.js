@@ -1,6 +1,7 @@
 const SAVE_KEY = 'PIRATE_TRAILS_DEMO_SAVE_V1';
 const DAILY_QUEST_TARGET = 3;
 const DAILY_QUEST_REWARD = 50;
+export const DAILY_CHECKIN_COINS = 60;
 
 const defaultState = {
   coins: 100,
@@ -17,6 +18,10 @@ const defaultState = {
   // — cho phép lướt xem category khác mà không đổi điểm resume thật).
   viewedCategoryId: null,
   dailyQuest: { date: '', newClearsToday: 0, target: DAILY_QUEST_TARGET, claimed: false },
+  // Simple daily-login reward (Home's calendar button) — independent from
+  // dailyQuest above, which is earned by clearing levels, not just opening
+  // the app.
+  dailyCheckIn: { date: '', claimed: false },
   // Set by the (mocked, no real payment) "Remove Ads" purchase in the Shop.
   adsRemoved: false,
   // Buff inventory granted by Shop packs — GameScene spends from here first
@@ -42,7 +47,8 @@ export function loadSave() {
   } catch (e) {
     state = { ...defaultState, completedLevels: {} };
   }
-  return resolveDailyQuest(state);
+  resolveDailyQuest(state);
+  return resolveDailyCheckIn(state);
 }
 
 export function saveState(state) {
@@ -84,5 +90,23 @@ export function claimDailyQuestReward(state) {
   if (q.claimed || q.newClearsToday < q.target) return false;
   q.claimed = true;
   state.coins += DAILY_QUEST_REWARD;
+  return true;
+}
+
+// Daily Check-in — resets to unclaimed each new calendar day (player's
+// local time), independent of any in-level activity.
+export function resolveDailyCheckIn(state) {
+  const today = new Date().toDateString();
+  if (!state.dailyCheckIn || state.dailyCheckIn.date !== today) {
+    state.dailyCheckIn = { date: today, claimed: false };
+  }
+  return state;
+}
+
+export function claimDailyCheckIn(state) {
+  resolveDailyCheckIn(state);
+  if (state.dailyCheckIn.claimed) return false;
+  state.dailyCheckIn.claimed = true;
+  state.coins += DAILY_CHECKIN_COINS;
   return true;
 }
