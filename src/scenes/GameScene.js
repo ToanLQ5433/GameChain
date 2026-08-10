@@ -274,7 +274,7 @@ export default class GameScene extends Phaser.Scene {
   buildBuffBar(width, height) {
     const items = [
       { key: 'hint', icon: '💡', name: 'Hint', cost: 30 },
-      { key: 'freeze', icon: '⏸️', name: 'Freeze', cost: 25 },
+      { key: 'freeze', icon: '❄️', name: 'Freeze', cost: 25 },
       { key: 'undo', icon: '↩️', name: 'Undo', cost: 10 },
       { key: 'skip', icon: '⏩', name: 'Skip', cost: 50 }
     ];
@@ -343,7 +343,7 @@ export default class GameScene extends Phaser.Scene {
   useBuff(key, cost) {
     if (this.overlayContainer.visible) return;
     if (key === 'freeze' && this.buffState.freezeUsed) {
-      this.showToast('⏸️ Already used Freeze this run!');
+      this.showToast('❄️ Already used Freeze this run!');
       playSound('error', this.save.soundMuted);
       return;
     }
@@ -475,7 +475,7 @@ export default class GameScene extends Phaser.Scene {
     this.refreshBuffChips();
     playSound('freeze', this.save.soundMuted);
     this.spawnFreezeEffect();
-    this.showToast('⏸️❄️ Walls are frozen for this run!');
+    this.showToast('❄️ Walls are frozen for this run!');
   }
 
   // One-time frost burst on activation (screen-wide cold flash + a handful
@@ -904,9 +904,12 @@ export default class GameScene extends Phaser.Scene {
 
     e.switches.forEach(sw => {
       const { x, y } = this.cellToPixel(sw.r, sw.c);
-      const dot = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.22, TILE.switchDot).setStrokeStyle(2, COLORS.goldDim);
-      // 🔌 = công tắc thường, 📌 = biến thể Latch (giữ mở vĩnh viễn sau 1 lần) — đúng cặp icon tham khảo.
-      const icon = this.add.text(x + cs / 2, y + cs / 2, sw.latch ? '📌' : '🔌', { fontSize: Math.round(cs * 0.3) + 'px' }).setOrigin(0.5);
+      // 🔑 Key = Latch switch — touch it once and its Gate stays open
+      // forever. 🔘 Button = normal switch — a pressure plate whose Gate
+      // only stays open while a chain is actively standing on it.
+      const dot = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.24, sw.latch ? COLORS.gold : 0xc9d1d9)
+        .setStrokeStyle(2, sw.latch ? COLORS.goldDim : 0x6b7280);
+      const icon = this.add.text(x + cs / 2, y + cs / 2, sw.latch ? '🔑' : '🔘', { fontSize: Math.round(cs * 0.3) + 'px' }).setOrigin(0.5);
       this.boardDynamicContainer.add([dot, icon]);
 
       const { x: gx, y: gy } = this.cellToPixel(sw.gateR, sw.gateC);
@@ -915,8 +918,13 @@ export default class GameScene extends Phaser.Scene {
       g.fillStyle(open ? TILE.gateOpenBg : TILE.gateClosedBg, 0.9)
         .fillRoundedRect(gx + 3, gy + 3, cs - 6, cs - 6, radius);
       g.lineStyle(2, open ? COLORS.emerald : COLORS.ruby, 1).strokeRoundedRect(gx + 3, gy + 3, cs - 6, cs - 6, radius);
-      const gicon = this.add.text(gx + cs / 2, gy + cs / 2, open ? '🔓' : '🔒', { fontSize: Math.round(cs * 0.38) + 'px' }).setOrigin(0.5);
-      this.boardDynamicContainer.add([g, gicon]);
+      // Solid white backing badge behind the lock glyph so open/closed
+      // reads unmistakably regardless of the tile's pale green/red tint —
+      // the emoji's own color alone wasn't a clear enough signal.
+      const badge = this.add.circle(gx + cs / 2, gy + cs / 2, cs * 0.27, 0xffffff, 0.95)
+        .setStrokeStyle(2.5, open ? COLORS.emerald : COLORS.ruby, 1);
+      const gicon = this.add.text(gx + cs / 2, gy + cs / 2, open ? '🔓' : '🔒', { fontSize: Math.round(cs * 0.42) + 'px' }).setOrigin(0.5);
+      this.boardDynamicContainer.add([g, badge, gicon]);
     });
 
     // Reinforced wooden crate (was a plain push rock) — wood body, plank

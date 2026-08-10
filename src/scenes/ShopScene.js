@@ -17,7 +17,7 @@ import { buildBottomDock, DOCK_HOME_H } from '../utils/dock.js';
 
 const REMOVE_ADS_PRICE = '$2.99';
 
-const BUFF_ICONS = { hint: '💡', freeze: '⏸️', skip: '⏩' };
+const BUFF_ICONS = { hint: '💡', freeze: '❄️', skip: '⏩' };
 const BUFF_ORDER = ['hint', 'freeze', 'skip'];
 
 // Two big, eye-catching packs — this is the "hot deals" shelf every mobile
