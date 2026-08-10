@@ -272,6 +272,7 @@ export default class GameScene extends Phaser.Scene {
     const items = [
       { key: 'hint', icon: '💡', name: 'Hint', cost: 30 },
       { key: 'freeze', icon: '⏸️', name: 'Freeze', cost: 25 },
+      { key: 'undo', icon: '↩️', name: 'Undo', cost: 10 },
       { key: 'skip', icon: '⏩', name: 'Skip', cost: 50 }
     ];
     // Buff bar sits at the very bottom — large thumb-friendly chips
@@ -345,6 +346,7 @@ export default class GameScene extends Phaser.Scene {
     }
     if (key === 'hint') { this.useHint(cost); return; }
     if (key === 'freeze') this.useFreeze(cost);
+    else if (key === 'undo') this.useUndo(cost);
     else if (key === 'skip') this.useSkip(cost);
   }
 
@@ -424,15 +426,37 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     if (!this.spendBuff('hint', cost, '🟡 Not enough Coins for a Hint!', () => this.useHint(cost))) return;
-    const [r, c] = sol[chain.path.length];
-    this.showHintAt(r, c);
+    this.showHintPath(chain, sol);
   }
 
-  showHintAt(r, c) {
-    const { x: cx, y: cy } = this.cellCenter(r, c);
-    const ring = this.add.circle(cx, cy, this.cellSize * 0.24, COLORS.gold, 0.35).setStrokeStyle(2, COLORS.gold, 1);
-    this.fxContainer.add(ring);
-    this.tweens.add({ targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.9, to: 0.2 }, yoyo: true, repeat: 3, duration: 380, onComplete: () => ring.destroy() });
+  // Draws the ENTIRE remaining solution route for this chain — a dashed
+  // trail from where it currently stands all the way to its finish, plus a
+  // pulsing ring rippling down each remaining cell in sequence — instead of
+  // only revealing the single next step.
+  showHintPath(chain, sol) {
+    const last = chain.path[chain.path.length - 1];
+    const remaining = sol.slice(chain.path.length);
+    const points = [this.cellCenter(last.r, last.c), ...remaining.map(([r, c]) => this.cellCenter(r, c))];
+
+    const color = chain.colorTag ? (COLOR_HEX[chain.colorTag] || Phaser.Display.Color.HexStringToColor(chain.color).color)
+      : Phaser.Display.Color.HexStringToColor(chain.color).color;
+
+    const trail = this.add.graphics();
+    trail.lineStyle(Math.max(4, Math.round(this.cellSize * 0.14)), color, 0.5);
+    for (let i = 1; i < points.length; i++) {
+      trail.lineBetween(points[i - 1].x, points[i - 1].y, points[i].x, points[i].y);
+    }
+    this.fxContainer.add(trail);
+    this.tweens.add({ targets: trail, alpha: 0, duration: 500, delay: 1900, onComplete: () => trail.destroy() });
+
+    remaining.forEach(([r, c], i) => {
+      this.time.delayedCall(i * 70, () => {
+        const { x: cx, y: cy } = this.cellCenter(r, c);
+        const ring = this.add.circle(cx, cy, this.cellSize * 0.24, COLORS.gold, 0.35).setStrokeStyle(2, COLORS.gold, 1);
+        this.fxContainer.add(ring);
+        this.tweens.add({ targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.9, to: 0.2 }, duration: 380, onComplete: () => ring.destroy() });
+      });
+    });
     playSound('lock', this.save.soundMuted);
   }
 
@@ -495,6 +519,31 @@ export default class GameScene extends Phaser.Scene {
   useSkip(cost) {
     if (!this.spendBuff('skip', cost, '🟡 Not enough Coins for this Buff!', () => this.useSkip(cost))) return;
     this.completeLevel(true);
+  }
+
+  // Re-opens the most recently locked chain (not touching ChainEngine — the
+  // chain is a plain data object already read directly elsewhere in this
+  // file, e.g. redrawChains(); undo just resets it back to its anchor so
+  // the player can redraw it differently) — cheap (10 Coins default) since
+  // it only ever affects the single most recent lock, never a full retry.
+  useUndo(cost) {
+    const chain = this.lastLockedChainId ? this.engine.getChain(this.lastLockedChainId) : null;
+    if (!chain || !chain.locked) {
+      this.showToast('↩️ Nothing to undo yet — lock a chain first!');
+      playSound('error', this.save.soundMuted);
+      return;
+    }
+    if (!this.spendBuff('undo', cost, '🟡 Not enough Coins for Undo!', () => this.useUndo(cost))) return;
+    chain.locked = false;
+    chain.path = [{ r: chain.row, c: chain.col }];
+    chain.colorTag = null;
+    chain.waypointProgress = 0;
+    this.chainLengths[chain.id] = chain.path.length;
+    this.lastLockedChainId = null;
+    playSound('switch', this.save.soundMuted);
+    haptics.tap();
+    this.redrawChains();
+    this.showToast(`↩️ Chain ${chain.id} unlocked — redraw it!`);
   }
 
   showToast(text) {
@@ -645,6 +694,7 @@ export default class GameScene extends Phaser.Scene {
     this.buffState = { freezeUsed: false };
     this.usedBuffThisAttempt = false;
     this.rescueUsedThisAttempt = 0;
+    this.lastLockedChainId = null;
     this.refreshBuffChips();
 
     // Level Timer System (GDD 3.8) — a layer on top of the 5 core mechanics,
@@ -1043,6 +1093,7 @@ export default class GameScene extends Phaser.Scene {
       playSound('lock', this.save.soundMuted);
       haptics.lock();
       this.pulseLockedChain();
+      this.lastLockedChainId = this.engine.activeId;
       if (res.win) {
         this.completeLevel(false);
         return;

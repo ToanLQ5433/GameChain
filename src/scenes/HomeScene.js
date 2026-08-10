@@ -351,11 +351,11 @@ export default class HomeScene extends Phaser.Scene {
     }
 
     if (isCurrent) {
-      // Extra clearance above the node's own top edge (r) — emoji glyphs
-      // render with more visual ink than their nominal font box suggests,
-      // so the old -r-16 minimum still visibly touched the node's rim.
-      const avatar = this.add.text(0, -r - 34, '⛵', { fontSize: '24px' }).setOrigin(0.5);
-      this.tweens.add({ targets: avatar, y: { from: -r - 38, to: -r - 30 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      // Bigger and closer to the node — big enough to actually read as an
+      // icon at a glance, and close enough that it clearly marks THIS node
+      // rather than reading as floating debris further up the path.
+      const avatar = this.add.text(0, -r - 26, '⛵', { fontSize: '30px' }).setOrigin(0.5);
+      this.tweens.add({ targets: avatar, y: { from: -r - 30, to: -r - 22 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       group.add(avatar);
     }
 

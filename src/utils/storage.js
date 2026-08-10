@@ -27,7 +27,7 @@ const defaultState = {
   // Buff inventory granted by Shop packs — GameScene spends from here first
   // (free) before falling back to paying Coins per use, so a "Hint x3" pack
   // actually grants 3 free hints instead of just being a coin bundle in disguise.
-  buffs: { hint: 0, freeze: 0, skip: 0 },
+  buffs: { hint: 0, freeze: 0, skip: 0, undo: 0 },
   // Lives — real now (see utils/lives.js), not the decorative fixed "5/5"
   // shown everywhere before. Spent on Quit/Restart mid-level, refills over
   // time. nextRefillAt is a wall-clock timestamp (ms), null when full.
