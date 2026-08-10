@@ -5,7 +5,11 @@ import { playSound } from '../utils/audio.js';
 import { haptics } from '../utils/haptics.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
 import { getNextLevel } from '../utils/progression.js';
-import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
+import { getDifficulty, getDifficultyTier, DIFFICULTY_STYLE } from '../utils/difficulty.js';
+import {
+  getTimeLimit, getTimerColor, MAX_TIMEOUT_AD_USES_PER_ATTEMPT, TIMEOUT_AD_BONUS_RATIO,
+  TIMEOUT_COIN_COST, COIN_SPEED_MAX, COIN_SPEED_NO_BUFF_BONUS
+} from '../utils/levelTimer.js';
 import { COLORS, drawPanel, makeButton, makeStatChip } from '../utils/theme.js';
 
 // Bright parchment/teal palette — matches Home & Shop instead of the old
@@ -120,6 +124,20 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0, 0.5);
 
     this.coinChip = makeStatChip(this, width - 12, backY, '🟡', this.save.coins, COLORS.gold);
+
+    // Level Timer pill (GDD 3.8) — built once here, shown/hidden per level in
+    // loadLevel() since only Normal/Hard/Super Hard levels get a timer at
+    // all (Easy stays Unlimited to protect the FTUE, per the GDD). Sits in
+    // the open gap between the lives pill and the coin chip.
+    const timerX = heartsX + heartsW + 8, timerW = 90;
+    const timerBg = this.add.graphics();
+    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(timerX, backY, timerW, backSize, 15);
+    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(timerX, backY, timerW, backSize, 15);
+    const timerIcon = this.add.text(timerX + 17, backY + backSize / 2, '⏱️', { fontSize: '13px' }).setOrigin(0.5);
+    this.timerPillLabel = this.add.text(timerX + timerW - 12, backY + backSize / 2, '0:00', {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+    }).setOrigin(1, 0.5);
+    this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
     this.bannerY = backY + backSize + 8;
     const bannerH = 30;
@@ -267,6 +285,7 @@ export default class GameScene extends Phaser.Scene {
       this.save.buffs[key] -= 1;
       saveState(this.save);
       this.refreshBuffChips();
+      this.usedBuffThisAttempt = true;
       return true;
     }
     if (this.save.coins < cost) {
@@ -275,6 +294,7 @@ export default class GameScene extends Phaser.Scene {
       return false;
     }
     this.spendCoins(cost);
+    this.usedBuffThisAttempt = true;
     return true;
   }
 
@@ -375,6 +395,146 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });
   }
 
+  // ---------------- Level Timer System (GDD 3.8) ----------------
+  // A layer bolted ON TOP of the 5 core mechanics — nothing here ever
+  // touches ChainEngine, so the core rules stay 100% deterministic (Pillar
+  // P4) regardless of whether a Timer is running. update() is Phaser's own
+  // per-frame scene hook, called automatically every tick once defined.
+
+  update(time, delta) {
+    if (!this.timeLimit || this.timerPaused || this.overlayContainer.visible) return;
+    this.timeRemaining = Math.max(0, this.timeRemaining - delta / 1000);
+    this.updateTimerDisplay();
+
+    const ratio = this.timeRemaining / this.timeLimit;
+    [0.5, 0.2, 0.05].forEach(t => {
+      if (ratio <= t && !this.timerThresholdsFired.has(t)) {
+        this.timerThresholdsFired.add(t);
+        haptics.tap();
+      }
+    });
+    if (ratio < 0.2 && this.timeRemaining > 0) {
+      const whole = Math.ceil(this.timeRemaining);
+      if (whole !== this.lastTickWholeSecond) {
+        this.lastTickWholeSecond = whole;
+        playSound('timerTick', this.save.soundMuted);
+      }
+    }
+    if (this.timeRemaining <= 0) this.onTimerReachZero();
+  }
+
+  updateTimerDisplay() {
+    if (!this.timerPillLabel) return;
+    const secs = Math.ceil(this.timeRemaining);
+    const m = Math.floor(secs / 60), s = secs % 60;
+    this.timerPillLabel.setText(`${m}:${String(s).padStart(2, '0')}`);
+    this.timerPillLabel.setColor(getTimerColor(this.timeRemaining / this.timeLimit));
+  }
+
+  onTimerReachZero() {
+    this.timerPaused = true;
+    playSound('timeout', this.save.soundMuted);
+    haptics.fail();
+    this.showTimeoutChoices();
+  }
+
+  // Time-Out is explicitly NOT "thua có phạt" per GDD 3.8 — the board just
+  // pauses (reusing overlayContainer, which already blocks drag/buff input
+  // while visible) and offers 3 equal-weight ways to keep going.
+  showTimeoutChoices() {
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+
+    const panelW = width - 56, panelH = 300;
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
+
+    const title = this.add.text(width / 2, panelY + 34, '⏰ TIME OUT!', {
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+    }).setOrigin(0.5);
+    const sub = this.add.text(width / 2, panelY + 66, 'Out of time! Your board is safe —\nchoose how to keep going.', {
+      fontFamily: 'Crimson Pro', fontSize: '10.5px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 40 }
+    }).setOrigin(0.5);
+
+    const items = [bg, panel, title, sub];
+    const btnW = panelW - 40, btnH = 40, btnGap = 14;
+    let btnY = panelY + 128;
+
+    const canWatchAd = this.timeoutAdUsesThisAttempt < MAX_TIMEOUT_AD_USES_PER_ATTEMPT;
+    if (canWatchAd) {
+      const adBtn = makeButton(this, width / 2, btnY, `📺 Watch Ad (+${Math.round(TIMEOUT_AD_BONUS_RATIO * 100)}% Time)`, {
+        variant: 'gold', fontSize: '11px', width: btnW, shadow: true
+      });
+      adBtn.on('pointerdown', () => this.onWatchAdForTime());
+      items.push(adBtn);
+      btnY += btnH + btnGap;
+    }
+
+    const coinBtn = makeButton(this, width / 2, btnY, `🟡 ${TIMEOUT_COIN_COST} Coins (+${Math.round(TIMEOUT_AD_BONUS_RATIO * 100)}% Time)`, {
+      variant: 'tealSolid', fontSize: '11px', width: btnW
+    });
+    coinBtn.on('pointerdown', () => this.onSpendCurrencyForTime());
+    items.push(coinBtn);
+    btnY += btnH + btnGap;
+
+    const retryBtn = makeButton(this, width / 2, btnY, '🔄 Retry Now (Free)', { variant: 'ink', fontSize: '11px', width: btnW });
+    retryBtn.on('pointerdown', () => this.loadLevel());
+    items.push(retryBtn);
+
+    this.overlayContainer.add(items);
+    this.overlayContainer.setVisible(true);
+  }
+
+  // Mocked rewarded-ad flow — same "processing → done" shape as the Shop's
+  // purchase modal, since this demo has no real ad SDK to call.
+  onWatchAdForTime() {
+    this.timeoutAdUsesThisAttempt += 1;
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const panelW = width - 80, panelH = 150;
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
+    const label = this.add.text(width / 2, panelY + panelH / 2 - 20, '📺 Watching ad…', {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
+    }).setOrigin(0.5);
+    const spinner = this.add.graphics().setPosition(width / 2, panelY + panelH / 2 + 20);
+    spinner.lineStyle(4, COLORS.gold, 1);
+    spinner.beginPath();
+    spinner.arc(0, 0, 14, 0, Math.PI * 1.4, false);
+    spinner.strokePath();
+    this.tweens.add({ targets: spinner, angle: 360, duration: 700, repeat: -1 });
+    this.overlayContainer.add([bg, panel, label, spinner]);
+    this.overlayContainer.setVisible(true);
+    this.time.delayedCall(900, () => this.grantTimeoutBonus());
+  }
+
+  onSpendCurrencyForTime() {
+    if (this.save.coins < TIMEOUT_COIN_COST) {
+      this.showToast('🟡 Not enough Coins!');
+      playSound('error', this.save.soundMuted);
+      return;
+    }
+    this.save.coins -= TIMEOUT_COIN_COST;
+    saveState(this.save);
+    this.coinChip.setValue(this.save.coins);
+    this.grantTimeoutBonus();
+  }
+
+  grantTimeoutBonus() {
+    const bonusSec = this.timeLimit * TIMEOUT_AD_BONUS_RATIO;
+    this.timeRemaining += bonusSec;
+    this.timerPaused = false;
+    this.timerThresholdsFired = new Set();
+    this.lastTickWholeSecond = null;
+    this.updateTimerDisplay();
+    this.overlayContainer.removeAll(true);
+    this.overlayContainer.setVisible(false);
+    playSound('switch', this.save.soundMuted);
+    this.showToast(`⏱️ +${Math.round(bonusSec)}s added — keep going!`);
+  }
+
   // ---------------- Vòng đời level ----------------
 
   loadLevel() {
@@ -387,7 +547,22 @@ export default class GameScene extends Phaser.Scene {
     this.freezeBadge = null;
     if (this.toastText) { this.toastText.destroy(); this.toastText = null; }
     this.buffState = { freezeUsed: false };
+    this.usedBuffThisAttempt = false;
     this.refreshBuffChips();
+
+    // Level Timer System (GDD 3.8) — a layer on top of the 5 core mechanics,
+    // never touching ChainEngine. null timeLimit means Easy/Unlimited.
+    this.timerTier = getDifficultyTier(this.categoryId, this.levelIndex);
+    this.timeLimit = getTimeLimit(this.timerTier);
+    this.timeRemaining = this.timeLimit;
+    this.timerPaused = false;
+    this.timeoutAdUsesThisAttempt = 0;
+    this.timerThresholdsFired = new Set();
+    this.lastTickWholeSecond = null;
+    if (this.timerPillGroup) {
+      this.timerPillGroup.setVisible(!!this.timeLimit);
+      if (this.timeLimit) this.updateTimerDisplay();
+    }
 
     this.levelNameText.setText(this.levelDef.name);
     this.mechDescText.setText(this.category.desc);
@@ -841,7 +1016,20 @@ export default class GameScene extends Phaser.Scene {
     playSound('win', this.save.soundMuted);
     haptics.win();
     const already = (this.save.completedLevels[this.categoryId] || []).includes(this.levelIndex);
-    if (!already && !isSkip) this.save.coins += 20;
+
+    // Coin Tốc Độ (GDD 2.5) — first-clear only, one-way flag enforced by
+    // `already` above so replaying never re-earns it. Time-based when this
+    // level had a Timer running, otherwise the "didn't use a Buff" bonus.
+    let speedBonus = 0;
+    if (!already && !isSkip) {
+      if (this.timeLimit) {
+        const ratio = Phaser.Math.Clamp(this.timeRemaining / this.timeLimit, 0, 1);
+        speedBonus = Math.round(COIN_SPEED_MAX * ratio);
+      } else if (!this.usedBuffThisAttempt) {
+        speedBonus = COIN_SPEED_NO_BUFF_BONUS;
+      }
+      this.save.coins += 20 + speedBonus;
+    }
     if (!already) registerNewLevelClear(this.save);
     markLevelCompleted(this.save, this.categoryId, this.levelIndex);
     saveState(this.save);
@@ -853,10 +1041,10 @@ export default class GameScene extends Phaser.Scene {
       this.registry.set('justCompletedCategory', this.categoryId);
     }
     this.coinChip.setValue(this.save.coins);
-    this.showWin(isSkip);
+    this.showWin(isSkip, speedBonus);
   }
 
-  showWin(isSkip) {
+  showWin(isSkip, speedBonus = 0) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
@@ -891,7 +1079,11 @@ export default class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: [rewardFrame, rewardIcon], alpha: { from: 0.6, to: 1 }, yoyo: true, repeat: -1, duration: 700 });
     }
 
-    const rewardText = this.add.text(width / 2, cardY + cardH + 12, isSkip ? '' : '+20 Coins', {
+    // Speed bonus (GDD 2.5 "Coin Tốc Độ") folded into the same line rather
+    // than a second text element, so the reward card's fixed height never
+    // has to grow/collide with the buttons below it.
+    const rewardAmount = isSkip ? '' : `+${20 + speedBonus} Coins${speedBonus > 0 ? ` (⚡+${speedBonus})` : ''}`;
+    const rewardText = this.add.text(width / 2, cardY + cardH + 12, rewardAmount, {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#c68a00'
     }).setOrigin(0.5);
 

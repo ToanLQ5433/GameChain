@@ -68,6 +68,16 @@ export function playSound(type, muted) {
       tone(1400, 'sine', 0.12, 0.06);
       setTimeout(() => tone(1800, 'sine', 0.15, 0.05), 60);
       break;
+    // 'timerTick' — Level Timer countdown, fires once per second once under
+    // 20% time remaining (GDD 3.7: "tiếng tick nhẹ, tăng tần suất khi còn
+    // <20% giờ"). Kept very quiet/short since it repeats.
+    case 'timerTick': tone(660, 'sine', 0.05, 0.03); break;
+    // 'timeout' — Level Timer hits 0, distinct from both 'lose' (bomb) and
+    // 'error' so running out of time reads as its own kind of stop.
+    case 'timeout':
+      tone(300, 'square', 0.1, 0.08);
+      setTimeout(() => tone(220, 'square', 0.18, 0.08), 110);
+      break;
     default: break;
   }
 }
