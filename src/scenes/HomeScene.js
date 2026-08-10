@@ -4,7 +4,7 @@ import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward }
 import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, makeStatChip } from '../utils/theme.js';
+import { COLORS, makeStatChip, makeIconButton } from '../utils/theme.js';
 import { buildSettingsModal } from '../utils/settingsModal.js';
 import { showOutOfLives } from '../utils/livesModal.js';
 import { showMockedAdOverlay } from '../utils/mockAd.js';
@@ -52,7 +52,7 @@ export default class HomeScene extends Phaser.Scene {
 
   drawBackground(width, height) {
     const sky = this.add.graphics();
-    sky.fillGradientStyle(0x5fc4f0, 0x5fc4f0, 0x0b4f78, 0x0b4f78, 1);
+    sky.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
     sky.fillRect(0, 0, width, height);
 
     const deco = this.add.graphics();
@@ -81,48 +81,121 @@ export default class HomeScene extends Phaser.Scene {
   buildTopBar(width) {
     resolveLives(this.save);
 
-    // Coins Chip
-    this.coinChip = makeStatChip(this, 14 + 70, 12, '🟡', this.save.coins, COLORS.gold);
+    // Coins + Lives — big icon-in-circle bleeding into a blue-bordered cream
+    // pill, with a small green "+" quick-earn button on the end. Sizes are
+    // fixed but positions chain off each other's rightEdge, so the whole
+    // cluster self-adjusts across the 320-480px width range without ever
+    // needing per-breakpoint tuning.
+    this.coinChip = this.buildStatCluster(6, 8, {
+      icon: '🪙', iconBg: 0xffd94d, iconBorder: 0xc9971f,
+      value: this.save.coins, onBuy: () => this.watchAdForCoins()
+    });
 
-    // Lives Pill
-    const heartsX = 170, heartsY = 12, heartsW = 75, heartsH = 30;
-    const hg = this.add.graphics();
-    hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
-    hg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
-    this.add.text(heartsX + 15, heartsY + heartsH / 2, '❤️', { fontSize: '12px' }).setOrigin(0.5);
-    this.livesLabel = this.add.text(heartsX + 32, heartsY + heartsH / 2, `${this.save.lives.count}/${LIVES_MAX}`, {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#2b1e16'
-    }).setOrigin(0, 0.5);
-    this.livesTimerLabel = this.add.text(heartsX + heartsW / 2, heartsY + heartsH + 2, '', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#0369a1'
-    }).setOrigin(0.5, 0);
+    this.livesCluster = this.buildStatCluster(this.coinChip.rightEdge + 18, 8, {
+      icon: '❤️', iconBg: 0xff8a8a, iconBorder: 0xc23b3b, valueColor: '#b91c1c',
+      value: this.save.lives.count, onBuy: () => this.addLifeViaAd()
+    });
     this.refreshLivesDisplay();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshLivesDisplay() });
 
-    // Settings Square Button (Bo góc, viền dày)
-    const gearX = width - 26, gearY = 27;
-    const gearBtn = this.add.graphics();
-    gearBtn.fillStyle(COLORS.teal, 1).fillRoundedRect(gearX - 18, gearY - 18, 36, 36, 10);
-    gearBtn.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(gearX - 18, gearY - 18, 36, 36, 10);
-    this.add.text(gearX, gearY, '⚙️', { fontSize: '18px' }).setOrigin(0.5);
-    const gearHit = this.add.rectangle(gearX, gearY, 38, 38, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-    gearHit.on('pointerdown', () => {
-      playSound('switch', this.save.soundMuted);
-      this.settingsOverlay.setVisible(true);
+    // Settings — the shared chunky 3D icon button (blue, matches the
+    // reference's blue rounded-square gear button).
+    const gearSize = 48;
+    const gearX = width - 10 - gearSize / 2, gearY = 8 + gearSize / 2;
+    makeIconButton(this, gearX, gearY, '⚙️', {
+      size: gearSize, variant: 'blue', iconSize: '22px',
+      onClick: () => { playSound('switch', this.save.soundMuted); this.settingsOverlay.setVisible(true); }
     });
+  }
+
+  // Icon-in-circle + cream pill (blue border, bold brown value) + optional
+  // green "+" quick-action button — shared shape for the Coins and Lives
+  // HUD clusters. Returns rightEdge so callers can chain the next cluster's
+  // x position off it, and setValue/setBelow to keep it live.
+  buildStatCluster(x, y, { icon, iconBg, iconBorder, value, valueColor, onBuy }) {
+    const iconR = 18;
+    const cx = x + iconR, cy = y + iconR;
+    this.add.circle(cx, cy, iconR, iconBg).setStrokeStyle(4, iconBorder);
+    this.add.text(cx, cy, icon, { fontSize: '16px' }).setOrigin(0.5);
+
+    const pillH = 32, pillOverlap = 12, textPad = 10;
+    const pillX = cx + iconR - pillOverlap;
+    // Measure the label's width with a throwaway text object first, so the
+    // real value text can be created AFTER the pill graphics (and so drawn
+    // on top of it in the display list) instead of getting buried under it.
+    const measureTxt = this.add.text(0, 0, String(value), {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900'
+    });
+    const textWidth = measureTxt.width;
+    measureTxt.destroy();
+
+    const pillW = Math.max(56, textWidth + textPad * 2 + pillOverlap);
+    const pillG = this.add.graphics();
+    pillG.fillStyle(0xfff1de, 1).fillRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+    pillG.lineStyle(4, 0x16a5ff, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+
+    const valueTxt = this.add.text(pillX + pillOverlap + textPad, cy, String(value), {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor || '#996150'
+    }).setOrigin(0, 0.5);
+
+    let rightEdge = pillX + pillW;
+    if (onBuy) {
+      const buyR = 12;
+      const buyX = rightEdge + buyR + 2, buyY = cy;
+      const buyBg = this.add.circle(buyX, buyY, buyR, 0x67ee07).setStrokeStyle(3, 0x2f8c04);
+      const plus = this.add.graphics();
+      plus.lineStyle(3, 0xd5ffb8, 1);
+      plus.lineBetween(buyX - 5, buyY, buyX + 5, buyY);
+      plus.lineBetween(buyX, buyY - 5, buyX, buyY + 5);
+      const buyHit = this.add.rectangle(buyX, buyY, buyR * 2 + 14, buyR * 2 + 14, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+      buyHit.on('pointerdown', () => {
+        this.tweens.add({ targets: [buyBg, plus], scale: 0.85, duration: 60, yoyo: true });
+        onBuy();
+      });
+      rightEdge = buyX + buyR;
+    }
+
+    const belowTxt = this.add.text(pillX + pillW / 2, cy + pillH / 2 + 2, '', {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#0369a1'
+    }).setOrigin(0.5, 0);
+
+    return {
+      rightEdge,
+      setValue: (v) => valueTxt.setText(String(v)),
+      setBelow: (v) => belowTxt.setText(v)
+    };
   }
 
   refreshLivesDisplay() {
     resolveLives(this.save);
-    this.livesLabel.setText(`${this.save.lives.count}/${LIVES_MAX}`);
+    this.livesCluster.setValue(this.save.lives.count);
     const remaining = msUntilNextLife(this.save);
-    this.livesTimerLabel.setText(remaining > 0 ? `+1 in ${formatMs(remaining)}` : '');
+    this.livesCluster.setBelow(remaining > 0 ? `+1 in ${formatMs(remaining)}` : (this.save.lives.count >= LIVES_MAX ? 'FULL' : ''));
+  }
+
+  addLifeViaAd() {
+    resolveLives(this.save);
+    if (this.save.lives.count >= LIVES_MAX) {
+      playSound('switch', this.save.soundMuted);
+      this.showToast('❤️ Lives are already full!');
+      return;
+    }
+    playSound('switch', this.save.soundMuted);
+    showMockedAdOverlay(this, {
+      onDone: () => {
+        this.save.lives.count = Math.min(LIVES_MAX, this.save.lives.count + 1);
+        saveState(this.save);
+        this.refreshLivesDisplay();
+        playSound('win', this.save.soundMuted);
+        this.showToast('📺 +1 Life!');
+      }
+    });
   }
 
   // ---------------- Daily Quest event bar ----------------
 
   buildEventBar(width) {
-    const x = 14, y = 54, w = width - 28, h = 26;
+    const x = 14, y = 58, w = width - 28, h = 26;
     const g = this.add.graphics();
     g.fillStyle(COLORS.parchment, 1).fillRoundedRect(x, y, w, h, 13);
     g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, 13);
@@ -365,61 +438,69 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Floating side-menu (Offers) ----------------
 
   buildSideMenu(width) {
-    const startY = this.mapViewTop + 30;
+    const startY = this.mapViewTop + 62;
+    const cardSize = 68;
 
     // Watch Ad for Coins (Trái) — real mocked rewarded-ad flow, not a
     // "coming soon" placeholder.
-    const starterX = 36;
-    const starterY = startY;
-    const starterBox = this.add.container(starterX, starterY);
-
-    const starterBg = this.add.graphics();
-    starterBg.fillStyle(COLORS.gold, 1).fillRoundedRect(-20, -20, 40, 40, 10);
-    starterBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-20, -20, 40, 40, 10);
-    const starterIcon = this.add.text(0, -3, '📺', { fontSize: '18px' }).setOrigin(0.5);
-    const starterTagBg = this.add.graphics();
-    starterTagBg.fillStyle(COLORS.woodDark, 0.95).fillRoundedRect(-24, 12, 48, 14, 7);
-    const starterTagTxt = this.add.text(0, 19, `+${AD_COINS_REWARD} Xu`, {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    starterBox.add([starterBg, starterIcon, starterTagBg, starterTagTxt]);
-    const starterHit = this.add.rectangle(0, 0, 48, 48, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-    starterBox.add(starterHit);
-    starterHit.on('pointerdown', () => {
-      playSound('switch', this.save.soundMuted);
-      this.watchAdForCoins();
+    this.buildOfferCard(14 + cardSize / 2, startY, cardSize, {
+      bg: COLORS.gold, icon: '📺', label: `+${AD_COINS_REWARD} Xu`,
+      onClick: () => { playSound('switch', this.save.soundMuted); this.watchAdForCoins(); }
     });
 
-    // No Ads Floating Offer (Phải)
+    // No Ads Floating Offer (Phải) — a big diagonal "ADS" stamp reads as a
+    // "banned/no-ads" sticker once owned==false; flips to a plain ✓ once bought.
     const owned = !!this.save.adsRemoved;
-    const adsX = width - 36;
-    const adsY = startY;
-    const adsBox = this.add.container(adsX, adsY);
-
-    const adsBg = this.add.graphics();
-    adsBg.fillStyle(owned ? COLORS.teal : 0xf43f5e, 1).fillRoundedRect(-20, -20, 40, 40, 10);
-    adsBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-20, -20, 40, 40, 10);
-    const adsIcon = this.add.text(0, -3, owned ? '✓' : '🚫', { fontSize: '18px' }).setOrigin(0.5);
-
-    const adsTagBg = this.add.graphics();
-    adsTagBg.fillStyle(COLORS.woodDark, 0.95).fillRoundedRect(-24, 12, 48, 14, 7);
-    const adsTagTxt = this.add.text(0, 19, owned ? 'Owned' : 'No Ads', {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#ffffff'
-    }).setOrigin(0.5);
-
-    adsBox.add([adsBg, adsIcon, adsTagBg, adsTagTxt]);
-
-    const adsHit = this.add.rectangle(0, 0, 48, 48, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-    adsBox.add(adsHit);
-    adsHit.on('pointerdown', () => {
-      playSound('switch', this.save.soundMuted);
-      if (owned) {
-        this.showToast('✓ Ads already removed — thanks for your support!');
-        return;
+    this.buildOfferCard(width - 14 - cardSize / 2, startY, cardSize, {
+      bg: owned ? COLORS.teal : 0xf43f5e,
+      icon: owned ? '✓' : null,
+      stamp: owned ? null : 'ADS',
+      label: owned ? 'Owned' : 'No Ads',
+      onClick: () => {
+        playSound('switch', this.save.soundMuted);
+        if (owned) { this.showToast('✓ Ads already removed — thanks for your support!'); return; }
+        this.scene.start('Shop');
       }
-      this.scene.start('Shop');
     });
+  }
+
+  // Square icon card + navy label chip below — shared shape for the two
+  // floating Home offers (Watch-Ad-for-Coins, No Ads). `stamp` renders a
+  // big rotated word across the icon area instead of an emoji (used for the
+  // "ADS" no-ads-yet sticker look).
+  buildOfferCard(x, y, size, { bg, icon, stamp, label, onClick }) {
+    const box = this.add.container(x, y);
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x2b1e16, 0.35).fillRoundedRect(-size / 2, -size / 2 + 5, size, size, 16);
+    const bgG = this.add.graphics();
+    bgG.fillStyle(bg, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 16);
+    bgG.lineStyle(4, 0xffffff, 0.85).strokeRoundedRect(-size / 2, -size / 2, size, size, 16);
+    box.add([shadow, bgG]);
+
+    if (icon) box.add(this.add.text(0, -4, icon, { fontSize: Math.round(size * 0.42) + 'px' }).setOrigin(0.5));
+    if (stamp) {
+      const stampTxt = this.add.text(0, -4, stamp, {
+        fontFamily: 'Cinzel', fontSize: Math.round(size * 0.32) + 'px', fontStyle: '900', color: '#fff1de'
+      }).setOrigin(0.5).setAngle(-14).setShadow(0, 3, '#00000055', 4);
+      box.add(stampTxt);
+    }
+
+    const chipW = size - 2, chipH = 22, chipY = size / 2 + 4;
+    const chip = this.add.graphics();
+    chip.fillStyle(0x36324c, 1).fillRoundedRect(-chipW / 2, chipY, chipW, chipH, 10);
+    chip.lineStyle(2, 0x975e55, 1).strokeRoundedRect(-chipW / 2, chipY, chipW, chipH, 10);
+    box.add(chip);
+    box.add(this.add.text(0, chipY + chipH / 2, label, {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#fff9f4'
+    }).setOrigin(0.5));
+
+    const hit = this.add.rectangle(0, chipH / 2, size + 10, size + chipH + 10, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    box.add(hit);
+    hit.on('pointerdown', () => {
+      this.tweens.add({ targets: box, scale: 0.94, duration: 60, yoyo: true });
+      onClick();
+    });
+    return box;
   }
 
   watchAdForCoins() {
@@ -477,11 +558,12 @@ export default class HomeScene extends Phaser.Scene {
     shadow.fillRoundedRect(-btnW / 2, -btnH / 2 + 6, btnW, btnH, 20);
     this.ctaContainer.add(shadow);
 
-    // 2. Thân nút chính (Main Button Body)
+    // 2. Thân nút chính (Main Button Body) — cream trim ties it visually to
+    // the bottom dock right below it, instead of a plain white outline.
     const btnBg = this.add.graphics();
     btnBg.fillStyle(bgColor, 1);
     btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 20);
-    btnBg.lineStyle(4, 0xffffff, 0.95);
+    btnBg.lineStyle(6, 0xe7ccb1, 1);
     btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 20);
     this.ctaContainer.add(btnBg);
 
@@ -492,13 +574,14 @@ export default class HomeScene extends Phaser.Scene {
     this.ctaContainer.add(shine);
 
     // 4. Nhãn Level
+    const strokeColor = '#' + shadowColor.toString(16).padStart(6, '0');
     const levelLabel = this.add.text(0, diffTagText ? -7 : 0, `Level ${levelNum}`, {
       fontFamily: 'Cinzel',
       fontSize: '22px',
       fontStyle: '900',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 3
+      color: '#fef2d4',
+      stroke: strokeColor,
+      strokeThickness: 4
     }).setOrigin(0.5);
     this.ctaContainer.add(levelLabel);
 
@@ -551,34 +634,49 @@ export default class HomeScene extends Phaser.Scene {
 
   // ---------------- Bottom Navigation ----------------
 
+  // A single continuous 3-panel "dock" (cream Shop/Lock side panels + a
+  // taller gold-accented Home podium in the middle) instead of 3 separate
+  // floating rounded squares — each panel bleeds off the bottom edge of the
+  // screen so only its outer top corner reads as rounded, matching the
+  // reference's chunky "candy dock" look.
   buildBottomNav(width, height) {
-    const barH = 64;
-    const barY = height - barH - 8;
-    const bar = this.add.graphics();
-    bar.fillStyle(COLORS.teal, 1).fillRoundedRect(12, barY, width - 24, barH, 22);
-    bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, barY, width - 24, barH, 22);
+    const sideH = 76, homeH = 92, bleed = 30, R = 28;
+    const homeW = Math.min(width * 0.38, 150);
+    const homeX = width / 2 - homeW / 2;
+    const sideW = (width - homeW) / 2;
+    const sideY = height - sideH;
+    const homeY = height - homeH;
 
-    const items = [
-      { key: 'shop', icon: '🏪', label: 'CỬA HÀNG' },
-      { key: 'journey', icon: '🧭', label: 'HẢI TRÌNH' },
-      { key: 'lock', icon: '🔒', label: 'SẮP CÓ' }
-    ];
-    const step = (width - 24) / items.length;
-    const baseY = barY + barH / 2;
+    const drawDockPanel = (x, y, w, h, fill, radii) => {
+      const g = this.add.graphics();
+      g.fillStyle(fill, 1).fillRoundedRect(x, y, w, h + bleed, radii);
+      g.lineStyle(5, 0xe7ccb1, 1).strokeRoundedRect(x, y, w, h + bleed, radii);
+    };
 
-    items.forEach((item, i) => {
-      const cx = 12 + step * i + step / 2;
-      const active = item.key === 'journey';
-      const size = active ? 52 : 44;
-      const cy = baseY - (active ? 10 : 0);
+    drawDockPanel(0, sideY, sideW, sideH, 0xfee1b9, { tl: R, tr: 0, bl: 0, br: 0 });
+    drawDockPanel(width - sideW, sideY, sideW, sideH, 0xfee1b9, { tl: 0, tr: R, bl: 0, br: 0 });
+    drawDockPanel(homeX, homeY, homeW, homeH, 0xfff1de, { tl: R, tr: R, bl: 0, br: 0 });
 
-      const btnBg = this.add.graphics();
-      btnBg.fillStyle(active ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, cy - size / 2, size, size, 14);
-      btnBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, cy - size / 2, size, size, 14);
-      this.add.text(cx, cy, item.icon, { fontSize: active ? '22px' : '18px' }).setOrigin(0.5);
+    this.buildDockButton(sideW / 2, sideY + 6, '🏪', 'CỬA HÀNG', () => this.onNavTap('shop'), false);
+    this.buildDockButton(homeX + homeW / 2, homeY + 2, '🏠', 'HOME', () => this.onNavTap('journey'), true);
+    this.buildDockButton(width - sideW / 2, sideY + 6, '🔒', 'SẮP CÓ', () => this.onNavTap('lock'), false);
+  }
 
-      const hit = this.add.rectangle(cx, baseY, step - 6, barH, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => this.onNavTap(item.key));
+  buildDockButton(cx, topY, icon, label, onClick, isHome) {
+    const size = isHome ? 58 : 46;
+    const iconY = topY + size / 2 + 4;
+    const iconBg = this.add.graphics();
+    iconBg.fillStyle(isHome ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
+    iconBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
+    this.add.text(cx, iconY, icon, { fontSize: (isHome ? 26 : 20) + 'px' }).setOrigin(0.5);
+    this.add.text(cx, iconY + size / 2 + 12, label, {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#36324c'
+    }).setOrigin(0.5);
+
+    const hit = this.add.rectangle(cx, topY + 40, size + 22, 90, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    hit.on('pointerdown', () => {
+      this.tweens.add({ targets: iconBg, scale: 0.9, duration: 60, yoyo: true });
+      onClick();
     });
   }
 
