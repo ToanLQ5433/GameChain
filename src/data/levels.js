@@ -9,15 +9,15 @@
 export const CATEGORIES = [
   {
     "id": "nhap-mon",
-    "title": "Nhập Môn",
+    "title": "Basics",
     "icon": "🧭",
     "mechanic": "CORE",
-    "desc": "Chạm điểm neo và kéo phủ kín bàn cờ với nhiều xích cùng lúc — luật gốc trước khi học các cơ chế khác.",
+    "desc": "Tap an anchor and drag to cover the whole board with several chains at once — the core rule before learning any other mechanic.",
     "levels": [
       {
         "rows": 3,
         "cols": 4,
-        "name": "Nhập Môn 1: Song Xích 3x4",
+        "name": "Basics 1: Double Chain 3x4",
         "anchors": [
           {
             "id": "A",
@@ -92,7 +92,7 @@ export const CATEGORIES = [
       {
         "rows": 3,
         "cols": 4,
-        "name": "Nhập Môn 2: Song Xích 3x4",
+        "name": "Basics 2: Double Chain 3x4",
         "anchors": [
           {
             "id": "A",
@@ -167,7 +167,7 @@ export const CATEGORIES = [
       {
         "rows": 3,
         "cols": 4,
-        "name": "Nhập Môn 3: Song Xích 3x4",
+        "name": "Basics 3: Double Chain 3x4",
         "anchors": [
           {
             "id": "A",
@@ -250,7 +250,7 @@ export const CATEGORIES = [
           "001100",
           "000000"
         ],
-        "name": "Nhập Môn 4: Song Xích diamond6",
+        "name": "Basics 4: Double Chain diamond6",
         "anchors": [
           {
             "id": "A",
@@ -325,7 +325,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Nhập Môn 5: Song Xích 4x4",
+        "name": "Basics 5: Double Chain 4x4",
         "anchors": [
           {
             "id": "A",
@@ -416,7 +416,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Nhập Môn 6: Song Xích 5x3",
+        "name": "Basics 6: Double Chain 5x3",
         "anchors": [
           {
             "id": "A",
@@ -503,7 +503,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Nhập Môn 7: Song Xích 4x4",
+        "name": "Basics 7: Double Chain 4x4",
         "anchors": [
           {
             "id": "A",
@@ -603,7 +603,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Nhập Môn 8: Song Xích T7",
+        "name": "Basics 8: Double Chain T7",
         "anchors": [
           {
             "id": "A",
@@ -726,7 +726,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Nhập Môn 9: Song Xích 4x5",
+        "name": "Basics 9: Double Chain 4x5",
         "anchors": [
           {
             "id": "A",
@@ -833,7 +833,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Nhập Môn 10: Tam Xích 5x4",
+        "name": "Basics 10: Triple Chain 5x4",
         "anchors": [
           {
             "id": "A",
@@ -949,7 +949,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 6,
-        "name": "Nhập Môn 11: Tam Xích 4x6",
+        "name": "Basics 11: Triple Chain 4x6",
         "anchors": [
           {
             "id": "A",
@@ -1090,7 +1090,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Nhập Môn 12: Tam Xích cross7",
+        "name": "Basics 12: Triple Chain cross7",
         "anchors": [
           {
             "id": "A",
@@ -1222,7 +1222,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Nhập Môn 13: Tam Xích 6x4",
+        "name": "Basics 13: Triple Chain 6x4",
         "anchors": [
           {
             "id": "A",
@@ -1354,7 +1354,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Nhập Môn 14: Tam Xích 5x5",
+        "name": "Basics 14: Triple Chain 5x5",
         "anchors": [
           {
             "id": "A",
@@ -1490,7 +1490,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 6,
-        "name": "Nhập Môn 15: Tam Xích 4x6",
+        "name": "Basics 15: Triple Chain 4x6",
         "anchors": [
           {
             "id": "A",
@@ -1631,7 +1631,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Nhập Môn 16: Tam Xích cross7",
+        "name": "Basics 16: Triple Chain cross7",
         "anchors": [
           {
             "id": "A",
@@ -1763,7 +1763,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 6,
-        "name": "Nhập Môn 17: Tam Xích 5x6",
+        "name": "Basics 17: Triple Chain 5x6",
         "anchors": [
           {
             "id": "A",
@@ -1919,7 +1919,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 6,
-        "name": "Nhập Môn 18: Tam Xích 5x6",
+        "name": "Basics 18: Triple Chain 5x6",
         "anchors": [
           {
             "id": "A",
@@ -2075,7 +2075,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 7,
-        "name": "Nhập Môn 19: Tứ Xích 4x7",
+        "name": "Basics 19: Quad Chain 4x7",
         "anchors": [
           {
             "id": "A",
@@ -2241,7 +2241,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Nhập Môn 20: Tứ Xích T7",
+        "name": "Basics 20: Quad Chain T7",
         "anchors": [
           {
             "id": "A",
@@ -2382,7 +2382,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Nhập Môn 21: Tứ Xích 6x6",
+        "name": "Basics 21: Quad Chain 6x6",
         "anchors": [
           {
             "id": "A",
@@ -2571,7 +2571,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Nhập Môn 22: Tứ Xích 5x7",
+        "name": "Basics 22: Quad Chain 5x7",
         "anchors": [
           {
             "id": "A",
@@ -2756,7 +2756,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Nhập Môn 23: Tứ Xích 7x5",
+        "name": "Basics 23: Quad Chain 7x5",
         "anchors": [
           {
             "id": "A",
@@ -2950,7 +2950,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Nhập Môn 24: Tứ Xích T7",
+        "name": "Basics 24: Quad Chain T7",
         "anchors": [
           {
             "id": "A",
@@ -3091,7 +3091,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Nhập Môn 25: Tứ Xích 6x6",
+        "name": "Basics 25: Quad Chain 6x6",
         "anchors": [
           {
             "id": "A",
@@ -3280,7 +3280,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Nhập Môn 26: 5 Xích 7x6",
+        "name": "Basics 26: 5 Chains 7x6",
         "anchors": [
           {
             "id": "A",
@@ -3502,7 +3502,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Nhập Môn 27: 5 Xích 7x6",
+        "name": "Basics 27: 5 Chains 7x6",
         "anchors": [
           {
             "id": "A",
@@ -3733,7 +3733,7 @@ export const CATEGORIES = [
           "1111111",
           "1111111"
         ],
-        "name": "Nhập Môn 28: 5 Xích ring7",
+        "name": "Basics 28: 5 Chains ring7",
         "anchors": [
           {
             "id": "A",
@@ -3947,7 +3947,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Nhập Môn 29: 5 Xích 7x6",
+        "name": "Basics 29: 5 Chains 7x6",
         "anchors": [
           {
             "id": "A",
@@ -4169,7 +4169,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Nhập Môn 30: 5 Xích 7x6",
+        "name": "Basics 30: 5 Chains 7x6",
         "anchors": [
           {
             "id": "A",
@@ -4392,15 +4392,15 @@ export const CATEGORIES = [
   },
   {
     "id": "vat-can",
-    "title": "Vật Cản",
+    "title": "Obstacles",
     "icon": "🪨",
     "mechanic": "MEC-01",
-    "desc": "Rock chặn cứng, Wall chặn theo cạnh, Push Rock đẩy được để mở đường.",
+    "desc": "Rocks block hard, Walls block by edge, Push Rocks can be pushed to clear the way.",
     "levels": [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Vật Cản 1: Tảng Đá Chặn Đường",
+        "name": "Obstacles 1: Rock Blocking the Path",
         "rocks": [
           {
             "r": 0,
@@ -4493,7 +4493,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Vật Cản 2: Tảng Đá Chặn Đường",
+        "name": "Obstacles 2: Rock Blocking the Path",
         "rocks": [
           {
             "r": 2,
@@ -4582,7 +4582,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Vật Cản 3: Tảng Đá Chặn Đường",
+        "name": "Obstacles 3: Rock Blocking the Path",
         "rocks": [
           {
             "r": 3,
@@ -4675,7 +4675,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Vật Cản 4: Tảng Đá Chặn Đường",
+        "name": "Obstacles 4: Rock Blocking the Path",
         "rocks": [
           {
             "r": 1,
@@ -4768,7 +4768,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Vật Cản 5: Tảng Đá Chặn Đường",
+        "name": "Obstacles 5: Rock Blocking the Path",
         "rocks": [
           {
             "r": 1,
@@ -4877,7 +4877,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Vật Cản 6: Nhiều Tảng Đá",
+        "name": "Obstacles 6: Multiple Rocks",
         "rocks": [
           {
             "r": 2,
@@ -4986,7 +4986,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Vật Cản 7: Nhiều Tảng Đá",
+        "name": "Obstacles 7: Multiple Rocks",
         "rocks": [
           {
             "r": 1,
@@ -5095,7 +5095,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Vật Cản 8: Nhiều Tảng Đá",
+        "name": "Obstacles 8: Multiple Rocks",
         "rocks": [
           {
             "r": 4,
@@ -5204,7 +5204,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Vật Cản 9: Vách Ngăn Vô Hình",
+        "name": "Obstacles 9: Invisible Wall",
         "walls": [
           {
             "r1": 4,
@@ -5335,7 +5335,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Vật Cản 10: Vách Ngăn Vô Hình",
+        "name": "Obstacles 10: Invisible Wall",
         "walls": [
           {
             "r1": 3,
@@ -5466,7 +5466,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 11: Vách Ngăn Vô Hình",
+        "name": "Obstacles 11: Invisible Wall",
         "walls": [
           {
             "r1": 2,
@@ -5610,7 +5610,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Vật Cản 12: Vách Ngăn Vô Hình",
+        "name": "Obstacles 12: Invisible Wall",
         "walls": [
           {
             "r1": 5,
@@ -5741,7 +5741,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 13: Vách Ngăn Vô Hình",
+        "name": "Obstacles 13: Invisible Wall",
         "walls": [
           {
             "r1": 3,
@@ -5882,7 +5882,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 14: Vách Ngăn Vô Hình",
+        "name": "Obstacles 14: Invisible Wall",
         "walls": [
           {
             "r1": 1,
@@ -6023,7 +6023,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 4,
-        "name": "Vật Cản 15: Vách Ngăn Vô Hình",
+        "name": "Obstacles 15: Invisible Wall",
         "walls": [
           {
             "r1": 1,
@@ -6194,7 +6194,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Vật Cản 16: Vách Ngăn Vô Hình",
+        "name": "Obstacles 16: Invisible Wall",
         "walls": [
           {
             "r1": 5,
@@ -6340,7 +6340,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Vật Cản 17: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 17: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 4,
@@ -6518,7 +6518,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 18: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 18: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 1,
@@ -6656,7 +6656,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 19: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 19: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 2,
@@ -6794,7 +6794,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 20: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 20: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 2,
@@ -6932,7 +6932,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 21: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 21: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 1,
@@ -7070,7 +7070,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Vật Cản 22: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 22: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 2,
@@ -7248,7 +7248,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Vật Cản 23: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 23: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 2,
@@ -7386,7 +7386,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Vật Cản 24: Đẩy Đá Dọn Đường",
+        "name": "Obstacles 24: Push Rock Clears the Way",
         "pushRocks": [
           {
             "r": 4,
@@ -7564,7 +7564,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Vật Cản 25: Nhiều Tảng Đá",
+        "name": "Obstacles 25: Multiple Rocks",
         "rocks": [
           {
             "r": 4,
@@ -7742,7 +7742,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Vật Cản 26: Vách Ngăn Vô Hình",
+        "name": "Obstacles 26: Invisible Wall",
         "walls": [
           {
             "r1": 1,
@@ -7932,7 +7932,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Vật Cản 27: Nhiều Tảng Đá",
+        "name": "Obstacles 27: Multiple Rocks",
         "rocks": [
           {
             "r": 6,
@@ -8119,7 +8119,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Vật Cản 28: Vách Ngăn Vô Hình",
+        "name": "Obstacles 28: Invisible Wall",
         "walls": [
           {
             "r1": 1,
@@ -8265,7 +8265,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Vật Cản 29: Nhiều Tảng Đá",
+        "name": "Obstacles 29: Multiple Rocks",
         "rocks": [
           {
             "r": 2,
@@ -8471,7 +8471,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 7,
-        "name": "Vật Cản 30: Vách Ngăn Vô Hình",
+        "name": "Obstacles 30: Invisible Wall",
         "walls": [
           {
             "r1": 4,
@@ -8690,15 +8690,15 @@ export const CATEGORIES = [
   },
   {
     "id": "dinh-huong-mau",
-    "title": "Định Hướng & Màu",
+    "title": "Direction & Color",
     "icon": "🎨",
     "mechanic": "MEC-02",
-    "desc": "Mũi Tên ép hướng bước kế tiếp; Lăng Kính đổi màu dây; Cổng Màu chỉ cho qua đúng màu.",
+    "desc": "Arrows force the direction of your next step; Prisms recolor the chain; Color Gates only let the matching color through.",
     "levels": [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Định Hướng 1: Mũi Tên + Cổng Màu",
+        "name": "Direction 1: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -8806,7 +8806,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Định Hướng 2: Mũi Tên + Cổng Màu",
+        "name": "Direction 2: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -8918,7 +8918,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Định Hướng 3: Mũi Tên + Cổng Màu",
+        "name": "Direction 3: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -9039,7 +9039,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Định Hướng 4: Mũi Tên + Cổng Màu",
+        "name": "Direction 4: Arrow + Color Gate",
         "arrows": [
           {
             "r": 6,
@@ -9183,7 +9183,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Định Hướng 5: Mũi Tên + Cổng Màu",
+        "name": "Direction 5: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -9311,7 +9311,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Định Hướng 6: Mũi Tên + Cổng Màu",
+        "name": "Direction 6: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -9439,7 +9439,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Định Hướng 7: Mũi Tên + Cổng Màu",
+        "name": "Direction 7: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -9576,7 +9576,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Định Hướng 8: Mũi Tên + Cổng Màu",
+        "name": "Direction 8: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -9720,7 +9720,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 6,
-        "name": "Định Hướng 9: Mũi Tên + Cổng Màu",
+        "name": "Direction 9: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -9864,7 +9864,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Định Hướng 10: Mũi Tên + Cổng Màu",
+        "name": "Direction 10: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -10012,7 +10012,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Định Hướng 11: Mũi Tên + Cổng Màu",
+        "name": "Direction 11: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -10168,7 +10168,7 @@ export const CATEGORIES = [
           "001100",
           "000000"
         ],
-        "name": "Định Hướng 12: Mũi Tên + Cổng Màu",
+        "name": "Direction 12: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -10264,7 +10264,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Định Hướng 13: Mũi Tên + Cổng Màu",
+        "name": "Direction 13: Arrow + Color Gate",
         "arrows": [
           {
             "r": 1,
@@ -10412,7 +10412,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Định Hướng 14: Mũi Tên + Cổng Màu",
+        "name": "Direction 14: Arrow + Color Gate",
         "arrows": [
           {
             "r": 2,
@@ -10560,7 +10560,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Định Hướng 15: Mũi Tên + Cổng Màu",
+        "name": "Direction 15: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -10716,7 +10716,7 @@ export const CATEGORIES = [
           "001100",
           "000000"
         ],
-        "name": "Định Hướng 16: Mũi Tên + Cổng Màu",
+        "name": "Direction 16: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -10812,7 +10812,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Định Hướng 17: Mũi Tên + Cổng Màu",
+        "name": "Direction 17: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -10989,7 +10989,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Định Hướng 18: Mũi Tên + Cổng Màu",
+        "name": "Direction 18: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -11166,7 +11166,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Định Hướng 19: Mũi Tên + Cổng Màu",
+        "name": "Direction 19: Arrow + Color Gate",
         "arrows": [
           {
             "r": 1,
@@ -11351,7 +11351,7 @@ export const CATEGORIES = [
           "111111",
           "111111"
         ],
-        "name": "Định Hướng 20: Mũi Tên + Cổng Màu",
+        "name": "Direction 20: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -11516,7 +11516,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Định Hướng 21: Mũi Tên + Cổng Màu",
+        "name": "Direction 21: Arrow + Color Gate",
         "arrows": [
           {
             "r": 3,
@@ -11722,7 +11722,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Định Hướng 22: Mũi Tên + Cổng Màu",
+        "name": "Direction 22: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -11928,7 +11928,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Định Hướng 23: Mũi Tên + Cổng Màu",
+        "name": "Direction 23: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -12139,7 +12139,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Định Hướng 24: Mũi Tên + Cổng Màu",
+        "name": "Direction 24: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -12297,7 +12297,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Định Hướng 25: Mũi Tên + Cổng Màu",
+        "name": "Direction 25: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -12499,7 +12499,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Định Hướng 26: Mũi Tên + Cổng Màu",
+        "name": "Direction 26: Arrow + Color Gate",
         "arrows": [
           {
             "r": 1,
@@ -12701,7 +12701,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Định Hướng 27: Mũi Tên + Cổng Màu",
+        "name": "Direction 27: Arrow + Color Gate",
         "arrows": [
           {
             "r": 2,
@@ -12912,7 +12912,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Định Hướng 28: Mũi Tên + Cổng Màu",
+        "name": "Direction 28: Arrow + Color Gate",
         "arrows": [
           {
             "r": 0,
@@ -13070,7 +13070,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Định Hướng 29: Mũi Tên + Cổng Màu",
+        "name": "Direction 29: Arrow + Color Gate",
         "arrows": [
           {
             "r": 2,
@@ -13300,7 +13300,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Định Hướng 30: Mũi Tên + Cổng Màu",
+        "name": "Direction 30: Arrow + Color Gate",
         "arrows": [
           {
             "r": 4,
@@ -13503,15 +13503,15 @@ export const CATEGORIES = [
   },
   {
     "id": "mat-ma-so",
-    "title": "Mật Mã Số",
+    "title": "Number Code",
     "icon": "🔢",
     "mechanic": "MEC-03",
-    "desc": "Chạm các mốc số theo ĐÚNG thứ tự tăng dần, kết thúc đúng tại mốc cuối cùng.",
+    "desc": "Touch the numbered waypoints in strictly increasing order, ending exactly on the last one.",
     "levels": [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Mật Mã 1: 3 Mốc Số",
+        "name": "Code 1: 3 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -13605,7 +13605,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Mật Mã 2: 3 Mốc Số",
+        "name": "Code 2: 3 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -13699,7 +13699,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Mật Mã 3: 3 Mốc Số",
+        "name": "Code 3: 3 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -13805,7 +13805,7 @@ export const CATEGORIES = [
           "111111",
           "111111"
         ],
-        "name": "Mật Mã 4: 3 Mốc Số",
+        "name": "Code 4: 3 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -13947,7 +13947,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Mật Mã 5: 4 Mốc Số",
+        "name": "Code 5: 4 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14065,7 +14065,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Mật Mã 6: 4 Mốc Số",
+        "name": "Code 6: 4 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14183,7 +14183,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Mật Mã 7: 4 Mốc Số",
+        "name": "Code 7: 4 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14310,7 +14310,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Mật Mã 8: 4 Mốc Số",
+        "name": "Code 8: 4 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14444,7 +14444,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Mật Mã 9: 5 Mốc Số",
+        "name": "Code 9: 5 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14582,7 +14582,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Mật Mã 10: 5 Mốc Số",
+        "name": "Code 10: 5 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14724,7 +14724,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Mật Mã 11: 5 Mốc Số",
+        "name": "Code 11: 5 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14874,7 +14874,7 @@ export const CATEGORIES = [
           "001100",
           "000000"
         ],
-        "name": "Mật Mã 12: 5 Mốc Số",
+        "name": "Code 12: 5 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -14964,7 +14964,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 6,
-        "name": "Mật Mã 13: 6 Mốc Số",
+        "name": "Code 13: 6 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15130,7 +15130,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Mật Mã 14: 6 Mốc Số",
+        "name": "Code 14: 6 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15296,7 +15296,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 4,
-        "name": "Mật Mã 15: 6 Mốc Số",
+        "name": "Code 15: 6 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15463,7 +15463,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Mật Mã 16: 6 Mốc Số",
+        "name": "Code 16: 6 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15605,7 +15605,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Mật Mã 17: 7 Mốc Số",
+        "name": "Code 17: 7 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15775,7 +15775,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Mật Mã 18: 7 Mốc Số",
+        "name": "Code 18: 7 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -15965,7 +15965,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Mật Mã 19: 7 Mốc Số",
+        "name": "Code 19: 7 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -16164,7 +16164,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Mật Mã 20: 7 Mốc Số",
+        "name": "Code 20: 7 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -16310,7 +16310,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Mật Mã 21: 8 Mốc Số",
+        "name": "Code 21: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -16504,7 +16504,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Mật Mã 22: 8 Mốc Số",
+        "name": "Code 22: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -16702,7 +16702,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Mật Mã 23: 8 Mốc Số",
+        "name": "Code 23: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -16905,7 +16905,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Mật Mã 24: 8 Mốc Số",
+        "name": "Code 24: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -17055,7 +17055,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Mật Mã 25: 8 Mốc Số",
+        "name": "Code 25: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -17249,7 +17249,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Mật Mã 26: 8 Mốc Số",
+        "name": "Code 26: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -17471,7 +17471,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 7,
-        "name": "Mật Mã 27: 8 Mốc Số",
+        "name": "Code 27: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -17702,7 +17702,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Mật Mã 28: 8 Mốc Số",
+        "name": "Code 28: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -17852,7 +17852,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Mật Mã 29: 8 Mốc Số",
+        "name": "Code 29: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -18074,7 +18074,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Mật Mã 30: 8 Mốc Số",
+        "name": "Code 30: 8 Waypoints",
         "waypoints": {
           "A": [
             {
@@ -18297,15 +18297,15 @@ export const CATEGORIES = [
   },
   {
     "id": "cong-tac",
-    "title": "Công Tắc",
+    "title": "Switches",
     "icon": "🔘",
     "mechanic": "MEC-04",
-    "desc": "Giữ 1 dây trên Công Tắc để mở Cổng cho dây khác; Latch giữ Cổng mở vĩnh viễn sau 1 lần kích hoạt.",
+    "desc": "Hold one chain on a Switch to open a Gate for another chain; a Latch keeps the Gate open forever after one activation.",
     "levels": [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Công Tắc 1: Mở Khoá Cơ Bản",
+        "name": "Switch 1: Basic Unlock",
         "switches": [
           {
             "r": 3,
@@ -18401,7 +18401,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 4,
-        "name": "Công Tắc 2: Mở Khoá Chéo Xích",
+        "name": "Switch 2: Cross-Chain Unlock",
         "switches": [
           {
             "r": 3,
@@ -18501,7 +18501,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Công Tắc 3: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 3: Permanent Latch",
         "switches": [
           {
             "r": 0,
@@ -18606,7 +18606,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Công Tắc 4: Mở Khoá Chéo Xích",
+        "name": "Switch 4: Cross-Chain Unlock",
         "switches": [
           {
             "r": 2,
@@ -18738,7 +18738,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 4,
-        "name": "Công Tắc 5: Mở Khoá Cơ Bản",
+        "name": "Switch 5: Basic Unlock",
         "switches": [
           {
             "r": 4,
@@ -18854,7 +18854,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Công Tắc 6: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 6: Permanent Latch",
         "switches": [
           {
             "r": 0,
@@ -18970,7 +18970,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Công Tắc 7: Mở Khoá Cơ Bản",
+        "name": "Switch 7: Basic Unlock",
         "switches": [
           {
             "r": 1,
@@ -19095,7 +19095,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Công Tắc 8: Mở Khoá Chéo Xích",
+        "name": "Switch 8: Cross-Chain Unlock",
         "switches": [
           {
             "r": 5,
@@ -19227,7 +19227,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Công Tắc 9: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 9: Permanent Latch",
         "switches": [
           {
             "r": 2,
@@ -19343,7 +19343,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Công Tắc 10: Mở Khoá Chéo Xích",
+        "name": "Switch 10: Cross-Chain Unlock",
         "switches": [
           {
             "r": 4,
@@ -19475,7 +19475,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Công Tắc 11: Mở Khoá Cơ Bản",
+        "name": "Switch 11: Basic Unlock",
         "switches": [
           {
             "r": 4,
@@ -19615,7 +19615,7 @@ export const CATEGORIES = [
           "001100",
           "000000"
         ],
-        "name": "Công Tắc 12: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 12: Permanent Latch",
         "switches": [
           {
             "r": 3,
@@ -19699,7 +19699,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 4,
-        "name": "Công Tắc 13: Mở Khoá Cơ Bản",
+        "name": "Switch 13: Basic Unlock",
         "switches": [
           {
             "r": 6,
@@ -19847,7 +19847,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Công Tắc 14: Mở Khoá Chéo Xích",
+        "name": "Switch 14: Cross-Chain Unlock",
         "switches": [
           {
             "r": 1,
@@ -19983,7 +19983,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Công Tắc 15: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 15: Permanent Latch",
         "switches": [
           {
             "r": 0,
@@ -20128,7 +20128,7 @@ export const CATEGORIES = [
           "0011000",
           "0011000"
         ],
-        "name": "Công Tắc 16: Mở Khoá Chéo Xích",
+        "name": "Switch 16: Cross-Chain Unlock",
         "switches": [
           {
             "r": 5,
@@ -20260,7 +20260,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Công Tắc 17: Mở Khoá Cơ Bản",
+        "name": "Switch 17: Basic Unlock",
         "switches": [
           {
             "r": 3,
@@ -20416,7 +20416,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Công Tắc 18: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 18: Permanent Latch",
         "switches": [
           {
             "r": 4,
@@ -20572,7 +20572,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 5,
-        "name": "Công Tắc 19: Mở Khoá Cơ Bản",
+        "name": "Switch 19: Basic Unlock",
         "switches": [
           {
             "r": 2,
@@ -20737,7 +20737,7 @@ export const CATEGORIES = [
           "1111111",
           "1111111"
         ],
-        "name": "Công Tắc 20: Mở Khoá Chéo Xích",
+        "name": "Switch 20: Cross-Chain Unlock",
         "switches": [
           {
             "r": 1,
@@ -20933,7 +20933,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Công Tắc 21: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 21: Permanent Latch",
         "switches": [
           {
             "r": 6,
@@ -21109,7 +21109,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Công Tắc 22: Mở Khoá Chéo Xích",
+        "name": "Switch 22: Cross-Chain Unlock",
         "switches": [
           {
             "r": 0,
@@ -21285,7 +21285,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Công Tắc 23: Mở Khoá Cơ Bản",
+        "name": "Switch 23: Basic Unlock",
         "switches": [
           {
             "r": 1,
@@ -21470,7 +21470,7 @@ export const CATEGORIES = [
           "1111111",
           "1111111"
         ],
-        "name": "Công Tắc 24: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 24: Permanent Latch",
         "switches": [
           {
             "r": 3,
@@ -21666,7 +21666,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Công Tắc 25: Mở Khoá Cơ Bản",
+        "name": "Switch 25: Basic Unlock",
         "switches": [
           {
             "r": 2,
@@ -21846,7 +21846,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Công Tắc 26: Mở Khoá Chéo Xích",
+        "name": "Switch 26: Cross-Chain Unlock",
         "switches": [
           {
             "r": 0,
@@ -22026,7 +22026,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Công Tắc 27: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 27: Permanent Latch",
         "switches": [
           {
             "r": 0,
@@ -22210,7 +22210,7 @@ export const CATEGORIES = [
           "111111",
           "111111"
         ],
-        "name": "Công Tắc 28: Mở Khoá Chéo Xích",
+        "name": "Switch 28: Cross-Chain Unlock",
         "switches": [
           {
             "r": 3,
@@ -22354,7 +22354,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 7,
-        "name": "Công Tắc 29: Mở Khoá Cơ Bản",
+        "name": "Switch 29: Basic Unlock",
         "switches": [
           {
             "r": 5,
@@ -22558,7 +22558,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Công Tắc 30: Chốt Khoá Vĩnh Viễn",
+        "name": "Switch 30: Permanent Latch",
         "switches": [
           {
             "r": 4,
@@ -22763,15 +22763,15 @@ export const CATEGORIES = [
   },
   {
     "id": "bom-tinh",
-    "title": "Bom Tĩnh",
+    "title": "Static Bombs",
     "icon": "💣",
     "mechanic": "MEC-05",
-    "desc": "Chạm trực tiếp vào Bom = thua ngay. Chỉ phá được Bom bằng cách đẩy Push Rock va vào.",
+    "desc": "Touching a Bomb directly is an instant loss. The only way to destroy a Bomb is to push a Push Rock into it.",
     "levels": [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 1: Phá Bom",
+        "name": "Bomb 1: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -22906,7 +22906,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 2: Phá Bom",
+        "name": "Bomb 2: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -23041,7 +23041,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 3: Phá Bom",
+        "name": "Bomb 3: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -23176,7 +23176,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 4: Phá Bom",
+        "name": "Bomb 4: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -23311,7 +23311,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 5: Phá Bom",
+        "name": "Bomb 5: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -23446,7 +23446,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 6: Phá Bom",
+        "name": "Bomb 6: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -23581,7 +23581,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 7: Phá Bom",
+        "name": "Bomb 7: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -23716,7 +23716,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 8: Phá Bom",
+        "name": "Bomb 8: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 1,
@@ -23851,7 +23851,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 9: Phá Bom",
+        "name": "Bomb 9: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 1,
@@ -23986,7 +23986,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 10: Phá Bom",
+        "name": "Bomb 10: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -24121,7 +24121,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Bom Tĩnh 11: Phá Bom",
+        "name": "Bomb 11: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 5,
@@ -24296,7 +24296,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 12: Phá Bom",
+        "name": "Bomb 12: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -24431,7 +24431,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Bom Tĩnh 13: Phá Bom",
+        "name": "Bomb 13: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -24606,7 +24606,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 14: Phá Bom",
+        "name": "Bomb 14: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -24741,7 +24741,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Bom Tĩnh 15: Phá Bom",
+        "name": "Bomb 15: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 5,
@@ -24916,7 +24916,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Bom Tĩnh 16: Phá Bom",
+        "name": "Bomb 16: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -25091,7 +25091,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 17: Phá Bom",
+        "name": "Bomb 17: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -25235,7 +25235,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 18: Phá Bom",
+        "name": "Bomb 18: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -25379,7 +25379,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 19: Phá Bom",
+        "name": "Bomb 19: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 1,
@@ -25523,7 +25523,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Bom Tĩnh 20: Phá Bom",
+        "name": "Bomb 20: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 1,
@@ -25707,7 +25707,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 21: Phá Bom",
+        "name": "Bomb 21: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -25851,7 +25851,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Bom Tĩnh 22: Phá Bom",
+        "name": "Bomb 22: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -26035,7 +26035,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Bom Tĩnh 23: Phá Bom",
+        "name": "Bomb 23: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -26179,7 +26179,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Bom Tĩnh 24: Phá Bom",
+        "name": "Bomb 24: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 2,
@@ -26363,7 +26363,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 7,
-        "name": "Bom Tĩnh 25: Phá Bom",
+        "name": "Bomb 25: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -26547,7 +26547,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Bom Tĩnh 26: Phá Bom",
+        "name": "Bomb 26: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -26787,7 +26787,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Bom Tĩnh 27: Phá Bom",
+        "name": "Bomb 27: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 4,
@@ -27027,7 +27027,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Bom Tĩnh 28: Phá Bom",
+        "name": "Bomb 28: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 5,
@@ -27267,7 +27267,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Bom Tĩnh 29: Phá Bom",
+        "name": "Bomb 29: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 3,
@@ -27451,7 +27451,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Bom Tĩnh 30: Phá Bom",
+        "name": "Bomb 30: Destroy the Bomb",
         "pushRocks": [
           {
             "r": 4,
@@ -27692,15 +27692,15 @@ export const CATEGORIES = [
   },
   {
     "id": "tong-hop",
-    "title": "Tổng Hợp",
+    "title": "Combo",
     "icon": "⚔️",
     "mechanic": "COMBO",
-    "desc": "Thử thách khó nhất — kết hợp 2-3 cơ chế lõi trong cùng 1 màn.",
+    "desc": "The hardest challenge — combining 2-3 core mechanics in the same level.",
     "levels": [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 1: Công Tắc + Đẩy Đá",
+        "name": "Combo 1: Switch + Push Rock",
         "switches": [
           {
             "r": 1,
@@ -27837,7 +27837,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 3,
-        "name": "Tổng Hợp 2: Cổng Màu + Mật Mã Số",
+        "name": "Combo 2: Color Gate + Number Code",
         "prisms": [
           {
             "r": 0,
@@ -27945,7 +27945,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 3: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 3: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 2,
@@ -28088,7 +28088,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 4: Công Tắc + Đẩy Đá",
+        "name": "Combo 4: Switch + Push Rock",
         "switches": [
           {
             "r": 3,
@@ -28225,7 +28225,7 @@ export const CATEGORIES = [
       {
         "rows": 4,
         "cols": 5,
-        "name": "Tổng Hợp 5: Cổng Màu + Mật Mã Số",
+        "name": "Combo 5: Color Gate + Number Code",
         "prisms": [
           {
             "r": 3,
@@ -28353,7 +28353,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 6: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 6: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 3,
@@ -28496,7 +28496,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 7: Công Tắc + Đẩy Đá",
+        "name": "Combo 7: Switch + Push Rock",
         "switches": [
           {
             "r": 3,
@@ -28641,7 +28641,7 @@ export const CATEGORIES = [
           "111111",
           "111111"
         ],
-        "name": "Tổng Hợp 8: Cổng Màu + Mật Mã Số",
+        "name": "Combo 8: Color Gate + Number Code",
         "prisms": [
           {
             "r": 1,
@@ -28797,7 +28797,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 9: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 9: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 1,
@@ -28940,7 +28940,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 10: Công Tắc + Đẩy Đá",
+        "name": "Combo 10: Switch + Push Rock",
         "switches": [
           {
             "r": 1,
@@ -29077,7 +29077,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 4,
-        "name": "Tổng Hợp 11: Cổng Màu + Mật Mã Số",
+        "name": "Combo 11: Color Gate + Number Code",
         "prisms": [
           {
             "r": 0,
@@ -29221,7 +29221,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 12: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 12: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 3,
@@ -29404,7 +29404,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 13: Công Tắc + Đẩy Đá",
+        "name": "Combo 13: Switch + Push Rock",
         "switches": [
           {
             "r": 1,
@@ -29541,7 +29541,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 4,
-        "name": "Tổng Hợp 14: Cổng Màu + Mật Mã Số",
+        "name": "Combo 14: Color Gate + Number Code",
         "prisms": [
           {
             "r": 6,
@@ -29701,7 +29701,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 15: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 15: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 3,
@@ -29844,7 +29844,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 16: Công Tắc + Đẩy Đá",
+        "name": "Combo 16: Switch + Push Rock",
         "switches": [
           {
             "r": 0,
@@ -29981,7 +29981,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 6,
-        "name": "Tổng Hợp 17: Cổng Màu + Mật Mã Số",
+        "name": "Combo 17: Color Gate + Number Code",
         "prisms": [
           {
             "r": 1,
@@ -30149,7 +30149,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 18: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 18: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 3,
@@ -30332,7 +30332,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 19: Công Tắc + Đẩy Đá",
+        "name": "Combo 19: Switch + Push Rock",
         "switches": [
           {
             "r": 4,
@@ -30477,7 +30477,7 @@ export const CATEGORIES = [
           "111111",
           "111111"
         ],
-        "name": "Tổng Hợp 20: Cổng Màu + Mật Mã Số",
+        "name": "Combo 20: Color Gate + Number Code",
         "prisms": [
           {
             "r": 5,
@@ -30633,7 +30633,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 21: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 21: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 0,
@@ -30776,7 +30776,7 @@ export const CATEGORIES = [
       {
         "rows": 5,
         "cols": 5,
-        "name": "Tổng Hợp 22: Công Tắc + Đẩy Đá",
+        "name": "Combo 22: Switch + Push Rock",
         "switches": [
           {
             "r": 3,
@@ -30913,7 +30913,7 @@ export const CATEGORIES = [
       {
         "rows": 6,
         "cols": 6,
-        "name": "Tổng Hợp 23: Cổng Màu + Mật Mã Số",
+        "name": "Combo 23: Color Gate + Number Code",
         "prisms": [
           {
             "r": 4,
@@ -31105,7 +31105,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Tổng Hợp 24: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 24: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 4,
@@ -31344,7 +31344,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 25: Công Tắc + Đẩy Đá",
+        "name": "Combo 25: Switch + Push Rock",
         "switches": [
           {
             "r": 1,
@@ -31521,7 +31521,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 26: Cổng Màu + Mật Mã Số",
+        "name": "Combo 26: Color Gate + Number Code",
         "prisms": [
           {
             "r": 3,
@@ -31709,7 +31709,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 7,
-        "name": "Tổng Hợp 27: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 27: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 4,
@@ -31948,7 +31948,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 28: Công Tắc + Đẩy Đá",
+        "name": "Combo 28: Switch + Push Rock",
         "switches": [
           {
             "r": 4,
@@ -32125,7 +32125,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 6,
-        "name": "Tổng Hợp 29: Cổng Màu + Mật Mã Số",
+        "name": "Combo 29: Color Gate + Number Code",
         "prisms": [
           {
             "r": 5,
@@ -32341,7 +32341,7 @@ export const CATEGORIES = [
       {
         "rows": 7,
         "cols": 5,
-        "name": "Tổng Hợp 30: Công Tắc + Đẩy Đá + Bom",
+        "name": "Combo 30: Switch + Push Rock + Bomb",
         "switches": [
           {
             "r": 5,

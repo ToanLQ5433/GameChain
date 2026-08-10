@@ -356,7 +356,7 @@ function randomHoles(rows, cols, count, rng, exclude = new Set()) {
 
 // ---------------- Tên & mô tả tự sinh ----------------
 
-function chainWord(n) { return n === 2 ? 'Song Xích' : n === 3 ? 'Tam Xích' : n === 4 ? 'Tứ Xích' : `${n} Xích`; }
+function chainWord(n) { return n === 2 ? 'Double Chain' : n === 3 ? 'Triple Chain' : n === 4 ? 'Quad Chain' : `${n} Chains`; }
 
 // ================= 1. NHẬP MÔN (không cơ chế) =================
 
@@ -370,7 +370,7 @@ function genNhapMon(idx, rng) {
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
   return {
     ...baseLevel(plan),
-    name: `Nhập Môn ${idx + 1}: ${chainWord(chainsPlan)} ${plan.label}`,
+    name: `Basics ${idx + 1}: ${chainWord(chainsPlan)} ${plan.label}`,
     anchors, solution
   };
 }
@@ -393,7 +393,7 @@ function genVatCan(idx, rng) {
         const { anchors, solution } = segsToAnchorsAndSolution(segs);
         return {
           ...baseLevel(plan),
-          name: `Vật Cản ${idx + 1}: ${rockCount > 1 ? 'Nhiều Tảng Đá' : 'Tảng Đá Chặn Đường'}`,
+          name: `Obstacles ${idx + 1}: ${rockCount > 1 ? 'Multiple Rocks' : 'Rock Blocking the Path'}`,
           rocks: holes.map(([r, c]) => ({ r, c })), anchors, solution
         };
       }
@@ -423,7 +423,7 @@ function genVatCan(idx, rng) {
     const walls = shuffle(candidateEdges, rng).slice(0, wallCount);
     const segs = cutPath(path, chains, rng);
     const { anchors, solution } = segsToAnchorsAndSolution(segs);
-    return { ...baseLevel(plan), name: `Vật Cản ${idx + 1}: Vách Ngăn Vô Hình`, walls, anchors, solution };
+    return { ...baseLevel(plan), name: `Obstacles ${idx + 1}: Invisible Wall`, walls, anchors, solution };
   }
 
   // push
@@ -434,11 +434,11 @@ function genVatCan(idx, rng) {
     const { anchors, solution } = segsToAnchorsAndSolution(segs);
     return {
       rows: built.rows, cols: built.cols,
-      name: `Vật Cản ${idx + 1}: Đẩy Đá Dọn Đường`,
+      name: `Obstacles ${idx + 1}: Push Rock Clears the Way`,
       pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }], anchors, solution
     };
   }
-  throw new Error(`genVatCan(${idx}): không tìm được cấu trúc hợp lệ`);
+  throw new Error(`genVatCan(${idx}): no valid structure found`);
 }
 
 // ================= 3. ĐỊNH HƯỚNG & MÀU (Arrow / Prism / ColorGate) =================
@@ -493,7 +493,7 @@ function genDinhHuong(idx, rng) {
 
   return {
     ...baseLevel(plan),
-    name: `Định Hướng ${idx + 1}: ${arrows.length && colorGates.length ? 'Mũi Tên + Cổng Màu' : arrows.length ? 'Mũi Tên Ép Lối' : 'Nhuộm Màu Qua Cổng'}`,
+    name: `Direction ${idx + 1}: ${arrows.length && colorGates.length ? 'Arrow + Color Gate' : arrows.length ? 'Arrow Forces the Path' : 'Dye Through the Gate'}`,
     arrows, prisms, colorGates, anchors, solution
   };
 }
@@ -527,7 +527,7 @@ function genMatMa(idx, rng) {
     waypoints.A.push({ r, c });
   });
 
-  return { ...baseLevel(plan), name: `Mật Mã ${idx + 1}: ${waypoints.A.length} Mốc Số`, waypoints, anchors, solution };
+  return { ...baseLevel(plan), name: `Code ${idx + 1}: ${waypoints.A.length} Waypoints`, waypoints, anchors, solution };
 }
 
 // ================= 5. CÔNG TẮC (Switch -> Gate, ±Latch) =================
@@ -555,7 +555,7 @@ function genCongTac(idx, rng) {
 
   return {
     ...baseLevel(plan),
-    name: `Công Tắc ${idx + 1}: ${latch ? 'Chốt Khoá Vĩnh Viễn' : crossChain ? 'Mở Khoá Chéo Xích' : 'Mở Khoá Cơ Bản'}`,
+    name: `Switch ${idx + 1}: ${latch ? 'Permanent Latch' : crossChain ? 'Cross-Chain Unlock' : 'Basic Unlock'}`,
     switches: [{ r: swR, c: swC, gateR: gR, gateC: gC, latch }], anchors, solution
   };
 }
@@ -571,7 +571,7 @@ function genBomTinh(idx, rng) {
   const { anchors, solution } = segsToAnchorsAndSolution(segs);
   return {
     rows: built.rows, cols: built.cols,
-    name: `Bom Tĩnh ${idx + 1}: Phá Bom`,
+    name: `Bomb ${idx + 1}: Destroy the Bomb`,
     pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
     bombs: [{ r: built.holeCell[0], c: built.holeCell[1] }],
     anchors, solution
@@ -600,7 +600,7 @@ function genTongHop(idx, rng) {
       const [gR, gC] = swChain[gateIdx];
       return {
         rows: built.rows, cols: built.cols,
-        name: `Tổng Hợp ${idx + 1}: Công Tắc + Đẩy Đá`,
+        name: `Combo ${idx + 1}: Switch + Push Rock`,
         switches: [{ r: swR, c: swC, gateR: gR, gateC: gC }],
         pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
         anchors, solution
@@ -622,7 +622,7 @@ function genTongHop(idx, rng) {
       const waypoints = { A: [...new Set(wpIdxs)].sort((a, b) => a - b).map(i => ({ r: chain[i][0], c: chain[i][1] })) };
       return {
         ...baseLevel(plan),
-        name: `Tổng Hợp ${idx + 1}: Cổng Màu + Mật Mã Số`,
+        name: `Combo ${idx + 1}: Color Gate + Number Code`,
         prisms: [{ r: chain[pIdx][0], c: chain[pIdx][1], color }],
         colorGates: [{ r: chain[gIdx][0], c: chain[gIdx][1], color }],
         waypoints, anchors, solution
@@ -647,7 +647,7 @@ function genTongHop(idx, rng) {
   const [swR, swC] = swChain[swIdx];
   return {
     rows: built.rows, cols: built.cols,
-    name: `Tổng Hợp ${idx + 1}: Công Tắc + Đẩy Đá + Bom`,
+    name: `Combo ${idx + 1}: Switch + Push Rock + Bomb`,
     switches: [{ r: swR, c: swC, gateR: gR, gateC: gC }],
     pushRocks: [{ r: built.pushSource[0], c: built.pushSource[1] }],
     bombs: [{ r: built.holeCell[0], c: built.holeCell[1] }],
@@ -658,13 +658,13 @@ function genTongHop(idx, rng) {
 // ================= Build & Verify =================
 
 const CATEGORY_SPECS = [
-  { id: 'nhap-mon', title: 'Nhập Môn', icon: '🧭', mechanic: 'CORE', desc: 'Chạm điểm neo và kéo phủ kín bàn cờ với nhiều xích cùng lúc — luật gốc trước khi học các cơ chế khác.', gen: genNhapMon },
-  { id: 'vat-can', title: 'Vật Cản', icon: '🪨', mechanic: 'MEC-01', desc: 'Rock chặn cứng, Wall chặn theo cạnh, Push Rock đẩy được để mở đường.', gen: genVatCan },
-  { id: 'dinh-huong-mau', title: 'Định Hướng & Màu', icon: '🎨', mechanic: 'MEC-02', desc: 'Mũi Tên ép hướng bước kế tiếp; Lăng Kính đổi màu dây; Cổng Màu chỉ cho qua đúng màu.', gen: genDinhHuong },
-  { id: 'mat-ma-so', title: 'Mật Mã Số', icon: '🔢', mechanic: 'MEC-03', desc: 'Chạm các mốc số theo ĐÚNG thứ tự tăng dần, kết thúc đúng tại mốc cuối cùng.', gen: genMatMa },
-  { id: 'cong-tac', title: 'Công Tắc', icon: '🔘', mechanic: 'MEC-04', desc: 'Giữ 1 dây trên Công Tắc để mở Cổng cho dây khác; Latch giữ Cổng mở vĩnh viễn sau 1 lần kích hoạt.', gen: genCongTac },
-  { id: 'bom-tinh', title: 'Bom Tĩnh', icon: '💣', mechanic: 'MEC-05', desc: 'Chạm trực tiếp vào Bom = thua ngay. Chỉ phá được Bom bằng cách đẩy Push Rock va vào.', gen: genBomTinh },
-  { id: 'tong-hop', title: 'Tổng Hợp', icon: '⚔️', mechanic: 'COMBO', desc: 'Thử thách khó nhất — kết hợp 2-3 cơ chế lõi trong cùng 1 màn.', gen: genTongHop }
+  { id: 'nhap-mon', title: 'Basics', icon: '🧭', mechanic: 'CORE', desc: 'Tap an anchor and drag to cover the whole board with several chains at once — the core rule before learning any other mechanic.', gen: genNhapMon },
+  { id: 'vat-can', title: 'Obstacles', icon: '🪨', mechanic: 'MEC-01', desc: 'Rocks block hard, Walls block by edge, Push Rocks can be pushed to clear the way.', gen: genVatCan },
+  { id: 'dinh-huong-mau', title: 'Direction & Color', icon: '🎨', mechanic: 'MEC-02', desc: 'Arrows force the direction of your next step; Prisms recolor the chain; Color Gates only let the matching color through.', gen: genDinhHuong },
+  { id: 'mat-ma-so', title: 'Number Code', icon: '🔢', mechanic: 'MEC-03', desc: 'Touch the numbered waypoints in strictly increasing order, ending exactly on the last one.', gen: genMatMa },
+  { id: 'cong-tac', title: 'Switches', icon: '🔘', mechanic: 'MEC-04', desc: 'Hold one chain on a Switch to open a Gate for another chain; a Latch keeps the Gate open forever after one activation.', gen: genCongTac },
+  { id: 'bom-tinh', title: 'Static Bombs', icon: '💣', mechanic: 'MEC-05', desc: 'Touching a Bomb directly is an instant loss. The only way to destroy a Bomb is to push a Push Rock into it.', gen: genBomTinh },
+  { id: 'tong-hop', title: 'Combo', icon: '⚔️', mechanic: 'COMBO', desc: 'The hardest challenge — combining 2-3 core mechanics in the same level.', gen: genTongHop }
 ];
 
 const LEVELS_PER_CATEGORY = 30;

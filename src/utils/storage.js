@@ -7,7 +7,7 @@ const defaultState = {
   gems: 0, // Tiền tệ phụ (GDD 3.8: "dùng Coin/Gem mua thêm giờ") — hiện chỉ hiển thị, chưa có nguồn thu/tiêu trong bản demo.
   streak: 0,
   soundMuted: false,
-  playerName: 'Nhà Giải Mã Hải Hành',
+  playerName: 'Captain',
   // completedLevels[categoryId] = Set-like array of levelIndex đã hoàn thành lần đầu
   completedLevels: {},
   // Màn chơi gần nhất — dùng để nút "Chơi Tiếp" ở Home resume đúng chỗ.

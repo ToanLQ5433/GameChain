@@ -1,16 +1,14 @@
 import Phaser from 'phaser';
-import { CATEGORIES, getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward } from '../utils/storage.js';
+import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
+import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { COLORS, makeButton } from '../utils/theme.js';
 
-// Bản đồ "Hải Trình" dạng đường đi dọc zíc-zắc (kiểu Candy Crush/Coin Master)
-// theo đúng thiết kế Figma người dùng cung cấp — thay cho lưới category cũ.
-// Node cao (idx lớn) nằm TRÊN — càng lên cao càng xa/chưa mở; cuộn xuống dưới
-// là các màn đã qua.
-//
-// Bảng màu "trời/biển" tươi sáng (tham khảo mockup "Nautical Chains") thay cho
-// nền navy tối trước đây — chỉ áp dụng cho Home, không đổi theme.js dùng chung.
+// Single continuous "Voyage" path across ALL 210 levels (all categories
+// merged into one track, per product decision — the player never picks a
+// category explicitly anymore). Node index 0 = level 1 at the BOTTOM;
+// higher levels stack upward, matching the reference mockup's map.
 
 const MAP_BG = 0xf3e3b8;
 const MAP_BG_DARK = 0xe0c98a;
@@ -22,17 +20,15 @@ const CURRENT_BG = 0xffc200;
 const CURRENT_BORDER = 0xc68a00;
 const PASSED_BG = 0x22c55e;
 const PASSED_BORDER = 0x15803d;
+const ROAD_COLOR = 0x4a2c11;
+const ROAD_COLOR_LOCKED = 0x6b4423;
+const ROAD_STRIPE = 0xfef08a;
+const ROAD_STRIPE_LOCKED = 0x8a7550;
 const NODE_SPACING = 84;
 const NODE_R = 27;
 
 function totalCompleted(save) {
   return Object.values(save.completedLevels || {}).reduce((s, arr) => s + arr.length, 0);
-}
-function playerRank(save) { return 1 + Math.floor(totalCompleted(save) / 10); }
-
-function firstIncompleteIndex(save, category) {
-  const idx = category.levels.findIndex((_, i) => !isLevelCompleted(save, category.id, i));
-  return idx === -1 ? category.levels.length - 1 : idx;
 }
 
 export default class HomeScene extends Phaser.Scene {
@@ -42,32 +38,19 @@ export default class HomeScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const save = this.registry.get('save');
     this.save = save;
-
-    if (!save.viewedCategoryId || !getCategory(save.viewedCategoryId)) {
-      save.viewedCategoryId = save.lastCategoryId || CATEGORIES[0].id;
-    }
-    this.categoryIdx = Math.max(0, CATEGORIES.findIndex(c => c.id === save.viewedCategoryId));
+    this.flatLevels = getFlatLevels();
 
     this.drawBackground(width, height);
     this.buildTopBar(width);
     this.buildEventBar(width);
-    this.buildCategorySwitcher(width);
     this.buildMap(width, height);
     this.buildSideMenu(width);
     this.buildCTA(width, height);
     this.buildBottomNav(width, height);
     this.buildSettingsOverlay(width, height);
-
-    const justCompleted = this.registry.get('justCompletedCategory');
-    if (justCompleted) {
-      this.registry.set('justCompletedCategory', null);
-      playSound('win', save.soundMuted);
-    }
   }
 
-  get category() { return CATEGORIES[this.categoryIdx]; }
-
-  // ---------------- Nền trời/biển + đảo/mây trang trí ----------------
+  // ---------------- Sky/ocean background + decorative islands/clouds ----------------
 
   drawBackground(width, height) {
     const sky = this.add.graphics();
@@ -95,11 +78,11 @@ export default class HomeScene extends Phaser.Scene {
     cloud(width * 0.9, height * 0.66, 60, 20);
   }
 
-  // ---------------- HUD trên cùng ----------------
+  // ---------------- Top HUD ----------------
 
   buildTopBar(width) {
-    // Mạng chơi (❤️ 5/5) — chỉ trang trí theo đúng mockup tham khảo, bản demo
-    // chưa có cơ chế mất mạng/hồi mạng nên số liệu này cố định, không đổi.
+    // Lives (❤️ 5/5) — decorative only, matching the reference mockup; this
+    // demo has no life-loss/regeneration mechanic so the number never changes.
     const heartsX = 14, heartsY = 14, heartsW = 64, heartsH = 30;
     const hg = this.add.graphics();
     hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
@@ -108,17 +91,6 @@ export default class HomeScene extends Phaser.Scene {
     this.add.text(heartsX + 33, heartsY + heartsH / 2, '5/5', {
       fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(0, 0.5);
-
-    const rank = playerRank(this.save);
-    const rankChip = this.add.container(86, 14);
-    const rb = this.add.graphics();
-    rb.fillStyle(COLORS.woodDark, 1).fillRoundedRect(0, 0, 58, 30, 8);
-    rb.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(0, 0, 58, 30, 8);
-    const star = this.add.text(29, 9, '★', { fontSize: '10px', color: '#f3c64f' }).setOrigin(0.5);
-    const rankTxt = this.add.text(29, 21, `CẤP ${rank}`, {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#f4e8cf'
-    }).setOrigin(0.5);
-    rankChip.add([rb, star, rankTxt]);
 
     const gearSize = 34, gearX = width - 14 - gearSize, gearY = 14;
     const gearBg = this.add.graphics();
@@ -138,7 +110,7 @@ export default class HomeScene extends Phaser.Scene {
     this.coinChip = this.makeStatChip(coinRightEdge, 14, '🟡', this.save.coins, COLORS.gold);
   }
 
-  // rightEdgeX: toạ độ mép phải của chip (để xếp các chip từ phải sang trái không đè nhau).
+  // rightEdgeX: right edge of the chip, so chips can be laid out right-to-left without overlapping.
   makeStatChip(rightEdgeX, y, icon, value, accentColor) {
     const w = 64, h = 30;
     const xLeft = rightEdgeX - w;
@@ -153,17 +125,16 @@ export default class HomeScene extends Phaser.Scene {
     return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
   }
 
-  // ---------------- Thanh Nhiệm Vụ Ngày (event bar) ----------------
-  // Bề mặt hiển thị cho dailyQuest — dữ liệu này đã tồn tại trong storage.js
-  // (newClearsToday/target/claimed) nhưng trước đây chưa có UI nào đọc/nhận
-  // thưởng. Nhấn vào thanh này để xem tiến độ hoặc nhận thưởng khi đủ điều kiện.
+  // ---------------- Daily Quest event bar ----------------
+  // Surfaces `dailyQuest` (newClearsToday/target/claimed) which already lived
+  // in storage.js but previously had no UI reading or claiming it.
 
   buildEventBar(width) {
     const x = 14, y = 54, w = width - 28, h = 26;
     const g = this.add.graphics();
     g.fillStyle(COLORS.parchment, 1).fillRoundedRect(x, y, w, h, 13);
     g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, 13);
-    this.add.text(x + 15, y + h / 2, '📜', { fontSize: '13px' }).setOrigin(0.5);
+    this.add.text(x + 15, y + h / 2, '🏆', { fontSize: '13px' }).setOrigin(0.5);
 
     this.eventTrackX = x + 28;
     this.eventTrackW = w - 28 - 44;
@@ -191,14 +162,14 @@ export default class HomeScene extends Phaser.Scene {
     const fillW = Math.max(this.eventTrackH, this.eventTrackW * pct);
     this.eventFill.fillStyle(q.claimed ? COLORS.goldDim : COLORS.teal, 1)
       .fillRoundedRect(this.eventTrackX, this.eventTrackY, fillW, this.eventTrackH, this.eventTrackH / 2);
-    this.eventLabel.setText(q.claimed ? '✓ Đã nhận' : `${Math.min(q.newClearsToday, q.target)}/${q.target}`);
+    this.eventLabel.setText(q.claimed ? '✓ Claimed' : `${Math.min(q.newClearsToday, q.target)}/${q.target}`);
   }
 
   onEventBarTap() {
     const q = this.save.dailyQuest;
     if (q.claimed) {
       playSound('switch', this.save.soundMuted);
-      this.showToast('📜 Nhiệm vụ hôm nay đã nhận thưởng, mai quay lại nhé!');
+      this.showToast('🏆 Today\'s quest reward is already claimed — come back tomorrow!');
       return;
     }
     if (q.newClearsToday >= q.target) {
@@ -207,65 +178,28 @@ export default class HomeScene extends Phaser.Scene {
       playSound('win', this.save.soundMuted);
       this.coinChip.setValue(this.save.coins);
       this.updateEventBar();
-      this.showToast('🎉 Nhận thưởng Nhiệm Vụ Ngày thành công!');
+      this.showToast('🎉 Daily Quest reward claimed!');
       return;
     }
     playSound('switch', this.save.soundMuted);
-    this.showToast(`📜 Hoàn thành ${q.target - q.newClearsToday} màn mới nữa để nhận thưởng!`);
+    this.showToast(`🏆 Clear ${q.target - q.newClearsToday} more level${q.target - q.newClearsToday > 1 ? 's' : ''} to earn the reward!`);
   }
 
-  // ---------------- Bộ chuyển Category ----------------
-
-  buildCategorySwitcher(width) {
-    this.switcherY = 94;
-    this.switcherContainer = this.add.container(0, 0);
-    this.redrawSwitcher(width);
-
-    const arrowL = this.add.text(20, this.switcherY, '‹', { fontFamily: 'Cinzel', fontSize: '22px', color: '#f3c64f' })
-      .setOrigin(0.5).setInteractive({ useHandCursor: true });
-    const arrowR = this.add.text(width - 20, this.switcherY, '›', { fontFamily: 'Cinzel', fontSize: '22px', color: '#f3c64f' })
-      .setOrigin(0.5).setInteractive({ useHandCursor: true });
-    arrowL.on('pointerdown', () => this.switchCategory(-1, width));
-    arrowR.on('pointerdown', () => this.switchCategory(1, width));
-  }
-
-  redrawSwitcher(width) {
-    this.switcherContainer.removeAll(true);
-    const cat = this.category;
-    const label = this.add.text(width / 2, this.switcherY, `${cat.icon}  ${cat.title}`, {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#f4e8cf'
-    }).setOrigin(0.5);
-    const dots = this.add.text(width / 2, this.switcherY + 16, `Đảo ${this.categoryIdx + 1}/${CATEGORIES.length}`, {
-      fontFamily: 'Crimson Pro', fontSize: '9px', color: '#6fa8c9'
-    }).setOrigin(0.5);
-    this.switcherContainer.add([label, dots]);
-  }
-
-  switchCategory(dir, width) {
-    this.categoryIdx = (this.categoryIdx + dir + CATEGORIES.length) % CATEGORIES.length;
-    this.save.viewedCategoryId = this.category.id;
-    saveState(this.save);
-    playSound('switch', this.save.soundMuted);
-    this.redrawSwitcher(width);
-    this.rebuildMapContent();
-    this.updateCTA();
-  }
-
-  // ---------------- Bản đồ đường đi ----------------
+  // ---------------- Voyage path (all levels, one continuous track) ----------------
 
   buildMap(width, height) {
-    this.mapViewTop = 122;
+    this.mapViewTop = 92;
     this.mapViewBottom = height - 150;
     const mapH = this.mapViewBottom - this.mapViewTop;
-    // Hẹp hơn bản gốc (14/width-28) để chừa 2 cột trống bên trái/phải cho
-    // side-menu (giống layout nút nổi cạnh khung bản đồ trong mockup).
+    // Narrower than full width so 2 side-menu columns fit beside the card,
+    // like the floating buttons beside the map in the reference mockup.
     const mapX = 58, mapW = width - 116;
     this.mapX = mapX; this.mapW = mapW;
 
     const mapBg = this.add.graphics();
     mapBg.fillStyle(OCEAN, 1).fillRoundedRect(mapX, this.mapViewTop, mapW, mapH, 20);
     mapBg.fillStyle(MAP_BG, 1).fillRoundedRect(mapX + 8, this.mapViewTop + 8, mapW - 16, mapH - 16, 16);
-    // Vệt "đảo" bên trong đậm hơn 1 chút để gợi cảm giác địa hình, không phẳng lì.
+    // Slightly darker "island" patches inside so the parchment isn't perfectly flat.
     mapBg.fillStyle(MAP_BG_DARK, 0.5);
     for (let i = 0; i < 5; i++) {
       const cx = mapX + 20 + (i * 37) % (mapW - 40);
@@ -286,42 +220,62 @@ export default class HomeScene extends Phaser.Scene {
     this.setupMapScroll(mapX, mapW);
   }
 
-  laneX(idx) { return this.mapCenterX + 0.24 * (this.mapCenterX - 28) * Math.sin(idx * 1.15); }
+  laneX(globalIndex) { return this.mapCenterX + 0.24 * (this.mapCenterX - 28) * Math.sin(globalIndex * 1.15); }
 
   rebuildMapContent() {
     this.pathContainer.removeAll(true);
-    const cat = this.category;
-    const total = cat.levels.length;
-    const currentIdx = firstIncompleteIndex(this.save, cat);
-    this.currentLevelIdx = currentIdx;
+    const flat = this.flatLevels;
+    const total = flat.length;
+    const currentGlobalIdx = firstIncompleteGlobalIndex(this.save);
+    this.currentGlobalIdx = currentGlobalIdx;
     this.nodeHit = [];
 
-    for (let idx = total - 1; idx >= 0; idx--) {
-      const pos = total - 1 - idx; // 0 = trên cùng (idx lớn nhất)
+    for (let i = total - 1; i >= 0; i--) {
+      const item = flat[i];
+      const pos = total - 1 - i; // 0 = topmost (highest level)
       const y = pos * NODE_SPACING + 50;
-      const x = this.laneX(idx);
-      const done = isLevelCompleted(this.save, cat.id, idx);
-      const isCurrent = idx === currentIdx;
+      const x = this.laneX(i);
+      const done = isLevelCompleted(this.save, item.categoryId, item.levelIndex);
+      const isCurrent = i === currentGlobalIdx;
       const locked = !done && !isCurrent;
 
       if (pos > 0) {
-        const prevIdx = idx + 1;
+        const prevItem = flat[i + 1];
         const py = (pos - 1) * NODE_SPACING + 50;
-        const px = this.laneX(prevIdx);
-        const line = this.add.graphics();
-        line.lineStyle(5, locked ? 0x6b4423 : COLORS.teal, locked ? 0.5 : 0.85);
-        line.lineBetween(px, py, x, y);
-        this.pathContainer.add(line);
+        const px = this.laneX(prevItem.globalIndex);
+        this.drawRoadSegment(px, py, x, y, locked);
       }
 
-      this.pathContainer.add(this.buildNode(x, y, idx, { done, isCurrent, locked }));
+      this.pathContainer.add(this.buildNode(x, y, item, { done, isCurrent, locked }));
     }
 
     this.totalPathHeight = total * NODE_SPACING + 40;
     this.scrollToCurrent();
   }
 
-  buildNode(x, y, idx, { done, isCurrent, locked }) {
+  drawRoadSegment(px, py, x, y, locked) {
+    const base = this.add.graphics();
+    base.lineStyle(11, locked ? ROAD_COLOR_LOCKED : ROAD_COLOR, locked ? 0.55 : 1);
+    base.lineBetween(px, py, x, y);
+    this.pathContainer.add(base);
+
+    // Dashed centre stripe on top of the solid road base — mirrors the
+    // reference mockup's road (thick base + dashed line), not a bare line.
+    const dash = this.add.graphics();
+    dash.lineStyle(4, locked ? ROAD_STRIPE_LOCKED : ROAD_STRIPE, locked ? 0.35 : 0.9);
+    const dist = Phaser.Math.Distance.Between(px, py, x, y);
+    const dx = dist > 0 ? (x - px) / dist : 0, dy = dist > 0 ? (y - py) / dist : 0;
+    const segLen = 7, gapLen = 6;
+    let d = 0;
+    while (d < dist) {
+      const ed = Math.min(d + segLen, dist);
+      dash.lineBetween(px + dx * d, py + dy * d, px + dx * ed, py + dy * ed);
+      d += segLen + gapLen;
+    }
+    this.pathContainer.add(dash);
+  }
+
+  buildNode(x, y, item, { done, isCurrent, locked }) {
     const group = this.add.container(x, y);
     const r = isCurrent ? NODE_R + 6 : NODE_R;
 
@@ -339,10 +293,21 @@ export default class HomeScene extends Phaser.Scene {
     if (done) {
       group.add(this.add.text(0, 0, '✓', { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5));
     } else if (locked) {
-      group.add(this.add.text(0, -2, '🔒', { fontSize: '16px' }).setOrigin(0.5));
-      group.add(this.add.text(0, 15, String(idx + 1), { fontFamily: 'Cinzel', fontSize: '9px', color: '#d6d3d1' }).setOrigin(0.5));
+      group.add(this.drawLockIcon());
+      group.add(this.add.text(0, 15, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '9px', color: '#d6d3d1' }).setOrigin(0.5));
     } else {
-      group.add(this.add.text(0, 0, String(idx + 1), { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#2b1e16' }).setOrigin(0.5));
+      group.add(this.add.text(0, 0, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#2b1e16' }).setOrigin(0.5));
+    }
+
+    // Difficulty badge — only "hard"/"superhard" levels get a callout; easy
+    // and normal levels stay unmarked so the tag actually means something.
+    const difficulty = getDifficulty(item.categoryId, item.levelIndex);
+    if (difficulty) {
+      const style = DIFFICULTY_STYLE[difficulty];
+      const bx = r * 0.66, by = -r * 0.66;
+      const badgeBg = this.add.circle(bx, by, 10, style.color).setStrokeStyle(2, 0xffffff);
+      const badgeIcon = this.add.text(bx, by, style.icon, { fontSize: '11px' }).setOrigin(0.5);
+      group.add([badgeBg, badgeIcon]);
     }
 
     if (isCurrent) {
@@ -351,13 +316,28 @@ export default class HomeScene extends Phaser.Scene {
       group.add(avatar);
     }
 
-    this.nodeHit.push({ idx, x, y, r: r + 6, done, isCurrent, locked });
+    this.nodeHit.push({ item, x, y, r: r + 6, done, isCurrent, locked });
     return group;
   }
 
+  // Small vector padlock (instead of the 🔒 emoji) so locked nodes render
+  // identically across platforms/fonts instead of depending on emoji glyphs.
+  drawLockIcon() {
+    const lock = this.add.graphics();
+    const s = 16;
+    lock.fillStyle(0xf4e8cf, 1).fillRoundedRect(-s / 2, 0, s, s * 0.68, 3);
+    lock.lineStyle(2.5, 0xf4e8cf, 1);
+    lock.beginPath();
+    lock.arc(0, 0, s * 0.32, Math.PI, 0, false);
+    lock.strokePath();
+    lock.fillStyle(0x442711, 1).fillCircle(0, s * 0.32, 2.2);
+    lock.setPosition(0, -8);
+    return lock;
+  }
+
   scrollToCurrent() {
-    const total = this.category.levels.length;
-    const pos = total - 1 - this.currentLevelIdx;
+    const total = this.flatLevels.length;
+    const pos = total - 1 - this.currentGlobalIdx;
     const targetY = pos * NODE_SPACING + 50;
     const viewH = this.mapViewBottom - this.mapViewTop - 16;
     let offset = viewH * 0.62 - targetY;
@@ -399,17 +379,18 @@ export default class HomeScene extends Phaser.Scene {
   onNodeTap(node) {
     if (node.locked) {
       playSound('error', this.save.soundMuted);
-      this.showToast(`🔒 Hoàn thành màn ${node.idx} trước để mở khoá!`);
+      this.showToast(`🔒 Complete Level ${this.currentGlobalIdx + 1} first to unlock this one!`);
       return;
     }
     playSound('lock', this.save.soundMuted);
-    this.scene.start('Game', { categoryId: this.category.id, levelIndex: node.idx });
+    this.scene.start('Game', { categoryId: node.item.categoryId, levelIndex: node.item.levelIndex });
   }
 
-  // ---------------- Side-menu nổi cạnh bản đồ (trang trí theo mockup) ----------------
-  // Các nút này KHÔNG gắn với tính năng thật nào trong bản demo (không có
-  // bảng xếp hạng, rương quà, gợi ý mua hay quảng cáo) — chỉ dựng cho giống
-  // bố cục tham khảo; chạm vào sẽ báo "sắp ra mắt" để không gây hiểu nhầm.
+  // ---------------- Floating side-menu (decorative, matches the reference mockup) ----------------
+  // None of these buttons are wired to a real feature in this demo (there's
+  // no leaderboard, gift chest, purchasable hint, or ad system) — they only
+  // exist to match the reference layout; tapping shows a "coming soon" toast
+  // so it never claims to do something it doesn't.
 
   buildSideMenu(width) {
     const startY = this.mapViewTop + 26;
@@ -432,7 +413,7 @@ export default class HomeScene extends Phaser.Scene {
       const hit = this.add.rectangle(leftX, y, btnSize + 6, btnSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => {
         playSound('switch', this.save.soundMuted);
-        this.showToast('🚧 Tính năng này sẽ sớm ra mắt!');
+        this.showToast('🚧 This feature is coming soon!');
       });
     });
 
@@ -449,31 +430,28 @@ export default class HomeScene extends Phaser.Scene {
     const adsHit = this.add.rectangle(adsX, adsY, adsSize + 6, adsSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     adsHit.on('pointerdown', () => {
       playSound('switch', this.save.soundMuted);
-      this.showToast('🎬 Bản demo chưa hỗ trợ quảng cáo.');
+      this.showToast('🎬 Ads are not available in this demo.');
     });
   }
 
-  // ---------------- CTA + Nav dưới ----------------
+  // ---------------- CTA + bottom nav ----------------
 
   buildCTA(width, height) {
     this.ctaY = this.mapViewBottom + 34;
     this.ctaBtn = makeButton(this, width / 2, this.ctaY, this.ctaLabel(), {
-      variant: 'gold', fontSize: '14px', shadow: true,
-      onClick: () => this.onNodeTap({ idx: this.currentLevelIdx, locked: false })
+      variant: 'gold', fontSize: '14px', shadow: true, width: width * 0.82,
+      onClick: () => this.onNodeTap(this.currentNode())
     });
+  }
+
+  currentNode() {
+    const item = this.flatLevels[this.currentGlobalIdx];
+    return { item, locked: false };
   }
 
   ctaLabel() {
-    const isFirst = this.currentLevelIdx === 0 && totalCompleted(this.save) === 0;
-    return isFirst ? 'GIẢI MÃ HẢI HÀNH' : `VÀO MÀN ${this.currentLevelIdx + 1}`;
-  }
-
-  updateCTA() {
-    this.ctaBtn.destroy();
-    this.ctaBtn = makeButton(this, this.scale.width / 2, this.ctaY, this.ctaLabel(), {
-      variant: 'gold', fontSize: '14px', shadow: true,
-      onClick: () => this.onNodeTap({ idx: this.currentLevelIdx, locked: false })
-    });
+    const isFirst = this.currentGlobalIdx === 0 && totalCompleted(this.save) === 0;
+    return isFirst ? 'START THE VOYAGE' : `LEVEL ${this.currentGlobalIdx + 1}`;
   }
 
   buildBottomNav(width, height) {
@@ -484,10 +462,10 @@ export default class HomeScene extends Phaser.Scene {
     bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(10, barY, width - 20, barH, 20);
 
     const items = [
-      { key: 'journey', icon: '🧭', label: 'Hải Trình' },
-      { key: 'shop', icon: '🏪', label: 'Cửa Hàng' },
-      { key: 'quest', icon: '📜', label: 'Nhiệm Vụ' },
-      { key: 'bag', icon: '🎒', label: 'Hành Trang' }
+      { key: 'journey', icon: '🧭' },
+      { key: 'shop', icon: '🏪' },
+      { key: 'quest', icon: '📜' },
+      { key: 'bag', icon: '🎒' }
     ];
     const step = (width - 20) / items.length;
     const baseY = barY + barH / 2;
@@ -502,11 +480,6 @@ export default class HomeScene extends Phaser.Scene {
       btnBg.fillStyle(active ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
       btnBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
       this.add.text(cx, cy, item.icon, { fontSize: active ? '18px' : '15px' }).setOrigin(0.5);
-      if (!active) {
-        this.add.text(cx, cy + size / 2 + 7, item.label, {
-          fontFamily: 'Cinzel', fontSize: '6.5px', color: '#f4e8cf'
-        }).setOrigin(0.5);
-      }
 
       const hit = this.add.rectangle(cx, baseY, step - 6, barH, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => this.onNavTap(item.key));
@@ -516,11 +489,11 @@ export default class HomeScene extends Phaser.Scene {
   onNavTap(key) {
     if (key === 'journey') return;
     if (key === 'quest') { this.onEventBarTap(); return; }
-    if (key === 'shop') { this.showToast('🏪 Cửa Hàng sẽ sớm ra mắt!'); return; }
-    if (key === 'bag') { this.showToast('🎒 Bổ Trợ được mua trực tiếp trong màn chơi bằng Xu.'); return; }
+    if (key === 'shop') { this.showToast('🏪 The Shop is coming soon!'); return; }
+    if (key === 'bag') { this.showToast('🎒 Buffs are bought directly inside a level using Coins.'); return; }
   }
 
-  // ---------------- Thiết Lập (overlay đơn giản) ----------------
+  // ---------------- Settings overlay ----------------
 
   buildSettingsOverlay(width, height) {
     const bg = this.add.rectangle(0, 0, width, height, 0x04070d, 0.92).setOrigin(0).setInteractive();
@@ -528,7 +501,7 @@ export default class HomeScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(px, py, panelW, panelH, 16);
     g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(px, py, panelW, panelH, 16);
-    const title = this.add.text(width / 2, py + 20, 'THIẾT LẬP', {
+    const title = this.add.text(width / 2, py + 20, 'SETTINGS', {
       fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#f3c64f'
     }).setOrigin(0.5, 0);
 
@@ -539,14 +512,14 @@ export default class HomeScene extends Phaser.Scene {
         soundBtn.list[1].setText(this.soundLabel());
       }
     });
-    const closeBtn = makeButton(this, width / 2, py + panelH - 30, 'Đóng', {
+    const closeBtn = makeButton(this, width / 2, py + panelH - 30, 'Close', {
       variant: 'ink', fontSize: '11px', onClick: () => this.settingsOverlay.setVisible(false)
     });
 
     this.settingsOverlay = this.add.container(0, 0, [bg, g, title, soundBtn, closeBtn]).setDepth(100).setVisible(false);
   }
 
-  soundLabel() { return this.save.soundMuted ? '🔇 Đã Tắt Âm Thanh' : '🔊 Đang Bật Âm Thanh'; }
+  soundLabel() { return this.save.soundMuted ? '🔇 Sound Off' : '🔊 Sound On'; }
 
   // ---------------- Toast ----------------
 

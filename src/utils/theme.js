@@ -48,7 +48,7 @@ export function drawPanel(scene, x, y, w, h, opts = {}) {
 export function makeButton(scene, x, y, label, opts = {}) {
   const {
     variant = 'ink', fontSize = '12px', paddingX = 18, paddingY = 9,
-    originX = 0.5, onClick = null, shadow = false, shadowOffset = 5
+    originX = 0.5, onClick = null, shadow = false, shadowOffset = 5, width: forcedWidth = null
   } = opts;
 
   const palette = {
@@ -62,7 +62,7 @@ export function makeButton(scene, x, y, label, opts = {}) {
   }).setOrigin(0.5);
 
   const dotGap = variant === 'gold' ? 14 : 0;
-  const w = txt.width + paddingX * 2 + dotGap * 2, h = txt.height + paddingY * 2;
+  const w = forcedWidth || (txt.width + paddingX * 2 + dotGap * 2), h = txt.height + paddingY * 2;
   const container = scene.add.container(0, 0);
 
   // Viền "kẹo 3D" — khối màu đậm lệch xuống dưới, tạo cảm giác nút nổi khối

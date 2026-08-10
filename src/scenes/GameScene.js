@@ -3,6 +3,8 @@ import { ChainEngine } from '../engine/ChainEngine.js';
 import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
+import { getNextLevel } from '../utils/progression.js';
+import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { COLORS, drawChartBackground, drawPanel, makeButton, makeHudChip } from '../utils/theme.js';
 
 const TILE = {
@@ -45,6 +47,7 @@ export default class GameScene extends Phaser.Scene {
     drawChartBackground(this, width, height);
 
     this.buildTopBar(width);
+    this.buildDifficultyChip(width);
     this.buildBuffBar(width, height);
     this.buildBottomBar(width, height);
 
@@ -73,10 +76,10 @@ export default class GameScene extends Phaser.Scene {
   // ---------------- UI khung ngoài ----------------
 
   buildTopBar(width) {
-    makeButton(this, 12, 24, '← Danh sách', { variant: 'ink', fontSize: '10px', originX: 0 })
-      .on('pointerdown', () => this.scene.start('LevelSelect', { categoryId: this.categoryId }));
+    makeButton(this, 12, 24, '← Home', { variant: 'ink', fontSize: '10px', originX: 0 })
+      .on('pointerdown', () => this.scene.start('Home'));
 
-    this.coinChip = makeHudChip(this, width - 12, 24, 'XU', `🟡 ${this.save.coins}`, { variant: 'gold', originX: 1 });
+    this.coinChip = makeHudChip(this, width - 12, 24, 'COINS', `🟡 ${this.save.coins}`, { variant: 'gold', originX: 1 });
 
     this.levelNameText = this.add.text(width / 2, 54, '', {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: 'bold', color: '#f4e8cf', align: 'center',
@@ -95,19 +98,36 @@ export default class GameScene extends Phaser.Scene {
     this.add.line(0, 0, 0, 118, width, 118, COLORS.teal, 0.25).setOrigin(0);
   }
 
+  // Only rendered for "hard"/"superhard" levels — easy/normal levels show no tag at all.
+  buildDifficultyChip(width) {
+    if (this.difficultyChip) { this.difficultyChip.destroy(); this.difficultyChip = null; }
+    const difficulty = getDifficulty(this.categoryId, this.levelIndex);
+    if (!difficulty) return;
+    const style = DIFFICULTY_STYLE[difficulty];
+    const w = style.label.length * 6 + 22, h = 16;
+    const x = width - 12 - w, y = 42;
+    const g = this.add.graphics();
+    g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 8);
+    g.lineStyle(1.5, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 8);
+    const t = this.add.text(x + w / 2, y + h / 2, `${style.icon} ${style.label}`, {
+      fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
+    }).setOrigin(0.5);
+    this.difficultyChip = this.add.container(0, 0, [g, t]);
+  }
+
   buildBottomBar(width, height) {
-    makeButton(this, width / 2, height - 16, 'Chơi Lại', { variant: 'teal', fontSize: '11px' })
+    makeButton(this, width / 2, height - 16, 'Replay', { variant: 'teal', fontSize: '11px' })
       .on('pointerdown', () => this.loadLevel());
   }
 
-  // ---------------- Thanh Bổ Trợ (Buff) — GDD 3.1: "Dùng Buff (Hint/Freeze/Skip...)" ----------------
-  // Chỉ 3 buff được liệt kê chính thức trong GDD; không thêm buff ngoài phạm vi này.
+  // ---------------- Buff bar (GDD 3.1: "Use Buffs — Hint/Freeze/Skip...") ----------------
+  // Only the 3 buffs officially listed in the GDD; no buffs beyond that scope.
 
   buildBuffBar(width, height) {
     const items = [
-      { key: 'hint', icon: '💡', name: 'Gợi Ý', cost: 30 },
-      { key: 'freeze', icon: '⏸️', name: 'Đóng Băng', cost: 25 },
-      { key: 'skip', icon: '⏩', name: 'Bỏ Qua', cost: 50 }
+      { key: 'hint', icon: '💡', name: 'Hint', cost: 30 },
+      { key: 'freeze', icon: '⏸️', name: 'Freeze', cost: 25 },
+      { key: 'skip', icon: '⏩', name: 'Skip', cost: 50 }
     ];
     const y = height - 78;
     const gap = 8;
@@ -133,7 +153,7 @@ export default class GameScene extends Phaser.Scene {
     const name = this.add.text(0, 8, item.name, {
       fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#f4e8cf'
     }).setOrigin(0.5);
-    const cost = this.add.text(0, 20, `${item.cost} Xu`, {
+    const cost = this.add.text(0, 20, `${item.cost} Coins`, {
       fontFamily: 'Cinzel', fontSize: '8px', color: '#f3c64f'
     }).setOrigin(0.5);
 
@@ -160,13 +180,13 @@ export default class GameScene extends Phaser.Scene {
   useBuff(key, cost) {
     if (this.overlayContainer.visible) return;
     if (key === 'freeze' && this.buffState.freezeUsed) {
-      this.showToast('⏸️ Đã Đóng Băng trong lượt này rồi!');
+      this.showToast('⏸️ Already used Freeze this run!');
       playSound('error', this.save.soundMuted);
       return;
     }
     if (key === 'hint') { this.useHint(cost); return; }
     if (this.save.coins < cost) {
-      this.showToast('🟡 Không đủ Xu cho Bổ Trợ này!');
+      this.showToast('🟡 Not enough Coins for this Buff!');
       playSound('error', this.save.soundMuted);
       return;
     }
@@ -184,16 +204,16 @@ export default class GameScene extends Phaser.Scene {
   useHint(cost) {
     const chain = Object.values(this.engine.chains).find(c => !c.locked);
     if (!chain) {
-      this.showToast('Mọi xích đã khoá xong!');
+      this.showToast('Every chain is already locked!');
       return;
     }
     const sol = this.levelDef.solution && this.levelDef.solution[chain.id];
     if (!sol || chain.path.length >= sol.length) {
-      this.showToast('Không có gợi ý cho bước này.');
+      this.showToast('No hint available for this step.');
       return;
     }
     if (this.save.coins < cost) {
-      this.showToast('🟡 Không đủ Xu cho Gợi Ý!');
+      this.showToast('🟡 Not enough Coins for a Hint!');
       playSound('error', this.save.soundMuted);
       return;
     }
@@ -208,12 +228,12 @@ export default class GameScene extends Phaser.Scene {
     this.fxContainer.add(ring);
     this.tweens.add({ targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.9, to: 0.2 }, yoyo: true, repeat: 3, duration: 380, onComplete: () => ring.destroy() });
     playSound('lock', this.save.soundMuted);
-    this.statusText.setText(`💡 Gợi ý xích ${chainId}: bước kế tiếp tại ô (${r + 1}, ${c + 1})`);
+    this.statusText.setText(`💡 Hint for chain ${chainId}: next step at cell (${r + 1}, ${c + 1})`);
   }
 
   useFreeze(cost) {
     if (!this.levelDef.walls || !this.levelDef.walls.length) {
-      this.showToast('Màn này không có Vách Ngăn để đóng băng.');
+      this.showToast('This level has no Walls to freeze.');
       return;
     }
     this.spendCoins(cost);
@@ -222,7 +242,7 @@ export default class GameScene extends Phaser.Scene {
     this.drawStaticBoard();
     this.refreshBuffChips();
     playSound('switch', this.save.soundMuted);
-    this.showToast('⏸️ Đã tạm vô hiệu hoá Vách Ngăn cho lượt chơi này!');
+    this.showToast('⏸️ Walls are temporarily disabled for this run!');
   }
 
   useSkip(cost) {
@@ -256,7 +276,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.levelNameText.setText(this.levelDef.name);
     this.mechDescText.setText(this.category.desc);
-    this.statusText.setText('Chạm vào 1 số và kéo qua các ô liền kề.');
+    this.statusText.setText('Touch a number and drag through adjacent cells.');
 
     this.computeBoardMetrics();
     this.drawBoardFrame();
@@ -561,9 +581,9 @@ export default class GameScene extends Phaser.Scene {
       this.dragging = false;
       this.triggerExplosion(pos.r, pos.c, true);
       this.redrawChains();
-      this.statusText.setText('💥 Bom nổ!');
+      this.statusText.setText('💥 Bomb exploded!');
       this.time.delayedCall(480, () => {
-        this.showLose('💥 Bạn đã chạm vào Bom còn nguyên vẹn! Lần sau hãy đẩy Push Rock vào Bom trước khi cho dây đi qua.');
+        this.showLose('💥 You touched an armed Bomb! Next time, push a Push Rock into the Bomb before running a chain through it.');
       });
     } else {
       // Không rung camera ở đây: BLOCKED xảy ra liên tục khi ngón tay lướt qua
@@ -606,11 +626,11 @@ export default class GameScene extends Phaser.Scene {
 
   updateStatus() {
     if (!this.dragging) {
-      this.statusText.setText('Chạm vào 1 số và kéo qua các ô liền kề.');
+      this.statusText.setText('Touch a number and drag through adjacent cells.');
       return;
     }
     const chain = this.engine.getChain(this.engine.activeId);
-    this.statusText.setText(`Xích ${chain.id}: ${chain.path.length}/${chain.length} bước`);
+    this.statusText.setText(`Chain ${chain.id}: ${chain.path.length}/${chain.length} steps`);
   }
 
   // ---------------- Hiệu ứng Bom nổ ----------------
@@ -695,7 +715,7 @@ export default class GameScene extends Phaser.Scene {
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.cardBg, border: COLORS.gold, borderWidth: 3 });
 
-    const eyebrow = this.add.text(width / 2, panelY + 22, isSkip ? 'ĐÃ BỎ QUA' : 'CHIẾN THẮNG!', {
+    const eyebrow = this.add.text(width / 2, panelY + 22, isSkip ? 'SKIPPED' : 'VICTORY!', {
       fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#f3c64f', letterSpacing: 2
     }).setOrigin(0.5);
     const title = this.add.text(width / 2, panelY + 40, this.levelDef.name, {
@@ -721,23 +741,23 @@ export default class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: [rewardFrame, rewardIcon], alpha: { from: 0.6, to: 1 }, yoyo: true, repeat: -1, duration: 700 });
     }
 
-    const rewardText = this.add.text(width / 2, cardY + cardH + 12, isSkip ? '' : '+20 Xu', {
+    const rewardText = this.add.text(width / 2, cardY + cardH + 12, isSkip ? '' : '+20 Coins', {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#f3c64f'
     }).setOrigin(0.5);
 
-    const hasNext = this.levelIndex + 1 < this.category.levels.length;
-    const nextBtn = makeButton(this, width / 2, panelY + panelH - 46, hasNext ? 'Màn Tiếp Theo' : 'Về Danh Sách', {
+    const next = getNextLevel(this.categoryId, this.levelIndex);
+    const nextBtn = makeButton(this, width / 2, panelY + panelH - 46, next ? 'Next Level' : 'Back to Home', {
       variant: 'gold', fontSize: '13px'
     });
     nextBtn.on('pointerdown', () => {
-      if (hasNext) {
-        this.scene.start('Game', { categoryId: this.categoryId, levelIndex: this.levelIndex + 1 });
+      if (next) {
+        this.scene.start('Game', { categoryId: next.categoryId, levelIndex: next.levelIndex });
       } else {
-        this.scene.start('LevelSelect', { categoryId: this.categoryId });
+        this.scene.start('Home');
       }
     });
 
-    const homeBtn = makeButton(this, width / 2, panelY + panelH - 12, 'Trang Chủ', { variant: 'ink', fontSize: '10px' });
+    const homeBtn = makeButton(this, width / 2, panelY + panelH - 12, 'Home', { variant: 'ink', fontSize: '10px' });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
 
     this.overlayContainer.add([bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn]);
@@ -766,7 +786,7 @@ export default class GameScene extends Phaser.Scene {
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0x2a1414, border: COLORS.ruby, borderWidth: 3 });
 
-    const title = this.add.text(width / 2, panelY + 40, '💥 Bạn Đã Thua!', {
+    const title = this.add.text(width / 2, panelY + 40, '💥 You Lost!', {
       fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#e0605a'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 86, text, {
@@ -774,7 +794,7 @@ export default class GameScene extends Phaser.Scene {
       wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5);
 
-    const retryBtn = makeButton(this, width / 2, panelY + panelH - 40, 'Chơi Lại Màn Này', { variant: 'gold', fontSize: '13px' });
+    const retryBtn = makeButton(this, width / 2, panelY + panelH - 40, 'Retry This Level', { variant: 'gold', fontSize: '13px' });
     retryBtn.on('pointerdown', () => this.loadLevel());
 
     this.overlayContainer.add([bg, panel, title, sub, retryBtn]);
