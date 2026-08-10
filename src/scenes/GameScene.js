@@ -176,7 +176,11 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(1, 0.5);
     this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
-    this.headerBottom = Math.max(this.levelBadgeBottom, timerY + timerH) + 8;
+    // headerBottom is the bottom of the top bar — used to place the board
+    // immediately below it. The timer pill is positioned absolutely and only
+    // shown for hard/super-hard levels, so we don't inflate headerBottom with
+    // its height (that would waste ~40px on every easy/normal level).
+    this.headerBottom = this.levelBadgeBottom + 8;
   }
 
   // Only rendered for "hard"/"superhard" levels — easy/normal levels show no
@@ -648,17 +652,17 @@ export default class GameScene extends Phaser.Scene {
 
   computeBoardMetrics() {
     const { width, height } = this.scale;
-    const topOffset = this.headerBottom + 6;
-    // Reserve enough vertical room for the tall buff chips (88px) + padding
-    const bottomOffset = 116;
-    const marginX = 14;
+    const topOffset = this.headerBottom + 4;  // tight gap right below the top bar
+    // Bottom space for buff chips (88px height) + gap above them
+    const bottomOffset = 100;
+    const marginX = 10;  // narrow margins so board is wide
     const { rows, cols } = this.engine;
 
     const areaW = width - marginX * 2;
     const areaH = height - topOffset - bottomOffset;
-    // Fitts's Law floor: cells never under 44px so they remain draggable.
-    // Also cap cell size so very small grids don't balloon and crowd other UI.
-    const cell = Math.max(44, Math.min(72, Math.floor(Math.min(areaW / cols, areaH / rows))));
+    // No upper cap on cell size — let the board fill the available space
+    // naturally. Floor at 44px so cells stay finger-friendly.
+    const cell = Math.max(44, Math.floor(Math.min(areaW / cols, areaH / rows)));
 
     this.cellSize = cell;
     this.boardOriginX = Math.round((width - cell * cols) / 2);
