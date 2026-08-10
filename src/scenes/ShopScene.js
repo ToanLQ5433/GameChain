@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { playSound } from '../utils/audio.js';
 import { saveState } from '../utils/storage.js';
-import { COLORS, makeStatChip } from '../utils/theme.js';
+import { COLORS, makeIconButton, makeStatChip, makeButton } from '../utils/theme.js';
 
 // Real Shop screen for the systems this demo actually tracks: Coins, the 3
 // real Buffs (Hint/Freeze/Skip, same keys GameScene's buff bar already
@@ -85,35 +85,21 @@ export default class ShopScene extends Phaser.Scene {
   }
 
   buildTopBar(width) {
-    this.add.text(14, 20, 'SHOP', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f',
+    this.add.text(16, 24, 'CỬA HÀNG 🏪', {
+      fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#f3c64f',
       stroke: '#4a2c11', strokeThickness: 3
     }).setOrigin(0, 0.5);
 
-    const closeSize = 34, closeX = width - 14 - closeSize, closeY = 12;
-    this.add.circle(closeX + closeSize / 2, closeY + closeSize / 2, closeSize / 2, 0xe0605a).setStrokeStyle(3, COLORS.woodDark);
-    this.add.text(closeX + closeSize / 2, closeY + closeSize / 2, '✕', { fontSize: '16px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5);
-    this.add.rectangle(closeX + closeSize / 2, closeY + closeSize / 2, closeSize + 6, closeSize + 6, 0xffffff, 0.001)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); });
+    const closeX = width - 26, closeY = 24;
+    makeIconButton(this, closeX, closeY, '✕', {
+      size: 42, variant: 'ruby', iconSize: '16px',
+      onClick: () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); }
+    });
 
-    const gemRightEdge = closeX - 8;
-    this.gemChip = makeStatChip(this, gemRightEdge, 12, '💎', this.save.gems, COLORS.teal);
-    const coinRightEdge = this.gemChip.rightEdge - 16;
-    this.coinChip = makeStatChip(this, coinRightEdge, 12, '🟡', this.save.coins, COLORS.gold);
-
-    // "+" shortcut — jumps straight to the Gold Shop grid, same affordance
-    // players expect from tapping the "+" next to a currency pill. Sits in
-    // the gap between the coin and gem chips.
-    const plusX = coinRightEdge + 8, plusY = 12 + 15;
-    this.add.circle(plusX, plusY, 9, COLORS.tealDim).setStrokeStyle(2, COLORS.woodDark);
-    this.add.text(plusX, plusY, '+', { fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
-    this.add.circle(plusX, plusY, 13, 0xffffff, 0.001).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => {
-        playSound('switch', this.save.soundMuted);
-        const target = Phaser.Math.Clamp(this.viewTop - this.goldShopY, Math.min(this.viewTop, this.viewTop + (this.viewBottom - this.viewTop) - this.contentHeight), this.viewTop);
-        this.tweens.add({ targets: this.content, y: target, duration: 350, ease: 'Cubic.Out' });
-      });
+    const gemRightEdge = closeX - 28;
+    this.gemChip = makeStatChip(this, gemRightEdge, 7, '💎', this.save.gems, COLORS.teal);
+    const coinRightEdge = this.gemChip.rightEdge - 8;
+    this.coinChip = makeStatChip(this, coinRightEdge, 7, '🟡', this.save.coins, COLORS.gold);
   }
 
   // ---------------- Scrollable content ----------------
@@ -250,24 +236,24 @@ export default class ShopScene extends Phaser.Scene {
     this.content.add(g);
 
     // Ribbon tag, tilted like a hand-stuck price sticker.
-    const ribbon = this.add.container(x + 26, y + 4);
-    const rw = pack.tag.length * 5.8 + 18;
+    const ribbon = this.add.container(x + 28, y + 4);
+    const rw = pack.tag.length * 7 + 18;
     const rg = this.add.graphics();
-    rg.fillStyle(0xf43f5e, 1).fillRoundedRect(-rw / 2, -9, rw, 18, 5);
-    rg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(-rw / 2, -9, rw, 18, 5);
-    const rt = this.add.text(0, 0, pack.tag, { fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
+    rg.fillStyle(0xf43f5e, 1).fillRoundedRect(-rw / 2, -10, rw, 20, 6);
+    rg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(-rw / 2, -10, rw, 20, 6);
+    const rt = this.add.text(0, 0, pack.tag, { fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
     ribbon.add([rg, rt]);
     ribbon.setRotation(-0.12);
     this.content.add(ribbon);
 
     if (pack.includeAdsRemoval && !this.save.adsRemoved) {
-      const badgeW = 58;
+      const badgeW = 64;
       const bg2 = this.add.graphics();
-      bg2.fillStyle(0x22c55e, 1).fillRoundedRect(x + w - 12 - badgeW, y + 10, badgeW, 16, 8);
-      bg2.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(x + w - 12 - badgeW, y + 10, badgeW, 16, 8);
+      bg2.fillStyle(0x22c55e, 1).fillRoundedRect(x + w - 12 - badgeW, y + 8, badgeW, 18, 9);
+      bg2.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(x + w - 12 - badgeW, y + 8, badgeW, 18, 9);
       this.content.add(bg2);
-      this.content.add(this.add.text(x + w - 12 - badgeW / 2, y + 18, 'NO ADS', {
-        fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
+      this.content.add(this.add.text(x + w - 12 - badgeW / 2, y + 17, 'NO ADS', {
+        fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     }
 

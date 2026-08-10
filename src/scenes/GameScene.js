@@ -12,7 +12,7 @@ import {
   getTimeLimit, getTimerColor, MAX_TIMEOUT_AD_USES_PER_ATTEMPT, TIMEOUT_AD_BONUS_RATIO,
   TIMEOUT_COIN_COST, COIN_SPEED_MAX, COIN_SPEED_NO_BUFF_BONUS
 } from '../utils/levelTimer.js';
-import { COLORS, drawPanel, makeButton, makeStatChip } from '../utils/theme.js';
+import { COLORS, drawPanel, makeButton, makeIconButton, makeStatChip } from '../utils/theme.js';
 
 // Touch Offset (mobile UX): the recognized cell is sampled this many px
 // ABOVE the raw finger position, not at it — otherwise the fingertip sits
@@ -118,22 +118,24 @@ export default class GameScene extends Phaser.Scene {
   // Settings modal (see openSettings()), both behind a Life-cost confirm.
 
   buildTopBar(width) {
-    const topY = 14, rowH = 36;
+    const topY = 10, rowH = 42;
 
-    this.coinChip = makeStatChip(this, 14 + 64, topY, '🟡', this.save.coins, COLORS.gold);
+    // Home back button (left)
+    makeIconButton(this, 26, topY + rowH / 2, '🏠', {
+      size: 42, variant: 'wood', iconSize: '18px',
+      onClick: () => this.confirmQuit()
+    });
 
-    const gearSize = 34, gearX = width - 14 - gearSize;
-    const gearBg = this.add.graphics();
-    gearBg.fillStyle(COLORS.teal, 1).fillRoundedRect(gearX, topY, gearSize, gearSize, 10);
-    gearBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(gearX, topY, gearSize, gearSize, 10);
-    this.add.text(gearX + gearSize / 2, topY + gearSize / 2, '⚙️', { fontSize: '16px' }).setOrigin(0.5);
-    // Hit area padded up to the 48px Fitts's-Law floor even though the
-    // visible chip stays 34px, so the tap target itself never falls short.
-    const gearHitSize = Math.max(48, gearSize + 10);
-    this.add.rectangle(gearX + gearSize / 2, topY + gearSize / 2, gearHitSize, gearHitSize, 0xffffff, 0.001)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.openSettings());
+    // Settings gear (right)
+    makeIconButton(this, width - 26, topY + rowH / 2, '⚙️', {
+      size: 42, variant: 'teal', iconSize: '18px',
+      onClick: () => this.openSettings()
+    });
 
+    // Coin chip next to back button
+    this.coinChip = makeStatChip(this, 134, topY + 4, '🟡', this.save.coins, COLORS.gold);
+
+    // Level Badge (Center)
     const badgeR = 24, badgeCX = width / 2, badgeCY = topY + rowH / 2;
     this.add.circle(badgeCX, badgeCY, badgeR, COLORS.gold).setStrokeStyle(3, COLORS.woodDark);
     this.levelNumberText = this.add.text(badgeCX, badgeCY, '', {
@@ -141,19 +143,18 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.levelBadgeBottom = badgeCY + badgeR;
 
-    // Level Timer pill (GDD 3.8) — under the coin chip; hidden on Easy
-    // levels (see loadLevel()).
-    const timerY = topY + rowH + 6, timerW = 78, timerH = 26;
+    // Level Timer pill (GDD 3.8) — under the coin chip; hidden on Easy levels
+    const timerY = topY + rowH + 4, timerW = 86, timerH = 30;
     const timerBg = this.add.graphics();
-    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(14, timerY, timerW, timerH, 13);
-    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(14, timerY, timerW, timerH, 13);
-    const timerIcon = this.add.text(14 + 15, timerY + timerH / 2, '⏱️', { fontSize: '11px' }).setOrigin(0.5);
-    this.timerPillLabel = this.add.text(14 + timerW - 10, timerY + timerH / 2, '0:00', {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#2b1e16'
+    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(12, timerY, timerW, timerH, 15);
+    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, timerY, timerW, timerH, 15);
+    const timerIcon = this.add.text(12 + 16, timerY + timerH / 2, '⏱️', { fontSize: '13px' }).setOrigin(0.5);
+    this.timerPillLabel = this.add.text(12 + timerW - 10, timerY + timerH / 2, '0:00', {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(1, 0.5);
     this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
-    this.headerBottom = Math.max(this.levelBadgeBottom, timerY + timerH) + 10;
+    this.headerBottom = Math.max(this.levelBadgeBottom, timerY + timerH) + 8;
   }
 
   // Only rendered for "hard"/"superhard" levels — easy/normal levels show no
@@ -164,13 +165,13 @@ export default class GameScene extends Phaser.Scene {
     const difficulty = getDifficulty(this.categoryId, this.levelIndex);
     if (!difficulty) return;
     const style = DIFFICULTY_STYLE[difficulty];
-    const w = style.label.length * 6 + 20, h = 15;
-    const x = width / 2 - w / 2, y = this.levelBadgeBottom + 3;
+    const w = style.label.length * 8 + 28, h = 20;
+    const x = width / 2 - w / 2, y = this.levelBadgeBottom + 4;
     const g = this.add.graphics();
-    g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 7);
-    g.lineStyle(1.5, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 7);
+    g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 10);
+    g.lineStyle(2, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 10);
     const t = this.add.text(x + w / 2, y + h / 2, `${style.icon} ${style.label}`, {
-      fontFamily: 'Cinzel', fontSize: '6.5px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
     this.difficultyChip = this.add.container(0, 0, [g, t]);
     this.headerBottom = Math.max(this.headerBottom, y + h + 8);
@@ -255,26 +256,23 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createBuffChip(x, y, w, item) {
-    // Bumped up from the original 52px now that the header/footer redesign
-    // freed vertical space — buffs are meant to be the prominent, obviously-
-    // tappable action in this layout, not a footnote row.
-    const h = 60;
+    const h = 72;
     const g = this.add.graphics();
     const drawBg = (enabled) => {
       g.clear();
-      g.fillStyle(0xffffff, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 12);
-      g.lineStyle(2.5, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
+      g.fillStyle(0xffffff, enabled ? 1 : 0.55).fillRoundedRect(-w / 2, -h / 2, w, h, 14);
+      g.lineStyle(3, COLORS.woodDark, enabled ? 1 : 0.35).strokeRoundedRect(-w / 2, -h / 2, w, h, 14);
     };
     drawBg(true);
-    const icon = this.add.text(0, -16, item.icon, { fontSize: '21px' }).setOrigin(0.5);
+    const icon = this.add.text(0, -18, item.icon, { fontSize: '25px' }).setOrigin(0.5);
     const name = this.add.text(0, 10, item.name, {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#42281d'
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#42281d'
     }).setOrigin(0.5);
-    const costText = this.add.text(0, 23, '', {
-      fontFamily: 'Cinzel', fontSize: '9px', color: '#ee4343'
+    const costText = this.add.text(0, 25, '', {
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ee4343'
     }).setOrigin(0.5);
 
-    const container = this.add.container(x, y, [g, icon, name, costText]);
+    const container = this.add.container(x, y - 8, [g, icon, name, costText]);
     container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
     container.input.cursor = 'pointer';
     container.on('pointerdown', () => {
@@ -284,12 +282,9 @@ export default class GameScene extends Phaser.Scene {
     });
     container.drawBg = drawBg;
     container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, costText].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
-    // Shop-granted inventory is spent before Coins — show "Free ×N" while
-    // any is left so the player can see the pack they bought is actually
-    // being used, not just decorative.
     container.updateCost = () => {
       const count = this.save.buffs[item.key] || 0;
-      costText.setText(count > 0 ? `Free ×${count}` : `${item.cost} Coins`);
+      costText.setText(count > 0 ? `Miễn Phí x${count}` : `${item.cost} Xu`);
       costText.setColor(count > 0 ? '#12826c' : '#ee4343');
     };
     container.updateCost();
@@ -1143,8 +1138,8 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const next = getNextLevel(this.categoryId, this.levelIndex);
-    const nextBtn = makeButton(this, width / 2, panelY + panelH - 46, next ? 'Next Level' : 'Back to Home', {
-      variant: 'gold', fontSize: '13px'
+    const nextBtn = makeButton(this, width / 2, panelY + panelH - 72, next ? 'TIẾP TỤC ⏩' : 'VỀ TRANG CHỦ 🏠', {
+      variant: 'gold', fontSize: '16px', minHeight: 48, width: panelW - 48
     });
     nextBtn.on('pointerdown', () => {
       if (next) {
@@ -1154,26 +1149,20 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    const homeBtn = makeButton(this, width / 2, panelY + panelH - 12, 'Home', { variant: 'ink', fontSize: '10px' });
+    const homeBtn = makeButton(this, width / 2, panelY + panelH - 20, 'TRANG CHỦ 🏠', {
+      variant: 'ink', fontSize: '14px', minHeight: 40, width: panelW - 48
+    });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
 
     this.overlayContainer.add([bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn]);
     this.overlayContainer.setVisible(true);
 
-    // Sound + haptic already fired once in completeLevel() right as the
-    // chain locked — repeating them here (the old code called
-    // `playSound('win', false)` again, ignoring the mute setting too) just
-    // doubled up the fanfare. This is purely the visual celebration layer.
     if (!isSkip) {
       this.spawnVictoryCelebration(width, height);
       this.playCoinCountUp();
     }
   }
 
-  // Full-screen confetti + falling coins + the original sparkle drizzle —
-  // the old version only rained a few sparkles inside the panel's width,
-  // which barely read as a celebration. This is the "Victory Confetti"
-  // moment every modern match-style mobile game leads its win screen with.
   spawnVictoryCelebration(width, height) {
     const confettiColors = [COLORS.gold, COLORS.teal, 0xee4343, 0x22c55e, 0x9333ea];
     for (let i = 0; i < 32; i++) {
@@ -1222,9 +1211,6 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  // A handful of quick "coin" ticks timed to the reward reveal — the mobile
-  // game equivalent of a coin counter clicking upward, instead of the
-  // reward number just silently appearing.
   playCoinCountUp() {
     for (let i = 0; i < 5; i++) {
       this.time.delayedCall(150 + i * 90, () => playSound('coin', this.save.soundMuted));
@@ -1232,38 +1218,33 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showLose(text) {
-    // Distinct from 'explode' (already played a beat earlier, right when the
-    // bomb went off) — this is the "you lost" sting for the modal itself,
-    // so the failure has two separate, clearly-timed audio beats instead of
-    // silence between the blast and the retry screen.
     playSound('lose', this.save.soundMuted);
 
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
 
-    const panelW = width - 60, panelH = 220;
+    const panelW = width - 50, panelH = 240;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
-    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
-    const title = this.add.text(width / 2, panelY + 40, '💥 You Lost!', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+    const title = this.add.text(width / 2, panelY + 36, '💥 BẠN ĐÃ THUA!', {
+      fontFamily: 'Cinzel', fontSize: '22px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
-    const sub = this.add.text(width / 2, panelY + 86, text, {
-      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center',
-      wordWrap: { width: panelW - 30 }
+    const sub = this.add.text(width / 2, panelY + 84, text, {
+      fontFamily: 'Crimson Pro', fontSize: '13px', color: '#42281d', align: 'center',
+      wordWrap: { width: panelW - 36 }
     }).setOrigin(0.5);
 
-    const retryBtn = makeButton(this, width / 2, panelY + panelH - 40, 'Retry This Level', { variant: 'gold', fontSize: '13px' });
+    const retryBtn = makeButton(this, width / 2, panelY + panelH - 42, 'THỬ LẠI MÀN NÀY 🔄', {
+      variant: 'gold', fontSize: '16px', minHeight: 48, width: panelW - 48
+    });
     retryBtn.on('pointerdown', () => this.loadLevel());
 
     this.overlayContainer.add([bg, panel, title, sub, retryBtn]);
     this.overlayContainer.setVisible(true);
 
-    // A quick side-to-side shake on the title, echoing the reference
-    // mockup's fail-icon shake — reads as "impact" without needing motion
-    // on the whole panel (which would also throw off the retry button hitbox).
-    title.setPosition(width / 2, panelY + 40);
+    title.setPosition(width / 2, panelY + 36);
     this.tweens.add({ targets: title, x: { from: width / 2 - 8, to: width / 2 + 8 }, duration: 60, repeat: 4, yoyo: true, onComplete: () => title.setX(width / 2) });
   }
 }

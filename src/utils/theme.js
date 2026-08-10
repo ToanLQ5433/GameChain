@@ -41,38 +41,37 @@ export function drawPanel(scene, x, y, w, h, opts = {}) {
   return g;
 }
 
-// Nút viên thuốc — 2 biến thể đúng style guide:
-//  'gold'  = CTA chính, nền vàng đặc + 2 chấm tròn hai bên nhãn ("• LABEL •")
-//  'teal'  = hành động phụ, viền teal trong suốt
-//  'ink'   = trung tính (mặc định cho nút tiện ích như "Chơi Lại")
+// Nút viên thuốc chuẩn mobile game (Candy/Wood/Gold style) — bo tròn, nổi 3D,
+// chữ to rõ ràng (15px-18px) và diện tích bấm tối thiểu 44px-52px.
 export function makeButton(scene, x, y, label, opts = {}) {
   const {
-    variant = 'ink', fontSize = '12px', paddingX = 18, paddingY = 9,
-    originX = 0.5, onClick = null, shadow = false, shadowOffset = 5, width: forcedWidth = null
+    variant = 'ink', fontSize = '15px', paddingX = 22, paddingY = 11,
+    originX = 0.5, onClick = null, shadow = true, shadowOffset = 5, width: forcedWidth = null,
+    minHeight = 46
   } = opts;
 
   const palette = {
     gold: { bg: COLORS.gold, border: COLORS.goldDim, text: '#2b1e16', hoverBg: 0xffe07a },
-    // Outline-only, light-cyan text — only reads on a dark scene background.
     teal: { bg: null, border: COLORS.teal, text: '#8fe8de', hoverBg: 0x0d2a28 },
     ink: { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 },
-    // Solid fill, white text — the one to use on light/parchment backgrounds
-    // where the outline-only 'teal' variant would have no contrast.
     tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x18d4bd },
-    // Danger action (Quit, delete-ish confirmations) — solid red fill.
-    ruby: { bg: 0xe0605a, border: COLORS.ruby, text: '#ffffff', hoverBg: 0xf47a74 }
-  }[variant];
+    ruby: { bg: 0xdd2d2d, border: 0x991b1b, text: '#ffffff', hoverBg: 0xef4444 },
+    blue: { bg: 0x0284c7, border: 0x0369a1, text: '#ffffff', hoverBg: 0x38bdf8 },
+    emerald: { bg: 0x65a30d, border: 0x3f6212, text: '#ffffff', hoverBg: 0x84cc16 },
+    parchment3D: { bg: 0xdfc49c, border: 0x9e7b4f, text: '#42281d', hoverBg: 0xebd9bd }
+  }[variant] || { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 };
 
   const txt = scene.add.text(0, 0, label, {
     fontFamily: 'Cinzel', fontSize, fontStyle: 'bold', color: palette.text
   }).setOrigin(0.5);
 
   const dotGap = variant === 'gold' ? 14 : 0;
-  const w = forcedWidth || (txt.width + paddingX * 2 + dotGap * 2), h = txt.height + paddingY * 2;
+  const rawW = txt.width + paddingX * 2 + dotGap * 2;
+  const rawH = Math.max(minHeight, txt.height + paddingY * 2);
+  const w = forcedWidth || rawW, h = rawH;
   const container = scene.add.container(0, 0);
 
   // Viền "kẹo 3D" — khối màu đậm lệch xuống dưới, tạo cảm giác nút nổi khối
-  // như trong mockup tham khảo (candy-crush style), chỉ khi opts.shadow=true.
   if (shadow) {
     const shadowG = scene.add.graphics();
     shadowG.fillStyle(palette.border, 1).fillRoundedRect(-w / 2, -h / 2 + shadowOffset, w, h, h / 2);
@@ -84,14 +83,14 @@ export function makeButton(scene, x, y, label, opts = {}) {
   const drawBg = (fillColor, alpha) => {
     bg.clear();
     if (fillColor !== null) bg.fillStyle(fillColor, alpha !== undefined ? alpha : 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-    bg.lineStyle(2, palette.border, 1).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    bg.lineStyle(3, palette.border, 1).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
   };
   drawBg(palette.bg);
   container.add([bg, txt]);
 
   if (variant === 'gold') {
-    const dotL = scene.add.circle(-w / 2 + paddingX * 0.7, 0, 2.4, 0x2b1e16, 0.7);
-    const dotR = scene.add.circle(w / 2 - paddingX * 0.7, 0, 2.4, 0x2b1e16, 0.7);
+    const dotL = scene.add.circle(-w / 2 + paddingX * 0.7, 0, 3, 0x2b1e16, 0.7);
+    const dotR = scene.add.circle(w / 2 - paddingX * 0.7, 0, 3, 0x2b1e16, 0.7);
     container.add([dotL, dotR]);
   }
 
@@ -101,7 +100,7 @@ export function makeButton(scene, x, y, label, opts = {}) {
   container.on('pointerover', () => drawBg(palette.hoverBg, variant === 'teal' ? 0.5 : 1));
   container.on('pointerout', () => drawBg(palette.bg));
   container.on('pointerdown', () => {
-    scene.tweens.add({ targets: container, scale: 0.93, duration: 60, yoyo: true });
+    scene.tweens.add({ targets: container, scale: 0.92, duration: 60, yoyo: true });
     if (onClick) onClick();
   });
   container.width = w;
@@ -109,25 +108,72 @@ export function makeButton(scene, x, y, label, opts = {}) {
   return container;
 }
 
+// Nút Icon tròn/bo vuông nổi 3D chuẩn mobile (Settings ⚙️, Quay lại 🏠, Đóng ✕, Replay 🔄)
+// Kích thước chuẩn 44x44px trở lên cho ngón tay bấm thoải mái.
+export function makeIconButton(scene, x, y, icon, opts = {}) {
+  const {
+    size = 44, variant = 'wood', iconSize = '20px', onClick = null, shadow = true, shadowOffset = 4
+  } = opts;
+
+  const palette = {
+    wood: { bg: COLORS.parchment, border: COLORS.woodDark, iconColor: '#2b1e16', hoverBg: 0xfff6e5 },
+    gold: { bg: COLORS.gold, border: COLORS.goldDim, iconColor: '#2b1e16', hoverBg: 0xffe07a },
+    teal: { bg: COLORS.teal, border: COLORS.tealDim, iconColor: '#ffffff', hoverBg: 0x18d4bd },
+    ruby: { bg: 0xe0605a, border: COLORS.ruby, iconColor: '#ffffff', hoverBg: 0xf47a74 },
+    dark: { bg: COLORS.cardBgLight, border: COLORS.goldBorder, iconColor: '#f3c64f', hoverBg: 0x183a5e }
+  }[variant] || { bg: COLORS.parchment, border: COLORS.woodDark, iconColor: '#2b1e16', hoverBg: 0xfff6e5 };
+
+  const container = scene.add.container(x, y);
+
+  if (shadow) {
+    const shadowG = scene.add.graphics();
+    shadowG.fillStyle(palette.border, 1).fillCircle(0, shadowOffset, size / 2);
+    container.add(shadowG);
+  }
+
+  const bg = scene.add.graphics();
+  const drawBg = (fillColor) => {
+    bg.clear();
+    bg.fillStyle(fillColor, 1).fillCircle(0, 0, size / 2);
+    bg.lineStyle(3, palette.border, 1).strokeCircle(0, 0, size / 2);
+  };
+  drawBg(palette.bg);
+
+  const txt = scene.add.text(0, 0, icon, {
+    fontSize: iconSize, fontStyle: 'bold', color: palette.iconColor
+  }).setOrigin(0.5);
+
+  container.add([bg, txt]);
+  container.setInteractive(new Phaser.Geom.Circle(0, 0, size / 2), Phaser.Geom.Circle.Contains);
+  container.input.cursor = 'pointer';
+  container.on('pointerover', () => drawBg(palette.hoverBg));
+  container.on('pointerout', () => drawBg(palette.bg));
+  container.on('pointerdown', () => {
+    scene.tweens.add({ targets: container, scale: 0.90, duration: 60, yoyo: true });
+    if (onClick) onClick();
+  });
+  return container;
+}
+
 // Chip HUD 2 dòng (nhãn nhỏ phía trên + giá trị đậm) — dùng cho các số liệu
 // trên cùng màn hình (điểm số, xu, lượt đi...), viền teal hoặc gold tuỳ vai trò.
 export function makeHudChip(scene, x, y, label, value, opts = {}) {
-  const { variant = 'teal', originX = 0.5, minWidth = 64 } = opts;
+  const { variant = 'teal', originX = 0.5, minWidth = 72 } = opts;
   const border = variant === 'gold' ? COLORS.gold : COLORS.teal;
   const valueColor = variant === 'gold' ? '#f3c64f' : '#7fe9de';
 
-  const labelTxt = scene.add.text(0, -9, label, {
-    fontFamily: 'Cinzel', fontSize: '7px', color: '#9fb8c9', letterSpacing: 1
+  const labelTxt = scene.add.text(0, -10, label, {
+    fontFamily: 'Cinzel', fontSize: '9px', color: '#9fb8c9', letterSpacing: 1
   }).setOrigin(0.5);
-  const valueTxt = scene.add.text(0, 6, value, {
-    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor
+  const valueTxt = scene.add.text(0, 7, value, {
+    fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: valueColor
   }).setOrigin(0.5);
 
-  const w = Math.max(minWidth, Math.max(labelTxt.width, valueTxt.width) + 20);
-  const h = 38;
+  const w = Math.max(minWidth, Math.max(labelTxt.width, valueTxt.width) + 24);
+  const h = 42;
   const bg = scene.add.graphics();
-  bg.fillStyle(COLORS.cardBg, 1).fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-  bg.lineStyle(1.5, border, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, 8);
+  bg.fillStyle(COLORS.cardBg, 1).fillRoundedRect(-w / 2, -h / 2, w, h, 10);
+  bg.lineStyle(2, border, 0.9).strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
 
   const container = scene.add.container(x - (originX - 0.5) * w, y, [bg, labelTxt, valueTxt]);
   container.setValueText = (v) => valueTxt.setText(v);
@@ -135,20 +181,18 @@ export function makeHudChip(scene, x, y, label, value, opts = {}) {
   return container;
 }
 
-// White pill chip (coloured icon circle + bold value) — used for Coins/Gems
-// on every light-background HUD (Home, Shop, in-level top bar). `rightEdgeX`
-// is the chip's right edge, so callers can chain several chips right-to-left
-// without them overlapping.
+// White pill chip (coloured icon circle + bold value) — dùng cho Coins/Lives
+// trên mọi HUD (Home, Shop, Game top bar). `rightEdgeX` là mép phải của chip.
 export function makeStatChip(scene, rightEdgeX, y, icon, value, accentColor) {
-  const w = 64, h = 30;
+  const w = 78, h = 34;
   const xLeft = rightEdgeX - w;
   const g = scene.add.graphics();
-  g.fillStyle(0xffffff, 1).fillRoundedRect(xLeft, y, w, h, 15);
-  g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(xLeft, y, w, h, 15);
-  scene.add.circle(xLeft + 15, y + h / 2, 11, accentColor).setStrokeStyle(2, COLORS.woodDark);
-  scene.add.text(xLeft + 15, y + h / 2, icon, { fontSize: '11px' }).setOrigin(0.5);
-  const valTxt = scene.add.text(xLeft + 33, y + h / 2, String(value), {
-    fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+  g.fillStyle(0xffffff, 1).fillRoundedRect(xLeft, y, w, h, 17);
+  g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(xLeft, y, w, h, 17);
+  scene.add.circle(xLeft + 17, y + h / 2, 13, accentColor).setStrokeStyle(2, COLORS.woodDark);
+  scene.add.text(xLeft + 17, y + h / 2, icon, { fontSize: '13px' }).setOrigin(0.5);
+  const valTxt = scene.add.text(xLeft + 36, y + h / 2, String(value), {
+    fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#2b1e16'
   }).setOrigin(0, 0.5);
   return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
 }

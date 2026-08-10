@@ -4,7 +4,7 @@ import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward }
 import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, makeButton, makeStatChip } from '../utils/theme.js';
+import { COLORS, makeButton, makeIconButton, makeStatChip } from '../utils/theme.js';
 import { buildSettingsModal } from '../utils/settingsModal.js';
 
 // Single continuous "Voyage" path across ALL 210 levels (all categories
@@ -91,27 +91,24 @@ export default class HomeScene extends Phaser.Scene {
       fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(0, 0.5);
     this.livesTimerLabel = this.add.text(heartsX + heartsW / 2, heartsY + heartsH + 3, '', {
-      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#0369a1'
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#0369a1'
     }).setOrigin(0.5, 0);
     this.refreshLivesDisplay();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshLivesDisplay() });
 
-    const gearSize = 34, gearX = width - 14 - gearSize, gearY = 14;
-    const gearBg = this.add.graphics();
-    gearBg.fillStyle(COLORS.teal, 1).fillRoundedRect(gearX, gearY, gearSize, gearSize, 10);
-    gearBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(gearX, gearY, gearSize, gearSize, 10);
-    this.add.text(gearX + gearSize / 2, gearY + gearSize / 2, '⚙️', { fontSize: '15px' }).setOrigin(0.5);
-    const gearHit = this.add.rectangle(gearX + gearSize / 2, gearY + gearSize / 2, gearSize, gearSize, 0xffffff, 0.001)
-      .setInteractive({ useHandCursor: true });
-    gearHit.on('pointerdown', () => {
-      playSound('switch', this.save.soundMuted);
-      this.settingsOverlay.setVisible(true);
+    const gearX = width - 26, gearY = 24;
+    makeIconButton(this, gearX, gearY, '⚙️', {
+      size: 42, variant: 'teal', iconSize: '18px',
+      onClick: () => {
+        playSound('switch', this.save.soundMuted);
+        this.settingsOverlay.setVisible(true);
+      }
     });
 
-    const gemRightEdge = gearX - 8;
-    this.gemChip = makeStatChip(this, gemRightEdge, 14, '💎', this.save.gems, COLORS.teal);
+    const gemRightEdge = gearX - 28;
+    this.gemChip = makeStatChip(this, gemRightEdge, 7, '💎', this.save.gems, COLORS.teal);
     const coinRightEdge = this.gemChip.rightEdge - 8;
-    this.coinChip = makeStatChip(this, coinRightEdge, 14, '🟡', this.save.coins, COLORS.gold);
+    this.coinChip = makeStatChip(this, coinRightEdge, 7, '🟡', this.save.coins, COLORS.gold);
   }
 
   refreshLivesDisplay() {
@@ -141,7 +138,7 @@ export default class HomeScene extends Phaser.Scene {
     trackBg.lineStyle(1.5, COLORS.woodDark, 0.6).strokeRoundedRect(this.eventTrackX, this.eventTrackY, this.eventTrackW, this.eventTrackH, this.eventTrackH / 2);
     this.eventFill = this.add.graphics();
     this.eventLabel = this.add.text(x + w - 8, y + h / 2, '', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(1, 0.5);
 
     const hit = this.add.rectangle(x + w / 2, y + h / 2, w, h, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
@@ -281,7 +278,7 @@ export default class HomeScene extends Phaser.Scene {
       group.add(this.add.text(0, 0, '✓', { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5));
     } else if (locked) {
       group.add(this.drawLockIcon());
-      group.add(this.add.text(0, 15, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '9px', color: '#d6d3d1' }).setOrigin(0.5));
+      group.add(this.add.text(0, 16, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#ffffff' }).setOrigin(0.5));
     } else {
       group.add(this.add.text(0, 0, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#2b1e16' }).setOrigin(0.5));
     }
@@ -439,9 +436,14 @@ export default class HomeScene extends Phaser.Scene {
 
   buildCTA(width, height) {
     this.ctaY = this.mapViewBottom + 34;
-    this.ctaBtn = makeButton(this, width / 2, this.ctaY, this.ctaLabel(), {
-      variant: 'gold', fontSize: '14px', shadow: true, width: width * 0.82,
+    const btnW = Math.min(width * 0.85, 280);
+    const label = `▶️ ${this.ctaLabel()}`;
+    this.ctaBtn = makeButton(this, width / 2, this.ctaY, label, {
+      variant: 'gold', fontSize: '17px', shadow: true, shadowOffset: 6, width: btnW, minHeight: 52,
       onClick: () => this.onNodeTap(this.currentNode())
+    });
+    this.tweens.add({
+      targets: this.ctaBtn, scaleX: 1.03, scaleY: 1.03, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
     });
   }
 
@@ -456,30 +458,30 @@ export default class HomeScene extends Phaser.Scene {
   }
 
   buildBottomNav(width, height) {
-    const barH = 60;
-    const barY = height - barH - 6;
+    const barH = 64;
+    const barY = height - barH - 8;
     const bar = this.add.graphics();
-    bar.fillStyle(COLORS.teal, 1).fillRoundedRect(10, barY, width - 20, barH, 20);
-    bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(10, barY, width - 20, barH, 20);
+    bar.fillStyle(COLORS.teal, 1).fillRoundedRect(12, barY, width - 24, barH, 22);
+    bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, barY, width - 24, barH, 22);
 
     const items = [
-      { key: 'shop', icon: '🏪' },
-      { key: 'journey', icon: '🧭' },
-      { key: 'lock', icon: '🔒' }
+      { key: 'shop', icon: '🏪', label: 'CỬA HÀNG' },
+      { key: 'journey', icon: '🧭', label: 'HẢI TRÌNH' },
+      { key: 'lock', icon: '🔒', label: 'SẮP CÓ' }
     ];
-    const step = (width - 20) / items.length;
+    const step = (width - 24) / items.length;
     const baseY = barY + barH / 2;
 
     items.forEach((item, i) => {
-      const cx = 10 + step * i + step / 2;
+      const cx = 12 + step * i + step / 2;
       const active = item.key === 'journey';
-      const size = active ? 50 : 42;
+      const size = active ? 52 : 44;
       const cy = baseY - (active ? 10 : 0);
 
       const btnBg = this.add.graphics();
-      btnBg.fillStyle(active ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
-      btnBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
-      this.add.text(cx, cy, item.icon, { fontSize: active ? '18px' : '15px' }).setOrigin(0.5);
+      btnBg.fillStyle(active ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, cy - size / 2, size, size, 14);
+      btnBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, cy - size / 2, size, size, 14);
+      this.add.text(cx, cy, item.icon, { fontSize: active ? '22px' : '18px' }).setOrigin(0.5);
 
       const hit = this.add.rectangle(cx, baseY, step - 6, barH, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
       hit.on('pointerdown', () => this.onNavTap(item.key));
