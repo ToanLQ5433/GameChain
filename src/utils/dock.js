@@ -24,18 +24,26 @@ export function buildBottomDock(scene, width, height, { active, onShop, onHome, 
   drawDockPanel(width - sideW, sideY, sideW, sideH, 0xfee1b9, { tl: 0, tr: R, bl: 0, br: 0 });
   drawDockPanel(homeX, homeY, homeW, homeH, 0xfff1de, { tl: R, tr: R, bl: 0, br: 0 });
 
-  buildDockButton(scene, sideW / 2, sideY + 6, '🏪', 'SHOP', onShop, active === 'shop');
-  buildDockButton(scene, homeX + homeW / 2, homeY + 2, '🏠', 'HOME', onHome, active === 'home');
-  buildDockButton(scene, width - sideW / 2, sideY + 6, '🔒', 'SOON', onLock, active === 'lock');
+  // isCenter (which slot sits in the tall podium panel) is a FIXED layout
+  // fact — always the Home slot — independent of `active` (which tab is
+  // the current screen). Conflating the two used to size the Shop button
+  // as if it were the tall center button while ShopScene's own dock still
+  // drew it inside the short side panel: an oversized 58px icon + 90px
+  // hit-rect crammed into a 76px panel, overflowing its own slot.
+  buildDockButton(scene, sideW / 2, sideY + 6, '🏪', 'SHOP', onShop, false, active === 'shop');
+  buildDockButton(scene, homeX + homeW / 2, homeY + 2, '🏠', 'HOME', onHome, true, active === 'home');
+  buildDockButton(scene, width - sideW / 2, sideY + 6, '🔒', 'SOON', onLock, false, active === 'lock');
 }
 
-function buildDockButton(scene, cx, topY, icon, label, onClick, isActive) {
-  const size = isActive ? 58 : 46;
+function buildDockButton(scene, cx, topY, icon, label, onClick, isCenter, isActiveTab) {
+  const size = isCenter ? 58 : 46;
   const iconY = topY + size / 2 + 4;
   const iconBg = scene.add.graphics();
-  iconBg.fillStyle(isActive ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
-  iconBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
-  scene.add.text(cx, iconY, icon, { fontSize: (isActive ? 26 : 20) + 'px' }).setOrigin(0.5);
+  const bgColor = isCenter ? COLORS.gold : (isActiveTab ? 0xffe9b0 : 0xffffff);
+  const borderColor = !isCenter && isActiveTab ? COLORS.gold : COLORS.woodDark;
+  iconBg.fillStyle(bgColor, 1).fillRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
+  iconBg.lineStyle(3, borderColor, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
+  scene.add.text(cx, iconY, icon, { fontSize: (isCenter ? 26 : 20) + 'px' }).setOrigin(0.5);
   scene.add.text(cx, iconY + size / 2 + 12, label, {
     fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#36324c'
   }).setOrigin(0.5);

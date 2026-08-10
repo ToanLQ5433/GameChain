@@ -238,7 +238,17 @@ export default class HomeScene extends Phaser.Scene {
     this.pathContainer.setMask(this.mapMaskShape.createGeometryMask());
 
     this.rebuildMapContent();
-    this.setupMapScroll(64, width - 128);
+    // Real bug, not just a style nit: the map-scroll detection band used to
+    // extend far enough right (to width-64) to overlap the No Ads offer
+    // card's own hit rect (which spans down to width-82) by ~18px. A tap
+    // landing in that sliver fired the card's own click correctly, but the
+    // map-scroll listener ALSO saw it and started tracking it as a
+    // potential drag — any tiny finger jitter during the tap then read as
+    // "the map moved", which is exactly the kind of "buttons feel
+    // unreliable/offset" symptom a real device would surface. Narrowed so
+    // the band can never reach either side offer card (Daily Check-in on
+    // the left, No Ads on the right).
+    this.setupMapScroll(70, width - 162);
   }
 
   // Biên độ uốn lượn bị khống chế cứng ở ±90px (dải trung tâm rộng 180px)
