@@ -652,16 +652,20 @@ export default class GameScene extends Phaser.Scene {
 
   computeBoardMetrics() {
     const { width, height } = this.scale;
-    const topOffset = this.headerBottom + 4;  // tight gap right below the top bar
-    // Bottom space for buff chips (88px height) + gap above them
-    const bottomOffset = 100;
-    const marginX = 10;  // narrow margins so board is wide
+    // The wooden board frame extends ~pad px ABOVE the first row and BELOW the last row.
+    // pad = max(10, cell*0.18). We reserve a conservative estimate (22px) in both
+    // topOffset and bottomOffset so the frame never overlaps the header or buff chips.
+    const FRAME_PAD = 22;
+    const topOffset = this.headerBottom + 6 + FRAME_PAD;
+    // Buff chips: 88px tall, centered at (height - 56), top edge at (height - 100).
+    // Reserve buff area (100) + frame bottom padding + visual gap (10).
+    const bottomOffset = 100 + FRAME_PAD + 10;
+    const marginX = 10;
     const { rows, cols } = this.engine;
 
     const areaW = width - marginX * 2;
     const areaH = height - topOffset - bottomOffset;
-    // No upper cap on cell size — let the board fill the available space
-    // naturally. Floor at 44px so cells stay finger-friendly.
+    // No upper cap — board fills available space. Floor at 44px for touch targets.
     const cell = Math.max(44, Math.floor(Math.min(areaW / cols, areaH / rows)));
 
     this.cellSize = cell;
