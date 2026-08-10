@@ -85,7 +85,7 @@ export default class ShopScene extends Phaser.Scene {
   }
 
   buildTopBar(width) {
-    this.add.text(16, 24, 'CỬA HÀNG 🏪', {
+    this.add.text(16, 24, 'SHOP 🏪', {
       fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#f3c64f',
       stroke: '#4a2c11', strokeThickness: 3
     }).setOrigin(0, 0.5);

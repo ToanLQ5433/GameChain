@@ -320,7 +320,7 @@ export default class GameScene extends Phaser.Scene {
     container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, costText].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
     container.updateCost = () => {
       const count = this.save.buffs[item.key] || 0;
-      costText.setText(count > 0 ? `Miễn Phí x${count}` : `${item.cost} Xu`);
+      costText.setText(count > 0 ? `Free x${count}` : `${item.cost} Coins`);
       costText.setColor(count > 0 ? '#12826c' : '#ee4343');
     };
     container.updateCost();
@@ -1197,7 +1197,7 @@ export default class GameScene extends Phaser.Scene {
     }).setOrigin(0.5);
 
     const next = getNextLevel(this.categoryId, this.levelIndex);
-    const nextBtn = makeButton(this, width / 2, panelY + panelH - 72, next ? 'TIẾP TỤC ⏩' : 'VỀ TRANG CHỦ 🏠', {
+    const nextBtn = makeButton(this, width / 2, panelY + panelH - 72, next ? 'NEXT ⏩' : 'HOME 🏠', {
       variant: 'gold', fontSize: '16px', minHeight: 48, width: panelW - 48
     });
     nextBtn.on('pointerdown', () => {
@@ -1208,7 +1208,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    const homeBtn = makeButton(this, width / 2, panelY + panelH - 20, 'TRANG CHỦ 🏠', {
+    const homeBtn = makeButton(this, width / 2, panelY + panelH - 20, 'HOME 🏠', {
       variant: 'ink', fontSize: '14px', minHeight: 40, width: panelW - 48
     });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
@@ -1432,7 +1432,7 @@ export default class GameScene extends Phaser.Scene {
       wordWrap: { width: panelW - 36 }
     }).setOrigin(0.5);
 
-    const retryBtn = makeButton(this, width / 2, panelY + panelH - 42, 'THỬ LẠI (-1 ❤️) 🔄', {
+    const retryBtn = makeButton(this, width / 2, panelY + panelH - 42, 'RETRY (-1 ❤️) 🔄', {
       variant: 'gold', fontSize: '15px', minHeight: 48, width: panelW - 48
     });
     retryBtn.on('pointerdown', () => this.retryWithLifeCost());

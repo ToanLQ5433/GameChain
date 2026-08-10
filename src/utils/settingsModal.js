@@ -193,7 +193,7 @@ export function buildLifeCostConfirm(scene, width, height, { icon, title, messag
   });
   confirmBtn.on('pointerdown', onConfirm);
 
-  const cancelBtn = makeButton(scene, width / 2, panelY + panelH - 28, 'Hủy Bỏ', { variant: 'ink', fontSize: '13px', minHeight: 40, width: btnW });
+  const cancelBtn = makeButton(scene, width / 2, panelY + panelH - 28, 'Cancel', { variant: 'ink', fontSize: '13px', minHeight: 40, width: btnW });
   cancelBtn.on('pointerdown', onCancel);
 
   return { items: [bg, panel, titleTxt, heart, msgTxt, confirmBtn, cancelBtn] };

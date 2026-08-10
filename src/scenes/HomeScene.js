@@ -29,6 +29,16 @@ const NODE_R = 42;
 const NODE_R_CURRENT = 52;
 const NODE_TOP_PAD = 70;
 
+// Shared bottom-of-screen geometry — the dock's raised center "Home" podium
+// is the TALLEST thing at the bottom of the screen (taller than its own
+// side panels), so both the map mask and the CTA button anchor off its top
+// edge (DOCK_HOME_H), not the shorter side panels, or the CTA's rounded
+// corners get clipped by the podium sitting in front of it.
+const DOCK_HOME_H = 92;
+const CTA_H = 62;
+const CTA_DOCK_GAP = 10;
+const MAP_CTA_GAP = 8;
+
 function totalCompleted(save) {
   return Object.values(save.completedLevels || {}).reduce((s, arr) => s + arr.length, 0);
 }
@@ -60,25 +70,28 @@ export default class HomeScene extends Phaser.Scene {
     sky.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
     sky.fillRect(0, 0, width, height);
 
+    // Small, soft, low-opacity background dressing — big saturated ellipses
+    // with a hard dark outline read as placeholder art, so these are
+    // shrunk and faded well behind the map/UI instead of competing with it.
     const deco = this.add.graphics();
     const island = (cx, cy, w, h, rot) => {
       deco.save();
       deco.translateCanvas(cx, cy);
       deco.rotateCanvas(rot);
-      deco.fillStyle(0x4ade80, 0.85).fillEllipse(0, 0, w, h);
-      deco.lineStyle(3, COLORS.woodDark, 0.85).strokeEllipse(0, 0, w, h);
+      deco.fillStyle(0x4ade80, 0.4).fillEllipse(0, 0, w, h);
+      deco.lineStyle(2, COLORS.woodDark, 0.25).strokeEllipse(0, 0, w, h);
       deco.restore();
     };
     const cloud = (cx, cy, w, h) => {
-      deco.fillStyle(0xffffff, 0.85).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
-      deco.lineStyle(2, 0xcbd5e1, 0.9).strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
+      deco.fillStyle(0xffffff, 0.55).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
+      deco.lineStyle(1.5, 0xcbd5e1, 0.5).strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
     };
-    island(width * 0.12, height * 0.16, 90, 56, -0.15);
-    island(width * 0.92, height * 0.4, 100, 60, 0.2);
-    island(width * 0.08, height * 0.82, 74, 46, 0);
-    cloud(width * 0.82, height * 0.08, 70, 24);
-    cloud(width * 0.1, height * 0.34, 84, 26);
-    cloud(width * 0.9, height * 0.66, 60, 20);
+    island(width * 0.12, height * 0.16, 62, 38, -0.15);
+    island(width * 0.92, height * 0.4, 70, 42, 0.2);
+    island(width * 0.08, height * 0.82, 52, 32, 0);
+    cloud(width * 0.82, height * 0.08, 56, 20);
+    cloud(width * 0.1, height * 0.34, 66, 22);
+    cloud(width * 0.9, height * 0.66, 48, 16);
   }
 
   // ---------------- Top HUD ----------------
@@ -262,7 +275,7 @@ export default class HomeScene extends Phaser.Scene {
     // đường đi/level node để khi vuốt cuộn, chúng KHÔNG BAO GIỜ trượt lòi ra
     // che Top HUD hay chèn xuống dưới CTA/Nav Bar.
     this.mapViewTop = 90;
-    this.mapViewBottom = height - 145;
+    this.mapViewBottom = height - DOCK_HOME_H - CTA_DOCK_GAP - CTA_H - MAP_CTA_GAP;
     this.mapCenterX = width / 2;
 
     this.mapMaskShape = this.make.graphics({ x: 0, y: 0 }, false);
@@ -283,6 +296,12 @@ export default class HomeScene extends Phaser.Scene {
     return this.mapCenterX + amplitude * Math.sin(globalIndex * 1.15);
   }
 
+  // Two passes, not one interleaved pass: every road segment gets added to
+  // the display list BEFORE any node. A single per-i loop that draws "this
+  // node's incoming road, then this node" put each segment ABOVE the node
+  // above it but BELOW the node below it (added order = render order in
+  // Phaser) — the classic z-fighting bug where the dashed road visibly cut
+  // across the level number of the node just above it.
   rebuildMapContent() {
     this.pathContainer.removeAll(true);
     const flat = this.flatLevels;
@@ -291,6 +310,7 @@ export default class HomeScene extends Phaser.Scene {
     this.currentGlobalIdx = currentGlobalIdx;
     this.nodeHit = [];
 
+    const laid = [];
     for (let i = total - 1; i >= 0; i--) {
       const item = flat[i];
       const pos = total - 1 - i;
@@ -299,16 +319,20 @@ export default class HomeScene extends Phaser.Scene {
       const done = isLevelCompleted(this.save, item.categoryId, item.levelIndex);
       const isCurrent = i === currentGlobalIdx;
       const locked = !done && !isCurrent;
-
-      if (pos > 0) {
-        const prevItem = flat[i + 1];
-        const py = (pos - 1) * NODE_SPACING + NODE_TOP_PAD;
-        const px = this.laneX(prevItem.globalIndex);
-        this.drawRoadSegment(px, py, x, y, locked);
-      }
-
-      this.pathContainer.add(this.buildNode(x, y, item, { done, isCurrent, locked }));
+      laid.push({ item, pos, x, y, done, isCurrent, locked });
     }
+
+    // Pass 1 — every road segment (roadLayer), always behind every node.
+    laid.forEach((n, idx) => {
+      if (n.pos === 0) return;
+      const prev = laid[idx - 1];
+      this.drawRoadSegment(prev.x, prev.y, n.x, n.y, n.locked);
+    });
+
+    // Pass 2 — every node (nodeLayer), always in front of every road segment.
+    laid.forEach((n) => {
+      this.pathContainer.add(this.buildNode(n.x, n.y, n.item, n));
+    });
 
     this.totalPathHeight = total * NODE_SPACING + NODE_TOP_PAD;
     this.scrollToCurrent();
@@ -354,13 +378,11 @@ export default class HomeScene extends Phaser.Scene {
         fontFamily: 'Cinzel', fontSize: '32px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     } else if (locked) {
-      // Khoá và số level tách 2 dòng riêng (y:-10 / y:+10) — không bao giờ
-      // đè lên nhau, khác với bản cũ vẽ cả 2 gần như cùng tâm.
-      group.add(this.add.text(0, -10, '🔒', { fontSize: '12px' }).setOrigin(0.5));
-      group.add(this.add.text(0, 10, String(item.globalIndex + 1), {
-        fontFamily: 'Cinzel', fontSize: '26px', fontStyle: '900', color: '#ffffff'
-      }).setOrigin(0.5));
+      // Locked nodes show ONLY the lock icon, big and centered — no level
+      // number at all, so there's nothing for it to collide with.
+      group.add(this.add.text(0, 0, '🔒', { fontSize: Math.round(r * 0.62) + 'px' }).setOrigin(0.5));
     } else {
+      // Unlocked/current nodes show ONLY the level number — no lock icon.
       group.add(this.add.text(0, 0, String(item.globalIndex + 1), {
         fontFamily: 'Cinzel', fontSize: '26px', fontStyle: '900', color: '#2b1e16'
       }).setOrigin(0.5));
@@ -509,7 +531,7 @@ export default class HomeScene extends Phaser.Scene {
     resolveDailyCheckIn(this.save);
     if (this.save.dailyCheckIn.claimed) {
       playSound('switch', this.save.soundMuted);
-      this.showToast('📅 Bạn đã điểm danh hôm nay rồi — quay lại vào ngày mai!');
+      this.showToast('📅 You already checked in today — come back tomorrow!');
       return;
     }
     if (!claimDailyCheckIn(this.save)) return;
@@ -517,7 +539,7 @@ export default class HomeScene extends Phaser.Scene {
     this.coinChip.setValue(this.save.coins);
     if (this.dailyCheckInDot) this.dailyCheckInDot.setVisible(false);
     playSound('win', this.save.soundMuted);
-    this.showToast('🎉 Nhận thưởng điểm danh thành công!');
+    this.showToast('🎉 Daily Check-in reward claimed!');
   }
 
   // Square icon card + navy label chip below — shared shape for the two
@@ -574,9 +596,12 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- CTA / Play Level Button (Chỉnh theo đúng Yêu cầu Mockup) ----------------
 
   buildCTA(width, height) {
-    this.ctaY = this.mapViewBottom + 34;
+    // Anchored off the dock's podium height (not mapViewBottom) so its
+    // rounded bottom corners always clear the Home podium sitting in front
+    // of it, with a fixed CTA_DOCK_GAP breathing room in between.
+    this.ctaY = height - DOCK_HOME_H - CTA_DOCK_GAP - CTA_H / 2;
     const btnW = Math.min(width * 0.8, 260);
-    const btnH = 62;
+    const btnH = CTA_H;
     const x = width / 2;
     const y = this.ctaY;
 
@@ -698,7 +723,7 @@ export default class HomeScene extends Phaser.Scene {
   // screen so only its outer top corner reads as rounded, matching the
   // reference's chunky "candy dock" look.
   buildBottomNav(width, height) {
-    const sideH = 76, homeH = 92, bleed = 30, R = 28;
+    const sideH = 76, homeH = DOCK_HOME_H, bleed = 30, R = 28;
     const homeW = Math.min(width * 0.38, 150);
     const homeX = width / 2 - homeW / 2;
     const sideW = (width - homeW) / 2;
@@ -715,9 +740,9 @@ export default class HomeScene extends Phaser.Scene {
     drawDockPanel(width - sideW, sideY, sideW, sideH, 0xfee1b9, { tl: 0, tr: R, bl: 0, br: 0 });
     drawDockPanel(homeX, homeY, homeW, homeH, 0xfff1de, { tl: R, tr: R, bl: 0, br: 0 });
 
-    this.buildDockButton(sideW / 2, sideY + 6, '🏪', 'CỬA HÀNG', () => this.onNavTap('shop'), false);
+    this.buildDockButton(sideW / 2, sideY + 6, '🏪', 'SHOP', () => this.onNavTap('shop'), false);
     this.buildDockButton(homeX + homeW / 2, homeY + 2, '🏠', 'HOME', () => this.onNavTap('journey'), true);
-    this.buildDockButton(width - sideW / 2, sideY + 6, '🔒', 'SẮP CÓ', () => this.onNavTap('lock'), false);
+    this.buildDockButton(width - sideW / 2, sideY + 6, '🔒', 'SOON', () => this.onNavTap('lock'), false);
   }
 
   buildDockButton(cx, topY, icon, label, onClick, isHome) {
