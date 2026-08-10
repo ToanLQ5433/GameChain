@@ -761,8 +761,7 @@ export default class GameScene extends Phaser.Scene {
 
     getRelationshipHighlights(mechanic, this.levelDef).forEach(pair => this.spawnRelationshipGlow(pair.from, pair.to));
 
-    const [tr, tc] = sol[1];
-    this.showTutorialTooltip(content, tr, tc);
+    this.showTutorialCaption(content);
     this.updateTutorialPointer();
   }
 
@@ -786,36 +785,36 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: line, alpha: 0, delay: 1600, duration: 400, onComplete: () => line.destroy() });
   }
 
-  // Small speech-bubble anchored near the target cell, flipping below it
-  // if too close to the top of the screen.
-  showTutorialTooltip(content, r, c) {
+  // One short line, fixed just under the header — NOT anchored to any
+  // cell, so it can never sit on top of the board and cover a tile.
+  // Auto-fades after a few seconds; the blinking cell highlight (see
+  // updateTutorialPointer) is what keeps guiding the player after that.
+  showTutorialCaption(text) {
     if (this.tutorialTooltip) { this.tutorialTooltip.destroy(); this.tutorialTooltip = null; }
-    const { x: cx, y: cy } = this.cellCenter(r, c);
     const { width } = this.scale;
-    const bubbleW = Math.min(width - 40, 230), h = 54;
-    const above = cy > this.headerBottom + 90;
-    const by = above ? cy - this.cellSize * 0.9 : cy + this.cellSize * 0.9;
-    const bx = Phaser.Math.Clamp(cx, bubbleW / 2 + 8, width - bubbleW / 2 - 8);
-
-    const box = this.add.container(bx, by);
+    const capW = Math.min(width - 40, 260), h = 30;
+    const box = this.add.container(width / 2, this.headerBottom + 16);
     const bg = this.add.graphics();
-    bg.fillStyle(0x1f2937, 0.95).fillRoundedRect(-bubbleW / 2, -h / 2, bubbleW, h, 12);
-    bg.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(-bubbleW / 2, -h / 2, bubbleW, h, 12);
-    const titleTxt = this.add.text(0, -h / 2 + 14, content.title, {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#f3c64f'
+    bg.fillStyle(0x1f2937, 0.92).fillRoundedRect(-capW / 2, -h / 2, capW, h, h / 2);
+    bg.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(-capW / 2, -h / 2, capW, h, h / 2);
+    const txt = this.add.text(0, 0, text, {
+      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#ffffff'
     }).setOrigin(0.5);
-    const bodyTxt = this.add.text(0, h / 2 - 15, content.body, {
-      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#ffffff', align: 'center', wordWrap: { width: bubbleW - 24 }
-    }).setOrigin(0.5);
-    box.add([bg, titleTxt, bodyTxt]);
+    box.add([bg, txt]);
     this.fxContainer.add(box);
     this.tutorialTooltip = box;
+    this.tweens.add({ targets: box, alpha: 0, delay: 3200, duration: 500, onComplete: () => { box.destroy(); if (this.tutorialTooltip === box) this.tutorialTooltip = null; } });
   }
 
-  // A bobbing hand sitting on whatever cell the gated chain needs to reach
-  // NEXT — re-called after every successful gated step (and on backtrack,
-  // since the "next" index is derived live from the chain's current path
-  // length, not a separately-tracked counter that could drift out of sync).
+  // Blinking gold outline on whatever cell the gated chain needs to reach
+  // NEXT — the primary "look here" cue, drawn AROUND the cell rather than
+  // over it so the actual tile (Crate/Switch/Bomb...) stays fully visible.
+  // A small hand sits just OUTSIDE the cell (above it, or below when the
+  // cell is too close to the top of the board) as a secondary cue — never
+  // centered on top of the tile the way a covering icon would be.
+  // Re-called after every successful gated step and on backtrack, since
+  // the "next" index is derived live from the chain's current path length,
+  // not a separately-tracked counter that could drift out of sync.
   updateTutorialPointer() {
     if (this.tutorialPointer) { this.tutorialPointer.destroy(); this.tutorialPointer = null; }
     if (!this.tutorialGate || !this.tutorialGate.active) return;
@@ -825,10 +824,25 @@ export default class GameScene extends Phaser.Scene {
     if (!target) return;
     const [r, c] = target;
     const { x, y } = this.cellCenter(r, c);
-    const hand = this.add.text(x, y - this.cellSize * 0.1, '👆', { fontSize: Math.round(this.cellSize * 0.5) + 'px' }).setOrigin(0.5);
-    this.fxContainer.add(hand);
-    this.tweens.add({ targets: hand, y: y - this.cellSize * 0.3, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    this.tutorialPointer = hand;
+    const cs = this.cellSize;
+    const group = this.add.container(0, 0);
+
+    const ringSize = cs * 0.94, radius = Math.round(cs * 0.16);
+    const highlight = this.add.graphics();
+    highlight.lineStyle(4, COLORS.gold, 1).strokeRoundedRect(x - ringSize / 2, y - ringSize / 2, ringSize, ringSize, radius);
+    group.add(highlight);
+    this.tweens.add({ targets: highlight, alpha: { from: 1, to: 0.2 }, duration: 480, yoyo: true, repeat: -1 });
+
+    const belowBoard = r === 0; // top row: keep the hand below instead of off-board above
+    const handIcon = belowBoard ? '👆' : '👇';
+    const restY = belowBoard ? y + cs * 0.85 : y - cs * 0.85;
+    const bobY = belowBoard ? y + cs * 0.72 : y - cs * 0.72;
+    const hand = this.add.text(x, restY, handIcon, { fontSize: Math.round(cs * 0.36) + 'px' }).setOrigin(0.5);
+    group.add(hand);
+    this.tweens.add({ targets: hand, y: bobY, duration: 480, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+    this.fxContainer.add(group);
+    this.tutorialPointer = group;
   }
 
   // Brief red pulse on a cell the player tried but that isn't the gated

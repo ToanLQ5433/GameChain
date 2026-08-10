@@ -6,13 +6,16 @@
 // before handing back normal free play. Nothing here ever touches
 // ChainEngine; it only reads levelDef/solution data GameScene already has.
 
+// One short imperative phrase each — the blinking cell highlight (see
+// GameScene.updateTutorialPointer) carries most of the teaching now, this
+// is just enough text to say WHAT to do, not why.
 export const TUTORIAL_CONTENT = {
-  CORE: { title: 'Drag to Connect', body: 'Drag from an anchor to link every cell of its color.' },
-  'MEC-01': { title: 'Push Crates', body: 'Drag into a Crate to shove it one cell further.' },
-  'MEC-02': { title: 'Arrows & Prisms', body: 'Arrows force your next step. A Prism recolors your chain to match its Gate.' },
-  'MEC-03': { title: 'Number Code', body: 'Touch the numbered cells in order, ending on the last one.' },
-  'MEC-04': { title: 'Switches & Gates', body: 'Hold a chain on the Switch to open its Gate.' },
-  'MEC-05': { title: 'Static Bombs', body: 'Touching a Bomb loses instantly — push a Crate into it to clear it safely.' }
+  CORE: 'Drag from the anchor',
+  'MEC-01': 'Drag into the Crate',
+  'MEC-02': 'Follow the glowing cells',
+  'MEC-03': 'Tap the numbers in order',
+  'MEC-04': 'Hold a chain on the Switch',
+  'MEC-05': 'Push the Crate into the Bomb'
 };
 
 // Picks the chain whose OWN solution actually passes through the cell(s)
