@@ -10,10 +10,6 @@ import { COLORS, makeButton } from '../utils/theme.js';
 // category explicitly anymore). Node index 0 = level 1 at the BOTTOM;
 // higher levels stack upward, matching the reference mockup's map.
 
-const MAP_BG = 0xf3e3b8;
-const MAP_BG_DARK = 0xe0c98a;
-const MAP_BORDER = 0x4a2c11;
-const OCEAN = 0x0f766e;
 const LOCK_BG = 0x7a5230;
 const LOCK_BORDER = 0x442711;
 const CURRENT_BG = 0xffc200;
@@ -186,38 +182,29 @@ export default class HomeScene extends Phaser.Scene {
   }
 
   // ---------------- Voyage path (all levels, one continuous track) ----------------
+  // Full-bleed like the reference mockup and most modern mobile saga maps —
+  // the path sits directly on the sky/ocean background, edge to edge, rather
+  // than inside a bordered card floating in the middle of the screen.
 
   buildMap(width, height) {
     this.mapViewTop = 92;
     this.mapViewBottom = height - 150;
-    const mapH = this.mapViewBottom - this.mapViewTop;
-    // Narrower than full width so 2 side-menu columns fit beside the card,
-    // like the floating buttons beside the map in the reference mockup.
-    const mapX = 58, mapW = width - 116;
-    this.mapX = mapX; this.mapW = mapW;
+    this.mapCenterX = width / 2;
 
-    const mapBg = this.add.graphics();
-    mapBg.fillStyle(OCEAN, 1).fillRoundedRect(mapX, this.mapViewTop, mapW, mapH, 20);
-    mapBg.fillStyle(MAP_BG, 1).fillRoundedRect(mapX + 8, this.mapViewTop + 8, mapW - 16, mapH - 16, 16);
-    // Slightly darker "island" patches inside so the parchment isn't perfectly flat.
-    mapBg.fillStyle(MAP_BG_DARK, 0.5);
-    for (let i = 0; i < 5; i++) {
-      const cx = mapX + 20 + (i * 37) % (mapW - 40);
-      const cy = this.mapViewTop + 30 + (i * 97) % (mapH - 60);
-      mapBg.fillEllipse(cx, cy, 46, 30);
-    }
-    mapBg.lineStyle(4, MAP_BORDER, 1).strokeRoundedRect(mapX, this.mapViewTop, mapW, mapH, 20);
-    this.add.text(mapX + mapW - 30, this.mapViewTop + 26, '✳', { fontSize: '16px', color: '#4a2c11' }).setAlpha(0.5);
-
+    // Clip nodes to the area between the HUD and the bottom nav/CTA so
+    // scrolled-off content doesn't show through those bars — plain full-width
+    // rectangle now, no rounded "card" shape to match.
     this.mapMaskShape = this.make.graphics({ x: 0, y: 0 }, false);
-    this.mapMaskShape.fillStyle(0xffffff).fillRoundedRect(mapX + 8, this.mapViewTop + 8, mapW - 16, mapH - 16, 16);
+    this.mapMaskShape.fillStyle(0xffffff).fillRect(0, this.mapViewTop, width, this.mapViewBottom - this.mapViewTop);
 
     this.pathContainer = this.add.container(0, this.mapViewTop);
     this.pathContainer.setMask(this.mapMaskShape.createGeometryMask());
-    this.mapCenterX = mapX + mapW / 2;
 
     this.rebuildMapContent();
-    this.setupMapScroll(mapX, mapW);
+    // Input bounds stay narrower than the full-width visuals so drags don't
+    // steal taps meant for the floating side-menu/ADS buttons, which sit
+    // just outside the node lane's swing range.
+    this.setupMapScroll(52, width - 104);
   }
 
   laneX(globalIndex) { return this.mapCenterX + 0.24 * (this.mapCenterX - 28) * Math.sin(globalIndex * 1.15); }
@@ -395,7 +382,7 @@ export default class HomeScene extends Phaser.Scene {
   buildSideMenu(width) {
     const startY = this.mapViewTop + 26;
     const btnSize = 36;
-    const leftX = this.mapX / 2 + 7;
+    const leftX = 30;
     const leftItems = [
       { icon: '🎯', badge: true },
       { icon: '🎁', badge: false },
@@ -417,20 +404,29 @@ export default class HomeScene extends Phaser.Scene {
       });
     });
 
+    // "Remove Ads" IAP button — the diagonal slash over the icon is what
+    // marks it as "no ads", not just the red colour, so it reads correctly
+    // even to players who don't know this app has ads to begin with.
     const adsSize = 42;
-    const adsX = width - this.mapX / 2 - 7;
+    const adsX = width - 30;
     const adsY = startY;
     const adsBg = this.add.graphics();
     adsBg.fillStyle(0xf43f5e, 1).fillRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
     adsBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
-    this.add.text(adsX, adsY - 6, '🎬', { fontSize: '15px' }).setOrigin(0.5);
+    this.add.text(adsX, adsY - 6, '📺', { fontSize: '15px' }).setOrigin(0.5);
     this.add.text(adsX, adsY + 11, 'ADS', {
       fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
+    const slashInset = adsSize / 2 - 5;
+    const slash = this.add.graphics();
+    slash.lineStyle(4.5, 0x2b1e16, 0.9);
+    slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
+    slash.lineStyle(2.5, 0xffffff, 1);
+    slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
     const adsHit = this.add.rectangle(adsX, adsY, adsSize + 6, adsSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     adsHit.on('pointerdown', () => {
       playSound('switch', this.save.soundMuted);
-      this.showToast('🎬 Ads are not available in this demo.');
+      this.showToast('🚫 Remove Ads is not available in this demo.');
     });
   }
 
@@ -462,10 +458,9 @@ export default class HomeScene extends Phaser.Scene {
     bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(10, barY, width - 20, barH, 20);
 
     const items = [
-      { key: 'journey', icon: '🧭' },
       { key: 'shop', icon: '🏪' },
-      { key: 'quest', icon: '📜' },
-      { key: 'bag', icon: '🎒' }
+      { key: 'journey', icon: '🧭' },
+      { key: 'lock', icon: '🔒' }
     ];
     const step = (width - 20) / items.length;
     const baseY = barY + barH / 2;
@@ -488,9 +483,8 @@ export default class HomeScene extends Phaser.Scene {
 
   onNavTap(key) {
     if (key === 'journey') return;
-    if (key === 'quest') { this.onEventBarTap(); return; }
     if (key === 'shop') { this.showToast('🏪 The Shop is coming soon!'); return; }
-    if (key === 'bag') { this.showToast('🎒 Buffs are bought directly inside a level using Coins.'); return; }
+    if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 
   // ---------------- Settings overlay ----------------
