@@ -475,7 +475,12 @@ export default class HomeScene extends Phaser.Scene {
     this.dailyCheckInDot = dot;
     dot.setVisible(!this.save.dailyCheckIn.claimed);
 
-    const hit = this.add.rectangle(0, chipH / 2, size + 12, size + chipH + 12, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    // Hit rect centered on the TRUE visual midpoint of [icon-square-top ..
+    // chip-bottom] — not size/2 or chipH/2 alone, either of which drifts a
+    // few px off from what's actually drawn on screen once the label chip
+    // is added below the square.
+    const visTop = -size / 2, visBottom = chipY + chipH;
+    const hit = this.add.rectangle(0, (visTop + visBottom) / 2, size + 12, (visBottom - visTop) + 12, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     box.add(hit);
     hit.on('pointerdown', () => {
       this.tweens.add({ targets: box, scale: 0.94, duration: 60, yoyo: true });
@@ -528,7 +533,9 @@ export default class HomeScene extends Phaser.Scene {
       fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#fff9f4'
     }).setOrigin(0.5));
 
-    const hit = this.add.rectangle(0, chipH / 2, size + 10, size + chipH + 10, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    // Same true-centroid fix as buildDailyCheckInButton's hit rect above.
+    const visTop = -size / 2, visBottom = chipY + chipH;
+    const hit = this.add.rectangle(0, (visTop + visBottom) / 2, size + 10, (visBottom - visTop) + 10, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     box.add(hit);
     hit.on('pointerdown', () => {
       this.tweens.add({ targets: box, scale: 0.94, duration: 60, yoyo: true });

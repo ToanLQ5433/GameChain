@@ -55,8 +55,19 @@ html, body {
   }
 }
 
+/* No forced width/height here on purpose — Phaser's own Scale Manager
+   (Phaser.Scale.FIT + CENTER_BOTH, see main.js) sets the canvas's inline
+   style.width/height itself, and its pointer-to-game coordinate transform
+   is derived from THAT same calculation. A `width/height: 100% !important`
+   override here used to fight that: the canvas visually stretched to fill
+   #game-container exactly, but Phaser's input math still assumed its own
+   (possibly slightly different) FIT-computed box/offset — a mismatch
+   between what you SEE and where a tap actually registers is exactly the
+   kind of "buttons feel off" bug that produces. Since getGameSize() in
+   main.js already derives the game's logical resolution from the real,
+   clamped viewport size, FIT mode already lands full-bleed with
+   negligible letterboxing on real phones — there's nothing left for this
+   override to usefully correct, only drift for it to introduce. */
 canvas {
   display: block;
-  width: 100% !important;
-  height: 100% !important;
 }
