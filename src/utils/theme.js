@@ -58,7 +58,9 @@ export function makeButton(scene, x, y, label, opts = {}) {
     ink: { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 },
     // Solid fill, white text — the one to use on light/parchment backgrounds
     // where the outline-only 'teal' variant would have no contrast.
-    tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x18d4bd }
+    tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x18d4bd },
+    // Danger action (Quit, delete-ish confirmations) — solid red fill.
+    ruby: { bg: 0xe0605a, border: COLORS.ruby, text: '#ffffff', hoverBg: 0xf47a74 }
   }[variant];
 
   const txt = scene.add.text(0, 0, label, {

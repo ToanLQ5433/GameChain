@@ -2,15 +2,24 @@ import Phaser from 'phaser';
 import { ChainEngine } from '../engine/ChainEngine.js';
 import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
-import { haptics } from '../utils/haptics.js';
+import { haptics, setHapticsEnabled } from '../utils/haptics.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
-import { getNextLevel } from '../utils/progression.js';
+import { getNextLevel, findFlatIndex } from '../utils/progression.js';
 import { getDifficulty, getDifficultyTier, DIFFICULTY_STYLE } from '../utils/difficulty.js';
+import { resolveLives, loseLife } from '../utils/lives.js';
+import { buildSettingsModal, buildLifeCostConfirm } from '../utils/settingsModal.js';
 import {
   getTimeLimit, getTimerColor, MAX_TIMEOUT_AD_USES_PER_ATTEMPT, TIMEOUT_AD_BONUS_RATIO,
   TIMEOUT_COIN_COST, COIN_SPEED_MAX, COIN_SPEED_NO_BUFF_BONUS
 } from '../utils/levelTimer.js';
 import { COLORS, drawPanel, makeButton, makeStatChip } from '../utils/theme.js';
+
+// Touch Offset (mobile UX): the recognized cell is sampled this many px
+// ABOVE the raw finger position, not at it — otherwise the fingertip sits
+// directly on top of the cell it's choosing, hiding the one piece of
+// information the player needs most at that instant. Applied to every
+// touch->cell lookup while dragging.
+const TOUCH_OFFSET_Y = 26;
 
 // Bright parchment/teal palette — matches Home & Shop instead of the old
 // dark navy "chart" theme, so the whole app reads as one consistently
@@ -58,13 +67,13 @@ export default class GameScene extends Phaser.Scene {
     this.save.lastCategoryId = this.categoryId;
     this.save.lastLevelIndex = this.levelIndex;
     saveState(this.save);
+    setHapticsEnabled(this.save.hapticsEnabled);
 
     this.drawBackground(width, height);
 
     this.buildTopBar(width);
     this.buildDifficultyChip(width);
     this.buildBuffBar(width, height);
-    this.buildBottomBar(width, height);
 
     // Tách hẳn lớp tĩnh (nền ô, tường, mũi tên, lăng kính, mốc số — không đổi
     // trong suốt màn) khỏi lớp động (đá đẩy, bom, cổng, dây xích — đổi mỗi
@@ -101,93 +110,125 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ---------------- UI khung ngoài ----------------
+  // Redesigned to be icon/number-only, no instructional prose: Coins (left)
+  // / Level number + difficulty tag (center) / Settings gear (right). The
+  // old title banner + description paragraph + status line are gone — that
+  // vertical space now goes straight to a bigger, more touch-friendly board.
+  // Leaving mid-level (Quit) or restarting now only happens through the
+  // Settings modal (see openSettings()), both behind a Life-cost confirm.
 
   buildTopBar(width) {
-    const backSize = 34, backY = 10;
-    const backBg = this.add.graphics();
-    backBg.fillStyle(COLORS.teal, 1).fillRoundedRect(12, backY, backSize, backSize, 10);
-    backBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, backY, backSize, backSize, 10);
-    this.add.text(12 + backSize / 2, backY + backSize / 2, '🏠', { fontSize: '16px' }).setOrigin(0.5);
-    this.add.rectangle(12 + backSize / 2, backY + backSize / 2, backSize + 6, backSize + 6, 0xffffff, 0.001)
+    const topY = 14, rowH = 36;
+
+    this.coinChip = makeStatChip(this, 14 + 64, topY, '🟡', this.save.coins, COLORS.gold);
+
+    const gearSize = 34, gearX = width - 14 - gearSize;
+    const gearBg = this.add.graphics();
+    gearBg.fillStyle(COLORS.teal, 1).fillRoundedRect(gearX, topY, gearSize, gearSize, 10);
+    gearBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(gearX, topY, gearSize, gearSize, 10);
+    this.add.text(gearX + gearSize / 2, topY + gearSize / 2, '⚙️', { fontSize: '16px' }).setOrigin(0.5);
+    // Hit area padded up to the 48px Fitts's-Law floor even though the
+    // visible chip stays 34px, so the tap target itself never falls short.
+    const gearHitSize = Math.max(48, gearSize + 10);
+    this.add.rectangle(gearX + gearSize / 2, topY + gearSize / 2, gearHitSize, gearHitSize, 0xffffff, 0.001)
       .setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => this.scene.start('Home'));
+      .on('pointerdown', () => this.openSettings());
 
-    // Lives (❤️ 5/5) — decorative, matching Home's HUD; this demo has no
-    // life-loss mechanic, so the number is fixed on every screen that shows it.
-    const heartsX = 12 + backSize + 8, heartsW = 56;
-    const hg = this.add.graphics();
-    hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, backY, heartsW, backSize, 15);
-    hg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(heartsX, backY, heartsW, backSize, 15);
-    this.add.text(heartsX + 13, backY + backSize / 2, '❤️', { fontSize: '10px' }).setOrigin(0.5);
-    this.add.text(heartsX + 27, backY + backSize / 2, '5/5', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#2b1e16'
-    }).setOrigin(0, 0.5);
+    const badgeR = 24, badgeCX = width / 2, badgeCY = topY + rowH / 2;
+    this.add.circle(badgeCX, badgeCY, badgeR, COLORS.gold).setStrokeStyle(3, COLORS.woodDark);
+    this.levelNumberText = this.add.text(badgeCX, badgeCY, '', {
+      fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#2b1e16'
+    }).setOrigin(0.5);
+    this.levelBadgeBottom = badgeCY + badgeR;
 
-    this.coinChip = makeStatChip(this, width - 12, backY, '🟡', this.save.coins, COLORS.gold);
-
-    // Level Timer pill (GDD 3.8) — built once here, shown/hidden per level in
-    // loadLevel() since only Normal/Hard/Super Hard levels get a timer at
-    // all (Easy stays Unlimited to protect the FTUE, per the GDD). Sits in
-    // the open gap between the lives pill and the coin chip.
-    const timerX = heartsX + heartsW + 8, timerW = 90;
+    // Level Timer pill (GDD 3.8) — under the coin chip; hidden on Easy
+    // levels (see loadLevel()).
+    const timerY = topY + rowH + 6, timerW = 78, timerH = 26;
     const timerBg = this.add.graphics();
-    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(timerX, backY, timerW, backSize, 15);
-    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(timerX, backY, timerW, backSize, 15);
-    const timerIcon = this.add.text(timerX + 17, backY + backSize / 2, '⏱️', { fontSize: '13px' }).setOrigin(0.5);
-    this.timerPillLabel = this.add.text(timerX + timerW - 12, backY + backSize / 2, '0:00', {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(14, timerY, timerW, timerH, 13);
+    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(14, timerY, timerW, timerH, 13);
+    const timerIcon = this.add.text(14 + 15, timerY + timerH / 2, '⏱️', { fontSize: '11px' }).setOrigin(0.5);
+    this.timerPillLabel = this.add.text(14 + timerW - 10, timerY + timerH / 2, '0:00', {
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(1, 0.5);
     this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
-    this.bannerY = backY + backSize + 8;
-    const bannerH = 30;
-    const banner = this.add.graphics();
-    banner.fillStyle(COLORS.gold, 1).fillRoundedRect(12, this.bannerY, width - 24, bannerH, 14);
-    banner.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, this.bannerY, width - 24, bannerH, 14);
-    this.levelNameText = this.add.text(width / 2, this.bannerY + bannerH / 2, '', {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#2b1e16', align: 'center',
-      wordWrap: { width: width - 56 }
-    }).setOrigin(0.5);
-
-    const hintY = this.bannerY + bannerH + 6, hintH = 34;
-    const hintBg = this.add.graphics();
-    hintBg.fillStyle(COLORS.parchment, 1).fillRoundedRect(12, hintY, width - 24, hintH, 12);
-    hintBg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(12, hintY, width - 24, hintH, 12);
-    this.mechDescText = this.add.text(width / 2, hintY + hintH / 2, '', {
-      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#42281d', align: 'center',
-      wordWrap: { width: width - 44 }
-    }).setOrigin(0.5);
-
-    const statusY = hintY + hintH + 8;
-    this.statusText = this.add.text(width / 2, statusY, '', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'italic', color: '#78350f'
-    }).setOrigin(0.5, 0);
-
-    this.headerBottom = statusY + 16;
+    this.headerBottom = Math.max(this.levelBadgeBottom, timerY + timerH) + 10;
   }
 
   // Only rendered for "hard"/"superhard" levels — easy/normal levels show no
-  // tag at all. Stamped like a ribbon across the top-right of the level
-  // banner, same visual language as the Shop's pack ribbons.
+  // tag at all. Sits directly under the level-number badge now (was stamped
+  // on the removed title banner).
   buildDifficultyChip(width) {
     if (this.difficultyChip) { this.difficultyChip.destroy(); this.difficultyChip = null; }
     const difficulty = getDifficulty(this.categoryId, this.levelIndex);
     if (!difficulty) return;
     const style = DIFFICULTY_STYLE[difficulty];
-    const w = style.label.length * 6 + 22, h = 16;
-    const x = width - 12 - w, y = this.bannerY - 6;
+    const w = style.label.length * 6 + 20, h = 15;
+    const x = width / 2 - w / 2, y = this.levelBadgeBottom + 3;
     const g = this.add.graphics();
-    g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 8);
-    g.lineStyle(1.5, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 8);
+    g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 7);
+    g.lineStyle(1.5, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 7);
     const t = this.add.text(x + w / 2, y + h / 2, `${style.icon} ${style.label}`, {
-      fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Cinzel', fontSize: '6.5px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
     this.difficultyChip = this.add.container(0, 0, [g, t]);
+    this.headerBottom = Math.max(this.headerBottom, y + h + 8);
   }
 
-  buildBottomBar(width, height) {
-    makeButton(this, width / 2, height - 16, 'Replay', { variant: 'tealSolid', fontSize: '11px', shadow: true })
-      .on('pointerdown', () => this.loadLevel());
+  // ---------------- Settings (Sound/Music/Haptic, Quit, Restart Level) ----
+
+  openSettings() {
+    if (this.overlayContainer.visible) return; // never stack over Win/Lose/Timeout
+    playSound('switch', this.save.soundMuted);
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const { items } = buildSettingsModal(this, width, height, {
+      onClose: () => { this.overlayContainer.setVisible(false); this.overlayContainer.removeAll(true); },
+      onRestartLevel: () => this.confirmRestart(),
+      onQuitToHome: () => this.confirmQuit()
+    });
+    this.overlayContainer.add(items);
+    this.overlayContainer.setVisible(true);
+  }
+
+  // Shared "-1 Life" flow for both Quit and Restart — voluntarily abandoning
+  // an in-progress attempt costs a Life, same as the reference design.
+  // Losing to a Bomb is unaffected and stays free-retry (see showLose()).
+  confirmRestart() {
+    resolveLives(this.save);
+    const cost = Math.min(1, this.save.lives.count);
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const { items } = buildLifeCostConfirm(this, width, height, {
+      icon: '💔', title: 'Restart Level?', cost,
+      message: cost > 0
+        ? 'Restarting this attempt from scratch costs 1 Life.'
+        : 'No Lives left — this restart is free.',
+      actionLabel: cost > 0 ? 'Restart (-1 ❤️)' : 'Restart', actionVariant: 'gold',
+      onConfirm: () => { loseLife(this.save); saveState(this.save); this.loadLevel(); },
+      onCancel: () => this.openSettings()
+    });
+    this.overlayContainer.add(items);
+    this.overlayContainer.setVisible(true);
+  }
+
+  confirmQuit() {
+    resolveLives(this.save);
+    const cost = Math.min(1, this.save.lives.count);
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const { items } = buildLifeCostConfirm(this, width, height, {
+      icon: '💔', title: 'Quit to Home?', cost,
+      message: cost > 0
+        ? 'Leaving this level unfinished costs 1 Life.'
+        : 'No Lives left — leaving is free right now.',
+      actionLabel: cost > 0 ? 'Quit (-1 ❤️)' : 'Quit', actionVariant: 'ruby',
+      onConfirm: () => { loseLife(this.save); saveState(this.save); this.scene.start('Home'); },
+      onCancel: () => this.openSettings()
+    });
+    this.overlayContainer.add(items);
+    this.overlayContainer.setVisible(true);
   }
 
   // ---------------- Buff bar (GDD 3.1: "Use Buffs — Hint/Freeze/Skip...") ----------------
@@ -199,8 +240,11 @@ export default class GameScene extends Phaser.Scene {
       { key: 'freeze', icon: '⏸️', name: 'Freeze', cost: 25 },
       { key: 'skip', icon: '⏩', name: 'Skip', cost: 50 }
     ];
-    const y = height - 78;
-    const gap = 8;
+    // Sits lower than before now that the standalone Replay button is gone
+    // (moved into Settings) — buffs get the reclaimed space and the thumb-
+    // reach real estate right above it.
+    const y = height - 56;
+    const gap = 10;
     const chipW = (width - 24 - gap * (items.length - 1)) / items.length;
     this.buffChips = {};
     this.buffState = { freezeUsed: false };
@@ -211,20 +255,23 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createBuffChip(x, y, w, item) {
-    const h = 52;
+    // Bumped up from the original 52px now that the header/footer redesign
+    // freed vertical space — buffs are meant to be the prominent, obviously-
+    // tappable action in this layout, not a footnote row.
+    const h = 60;
     const g = this.add.graphics();
     const drawBg = (enabled) => {
       g.clear();
-      g.fillStyle(0xffffff, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 10);
-      g.lineStyle(2, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 10);
+      g.fillStyle(0xffffff, enabled ? 1 : 0.5).fillRoundedRect(-w / 2, -h / 2, w, h, 12);
+      g.lineStyle(2.5, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 12);
     };
     drawBg(true);
-    const icon = this.add.text(0, -13, item.icon, { fontSize: '17px' }).setOrigin(0.5);
-    const name = this.add.text(0, 8, item.name, {
-      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#42281d'
+    const icon = this.add.text(0, -16, item.icon, { fontSize: '21px' }).setOrigin(0.5);
+    const name = this.add.text(0, 10, item.name, {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#42281d'
     }).setOrigin(0.5);
-    const costText = this.add.text(0, 20, '', {
-      fontFamily: 'Cinzel', fontSize: '8px', color: '#ee4343'
+    const costText = this.add.text(0, 23, '', {
+      fontFamily: 'Cinzel', fontSize: '9px', color: '#ee4343'
     }).setOrigin(0.5);
 
     const container = this.add.container(x, y, [g, icon, name, costText]);
@@ -311,16 +358,15 @@ export default class GameScene extends Phaser.Scene {
     }
     if (!this.spendBuff('hint', cost, '🟡 Not enough Coins for a Hint!')) return;
     const [r, c] = sol[chain.path.length];
-    this.showHintAt(r, c, chain.id);
+    this.showHintAt(r, c);
   }
 
-  showHintAt(r, c, chainId) {
+  showHintAt(r, c) {
     const { x: cx, y: cy } = this.cellCenter(r, c);
     const ring = this.add.circle(cx, cy, this.cellSize * 0.24, COLORS.gold, 0.35).setStrokeStyle(2, COLORS.gold, 1);
     this.fxContainer.add(ring);
     this.tweens.add({ targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.9, to: 0.2 }, yoyo: true, repeat: 3, duration: 380, onComplete: () => ring.destroy() });
     playSound('lock', this.save.soundMuted);
-    this.statusText.setText(`💡 Hint for chain ${chainId}: next step at cell (${r + 1}, ${c + 1})`);
   }
 
   useFreeze(cost) {
@@ -387,11 +433,11 @@ export default class GameScene extends Phaser.Scene {
   showToast(text) {
     if (this.toastText) this.toastText.destroy();
     const { width } = this.scale;
-    this.toastText = this.add.text(width / 2, 106, text, {
+    this.toastText = this.add.text(width / 2, this.headerBottom + 6, text, {
       fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
       backgroundColor: '#2b1e16', padding: { x: 10, y: 5 }, align: 'center',
       wordWrap: { width: width - 60 }
-    }).setOrigin(0.5, 0.5).setDepth(50);
+    }).setOrigin(0.5, 0).setDepth(50);
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });
   }
 
@@ -564,9 +610,10 @@ export default class GameScene extends Phaser.Scene {
       if (this.timeLimit) this.updateTimerDisplay();
     }
 
-    this.levelNameText.setText(this.levelDef.name);
-    this.mechDescText.setText(this.category.desc);
-    this.statusText.setText('Touch a number and drag through adjacent cells.');
+    // Numbers only, no descriptive title/hint prose — matches the "Level N"
+    // badge convention (Home's map nodes use the same global numbering).
+    const globalIdx = findFlatIndex(this.categoryId, this.levelIndex);
+    this.levelNumberText.setText(String(globalIdx + 1));
 
     this.computeBoardMetrics();
     this.drawBoardFrame();
@@ -582,17 +629,21 @@ export default class GameScene extends Phaser.Scene {
   computeBoardMetrics() {
     const { width, height } = this.scale;
     const topOffset = this.headerBottom + 6;
-    const bottomOffset = 132;
-    const marginX = 30;
+    const bottomOffset = 100; // shrunk along with the header now that the Replay button is gone
+    const marginX = 16; // tighter than before — removing the hint/status text freed room to widen the board
     const { rows, cols } = this.engine;
 
     const areaW = width - marginX * 2;
     const areaH = height - topOffset - bottomOffset;
-    const cell = Math.floor(Math.min(areaW / cols, areaH / rows));
+    // Fitts's Law floor: cells (the actual drag targets) never render under
+    // 44px even if that means the board slightly exceeds the "ideal" area —
+    // a board that's a few px taller than planned beats one that's too
+    // small to reliably touch.
+    const cell = Math.max(44, Math.floor(Math.min(areaW / cols, areaH / rows)));
 
     this.cellSize = cell;
     this.boardOriginX = Math.round((width - cell * cols) / 2);
-    this.boardOriginY = Math.round(topOffset + (areaH - cell * rows) / 2);
+    this.boardOriginY = Math.round(topOffset + Math.max(0, areaH - cell * rows) / 2);
   }
 
   cellToPixel(r, c) {
@@ -810,12 +861,22 @@ export default class GameScene extends Phaser.Scene {
 
       const prevLen = this.chainLengths[chain.id] || 1;
       chain.path.forEach((p, i) => {
-        const { x, y } = this.cellCenter(p.r, p.c);
+        const { x, y: cy } = this.cellCenter(p.r, p.c);
+        const isHead = i === chain.path.length - 1;
+        // Pop & Lift: the actively-dragged head bead scales up and floats
+        // above its true cell so it stays visible past the fingertip that's
+        // covering it — pairs with the Touch Offset in cellFromTouch().
+        const isActiveHead = this.dragging && chain.id === e.activeId && isHead && !chain.locked;
+        const y = isActiveHead ? cy - Math.round(cs * 0.32) : cy;
+        const liftScale = isActiveHead ? 1.28 : 1;
+
         // Glow mềm phía sau hạt xích — cho cảm giác "phát sáng" như game
-        // mobile hiện đại, thay vì hình tròn viền trắng phẳng lì.
-        const glow = this.add.circle(x, y, thickness / 2 + 4, displayColor, 0.28);
-        const bead = this.add.circle(x, y, thickness / 2, displayColor)
-          .setStrokeStyle(chain.locked ? 3 : 1.5, chain.locked ? COLORS.gold : 0xffffff, chain.locked ? 1 : 0.85);
+        // mobile hiện đại, thay vì hình tròn viền trắng phẳng lì. Widened
+        // further than the bead itself on the active head so a halo stays
+        // visible even where the fingertip still overlaps it.
+        const glow = this.add.circle(x, y, (thickness / 2 + 4) * (isActiveHead ? 1.4 : 1), displayColor, isActiveHead ? 0.4 : 0.28);
+        const bead = this.add.circle(x, y, (thickness / 2) * liftScale, displayColor)
+          .setStrokeStyle(chain.locked ? 3 : (isActiveHead ? 3 : 1.5), chain.locked ? COLORS.gold : (isActiveHead ? COLORS.gold : 0xffffff), chain.locked ? 1 : 0.85);
         this.chainContainer.add([glow, bead]);
         if (i === 0) {
           const remaining = chain.length - chain.path.length;
@@ -823,17 +884,19 @@ export default class GameScene extends Phaser.Scene {
             fontFamily: 'Cinzel', fontSize: Math.round(cs * 0.3) + 'px', fontStyle: '900', color: '#ffffff'
           }).setOrigin(0.5);
           this.chainContainer.add(txt);
-        } else if (i === chain.path.length - 1 && !chain.locked) {
+        } else if (isHead && !chain.locked) {
           // Cosmetic-only: a small boat rides the moving head while a chain
           // is still sailing toward its length, echoing the reference
           // mockup's "ship" — no gameplay logic involved.
           const ship = this.add.text(x, y, SHIP_ICONS[chain.id] || '⛵', {
-            fontSize: Math.round(cs * 0.32) + 'px'
+            fontSize: Math.round(cs * (isActiveHead ? 0.4 : 0.32)) + 'px'
           }).setOrigin(0.5);
           this.chainContainer.add(ship);
         }
         // Hạt vừa mới thêm ở cuối dây trong lượt kéo này -> nảy nhẹ (juice).
-        if (i === chain.path.length - 1 && chain.path.length > prevLen) {
+        // Skipped on the active (already lifted/scaled) head to avoid
+        // fighting the Pop & Lift transform above.
+        if (isHead && chain.path.length > prevLen && !isActiveHead) {
           newBeads.push(glow, bead);
         }
       });
@@ -851,9 +914,15 @@ export default class GameScene extends Phaser.Scene {
 
   // ---------------- Input kéo dây ----------------
 
+  // Touch Offset — samples the cell ABOVE the raw finger, not under it, so
+  // the fingertip never sits directly on top of the cell it's choosing.
+  cellFromTouch(pointer) {
+    return this.cellFromPointer(pointer.x, pointer.y - TOUCH_OFFSET_Y);
+  }
+
   onPointerDown(pointer) {
     if (this.overlayContainer.visible) return;
-    const pos = this.cellFromPointer(pointer.x, pointer.y);
+    const pos = this.cellFromTouch(pointer);
     if (!this.engine.inBounds(pos.r, pos.c)) return;
     const chain = this.engine.startDrag(pos.r, pos.c);
     if (!chain) return;
@@ -862,12 +931,11 @@ export default class GameScene extends Phaser.Scene {
     playSound('step', this.save.soundMuted);
     haptics.step();
     this.redrawChains();
-    this.updateStatus();
   }
 
   onPointerMove(pointer) {
     if (!this.dragging) return;
-    const pos = this.cellFromPointer(pointer.x, pointer.y);
+    const pos = this.cellFromTouch(pointer);
     if (!this.engine.inBounds(pos.r, pos.c)) return;
 
     const chain = this.engine.getChain(this.engine.activeId);
@@ -883,7 +951,6 @@ export default class GameScene extends Phaser.Scene {
         playSound('step', this.save.soundMuted);
         haptics.step();
         this.redrawChains();
-        this.updateStatus();
         return;
       }
     }
@@ -898,12 +965,10 @@ export default class GameScene extends Phaser.Scene {
       playSound('step', this.save.soundMuted);
       haptics.step();
       this.redrawChains();
-      this.updateStatus();
     } else if (res.result === 'LOSE') {
       this.dragging = false;
       this.triggerExplosion(pos.r, pos.c, true);
       this.redrawChains();
-      this.statusText.setText('💥 Bomb exploded!');
       this.time.delayedCall(480, () => {
         this.showLose('💥 You touched an armed Bomb! Next time, push a Push Rock into the Bomb before running a chain through it.');
       });
@@ -932,7 +997,6 @@ export default class GameScene extends Phaser.Scene {
       playSound('error', this.save.soundMuted);
     }
     this.redrawChains();
-    this.updateStatus();
   }
 
   pulseLockedChain() {
@@ -945,15 +1009,6 @@ export default class GameScene extends Phaser.Scene {
       targets: ring, scale: 2.6, alpha: 0, duration: 420, ease: 'Cubic.Out',
       onComplete: () => ring.destroy()
     });
-  }
-
-  updateStatus() {
-    if (!this.dragging) {
-      this.statusText.setText('Touch a number and drag through adjacent cells.');
-      return;
-    }
-    const chain = this.engine.getChain(this.engine.activeId);
-    this.statusText.setText(`Chain ${chain.id}: ${chain.path.length}/${chain.length} steps`);
   }
 
   // ---------------- Hiệu ứng Bom nổ ----------------

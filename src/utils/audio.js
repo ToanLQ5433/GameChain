@@ -81,3 +81,23 @@ export function playSound(type, muted) {
     default: break;
   }
 }
+
+// Real ambient background music loop (the Settings modal has a Music
+// switch, distinct from Sound/SFX) — no music asset file in this demo, so
+// it's a soft synthesized arpeggio instead of a fake toggle that does
+// nothing. Global/module-level (not per-scene) so it keeps playing across
+// scene transitions like real game music would.
+let musicInterval = null;
+const MUSIC_NOTES = [261.63, 329.63, 392.0, 329.63]; // soft C-E-G-E pad loop
+
+export function startMusic() {
+  if (musicInterval) return;
+  let i = 0;
+  const playNote = () => tone(MUSIC_NOTES[i++ % MUSIC_NOTES.length], 'sine', 1.6, 0.02);
+  playNote();
+  musicInterval = setInterval(playNote, 1400);
+}
+
+export function stopMusic() {
+  if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
+}

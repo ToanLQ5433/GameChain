@@ -1,9 +1,11 @@
 import Phaser from 'phaser';
 import { playSound } from '../utils/audio.js';
 import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward } from '../utils/storage.js';
+import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { COLORS, makeButton, makeStatChip } from '../utils/theme.js';
+import { buildSettingsModal } from '../utils/settingsModal.js';
 
 // Single continuous "Voyage" path across ALL 210 levels (all categories
 // merged into one track, per product decision — the player never picks a
@@ -77,16 +79,22 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Top HUD ----------------
 
   buildTopBar(width) {
-    // Lives (❤️ 5/5) — decorative only, matching the reference mockup; this
-    // demo has no life-loss/regeneration mechanic so the number never changes.
+    // Lives — real now (utils/lives.js): Quit/Restart mid-level spend one,
+    // refilling over time. Shows a countdown under the pill while below max.
+    resolveLives(this.save);
     const heartsX = 14, heartsY = 14, heartsW = 64, heartsH = 30;
     const hg = this.add.graphics();
     hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
     hg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
     this.add.text(heartsX + 15, heartsY + heartsH / 2, '❤️', { fontSize: '11px' }).setOrigin(0.5);
-    this.add.text(heartsX + 33, heartsY + heartsH / 2, '5/5', {
+    this.livesLabel = this.add.text(heartsX + 33, heartsY + heartsH / 2, `${this.save.lives.count}/${LIVES_MAX}`, {
       fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(0, 0.5);
+    this.livesTimerLabel = this.add.text(heartsX + heartsW / 2, heartsY + heartsH + 3, '', {
+      fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#0369a1'
+    }).setOrigin(0.5, 0);
+    this.refreshLivesDisplay();
+    this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshLivesDisplay() });
 
     const gearSize = 34, gearX = width - 14 - gearSize, gearY = 14;
     const gearBg = this.add.graphics();
@@ -104,6 +112,13 @@ export default class HomeScene extends Phaser.Scene {
     this.gemChip = makeStatChip(this, gemRightEdge, 14, '💎', this.save.gems, COLORS.teal);
     const coinRightEdge = this.gemChip.rightEdge - 8;
     this.coinChip = makeStatChip(this, coinRightEdge, 14, '🟡', this.save.coins, COLORS.gold);
+  }
+
+  refreshLivesDisplay() {
+    resolveLives(this.save);
+    this.livesLabel.setText(`${this.save.lives.count}/${LIVES_MAX}`);
+    const remaining = msUntilNextLife(this.save);
+    this.livesTimerLabel.setText(remaining > 0 ? `+1 in ${formatMs(remaining)}` : '');
   }
 
   // ---------------- Daily Quest event bar ----------------
@@ -477,33 +492,14 @@ export default class HomeScene extends Phaser.Scene {
     if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 
-  // ---------------- Settings overlay ----------------
+  // ---------------- Settings overlay (shared with GameScene) ----------------
 
   buildSettingsOverlay(width, height) {
-    const bg = this.add.rectangle(0, 0, width, height, 0x04070d, 0.92).setOrigin(0).setInteractive();
-    const panelW = width - 60, panelH = 200, px = width / 2 - panelW / 2, py = height / 2 - panelH / 2;
-    const g = this.add.graphics();
-    g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(px, py, panelW, panelH, 16);
-    g.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(px, py, panelW, panelH, 16);
-    const title = this.add.text(width / 2, py + 20, 'SETTINGS', {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#f3c64f'
-    }).setOrigin(0.5, 0);
-
-    const soundBtn = makeButton(this, width / 2, py + 80, this.soundLabel(), {
-      variant: 'teal', fontSize: '12px', onClick: () => {
-        this.save.soundMuted = !this.save.soundMuted;
-        saveState(this.save);
-        soundBtn.list[1].setText(this.soundLabel());
-      }
+    const { items } = buildSettingsModal(this, width, height, {
+      onClose: () => this.settingsOverlay.setVisible(false)
     });
-    const closeBtn = makeButton(this, width / 2, py + panelH - 30, 'Close', {
-      variant: 'ink', fontSize: '11px', onClick: () => this.settingsOverlay.setVisible(false)
-    });
-
-    this.settingsOverlay = this.add.container(0, 0, [bg, g, title, soundBtn, closeBtn]).setDepth(100).setVisible(false);
+    this.settingsOverlay = this.add.container(0, 0, items).setDepth(100).setVisible(false);
   }
-
-  soundLabel() { return this.save.soundMuted ? '🔇 Sound Off' : '🔊 Sound On'; }
 
   // ---------------- Toast ----------------
 

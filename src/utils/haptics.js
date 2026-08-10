@@ -2,14 +2,22 @@
 // don't implement navigator.vibrate at all, so every call is a no-op there
 // instead of throwing. Named patterns (not raw ms numbers) at call sites so
 // the "feel" of each moment is defined once, here, not re-invented per call.
+
+// Real Settings toggle now (the Settings modal has a Haptic switch) — a
+// module-level flag instead of threading a param through every call site.
+// Scenes call setHapticsEnabled(save.hapticsEnabled) on create() and again
+// whenever the toggle changes.
+let enabled = true;
+
+export function setHapticsEnabled(value) { enabled = value; }
+export function isHapticsEnabled() { return enabled; }
+
 function fire(pattern) {
+  if (!enabled) return;
   if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') return;
   try { navigator.vibrate(pattern); } catch (e) { /* ignore unsupported/blocked */ }
 }
 
-// No on/off setting for this — real devices without vibration hardware (or
-// with it disabled at the OS level) already no-op via `fire()` above, and
-// haptics are a distinct channel from the sound-mute toggle in Settings.
 export const haptics = {
   // Chain step accepted while dragging — tiny tick, fires often so it must
   // stay short or a long drag turns into one continuous buzz.
