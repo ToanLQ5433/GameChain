@@ -6,6 +6,10 @@ import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { COLORS, makeStatChip } from '../utils/theme.js';
 import { buildSettingsModal } from '../utils/settingsModal.js';
+import { showOutOfLives } from '../utils/livesModal.js';
+import { showMockedAdOverlay } from '../utils/mockAd.js';
+
+const AD_COINS_REWARD = 50;
 
 const LOCK_BG = 0x7a5230;
 const LOCK_BORDER = 0x442711;
@@ -41,6 +45,7 @@ export default class HomeScene extends Phaser.Scene {
     this.buildCTA(width, height);
     this.buildBottomNav(width, height);
     this.buildSettingsOverlay(width, height);
+    this.livesOverlay = this.add.container(0, 0).setDepth(105).setVisible(false);
   }
 
   // ---------------- Sky/ocean background + decorative islands/clouds ----------------
@@ -345,6 +350,14 @@ export default class HomeScene extends Phaser.Scene {
       this.showToast(`🔒 Complete Level ${this.currentGlobalIdx + 1} first to unlock this one!`);
       return;
     }
+    resolveLives(this.save);
+    if (this.save.lives.count <= 0) {
+      playSound('error', this.save.soundMuted);
+      showOutOfLives(this, this.livesOverlay, {
+        onGranted: () => { this.refreshLivesDisplay(); this.onNodeTap(node); }
+      });
+      return;
+    }
     playSound('lock', this.save.soundMuted);
     this.scene.start('Game', { categoryId: node.item.categoryId, levelIndex: node.item.levelIndex });
   }
@@ -354,7 +367,8 @@ export default class HomeScene extends Phaser.Scene {
   buildSideMenu(width) {
     const startY = this.mapViewTop + 30;
 
-    // Starter Offer (Trái)
+    // Watch Ad for Coins (Trái) — real mocked rewarded-ad flow, not a
+    // "coming soon" placeholder.
     const starterX = 36;
     const starterY = startY;
     const starterBox = this.add.container(starterX, starterY);
@@ -362,10 +376,10 @@ export default class HomeScene extends Phaser.Scene {
     const starterBg = this.add.graphics();
     starterBg.fillStyle(COLORS.gold, 1).fillRoundedRect(-20, -20, 40, 40, 10);
     starterBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-20, -20, 40, 40, 10);
-    const starterIcon = this.add.text(0, -3, '🎁', { fontSize: '20px' }).setOrigin(0.5);
+    const starterIcon = this.add.text(0, -3, '📺', { fontSize: '18px' }).setOrigin(0.5);
     const starterTagBg = this.add.graphics();
     starterTagBg.fillStyle(COLORS.woodDark, 0.95).fillRoundedRect(-24, 12, 48, 14, 7);
-    const starterTagTxt = this.add.text(0, 19, 'Starter', {
+    const starterTagTxt = this.add.text(0, 19, `+${AD_COINS_REWARD} Xu`, {
       fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#ffffff'
     }).setOrigin(0.5);
 
@@ -374,7 +388,7 @@ export default class HomeScene extends Phaser.Scene {
     starterBox.add(starterHit);
     starterHit.on('pointerdown', () => {
       playSound('switch', this.save.soundMuted);
-      this.showToast('🎁 Starter Offer: Special starter pack coming soon!');
+      this.watchAdForCoins();
     });
 
     // No Ads Floating Offer (Phải)
@@ -405,6 +419,18 @@ export default class HomeScene extends Phaser.Scene {
         return;
       }
       this.scene.start('Shop');
+    });
+  }
+
+  watchAdForCoins() {
+    showMockedAdOverlay(this, {
+      onDone: () => {
+        this.save.coins += AD_COINS_REWARD;
+        saveState(this.save);
+        this.coinChip.setValue(this.save.coins);
+        playSound('win', this.save.soundMuted);
+        this.showToast(`📺 +${AD_COINS_REWARD} Coins!`);
+      }
     });
   }
 

@@ -8,11 +8,18 @@ import { getNextLevel, findFlatIndex } from '../utils/progression.js';
 import { getDifficulty, getDifficultyTier, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { resolveLives, loseLife } from '../utils/lives.js';
 import { buildSettingsModal, buildLifeCostConfirm } from '../utils/settingsModal.js';
+import { showOutOfLives } from '../utils/livesModal.js';
+import { showMockedAdOverlay } from '../utils/mockAd.js';
 import {
   getTimeLimit, getTimerColor, MAX_TIMEOUT_AD_USES_PER_ATTEMPT, TIMEOUT_AD_BONUS_RATIO,
   TIMEOUT_COIN_COST, COIN_SPEED_MAX, COIN_SPEED_NO_BUFF_BONUS
 } from '../utils/levelTimer.js';
 import { COLORS, drawPanel, makeButton, makeIconButton, makeStatChip } from '../utils/theme.js';
+
+// A Rescue Offer's "keep going" retry (bomb-loss) and coins fallback cost —
+// distinct from the Level Timer's own bonus-time economy in levelTimer.js.
+const RESCUE_COIN_COST = 20;
+const MAX_RESCUE_USES_PER_ATTEMPT = 1;
 
 // Touch Offset (mobile UX): the recognized cell is sampled this many px
 // ABOVE the raw finger position, not at it — otherwise the fingertip sits
@@ -349,9 +356,11 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // Spends 1 unit of a Shop-granted buff if the player has any in inventory
-  // (free) — otherwise falls back to paying `cost` Coins as before. Returns
-  // false (after toasting) if neither is available.
-  spendBuff(key, cost, insufficientMessage) {
+  // (free) — otherwise falls back to paying `cost` Coins. If neither is
+  // available, offers a "Watch Ad for 1 Free Use" fallback instead of a
+  // dead-end toast, so running out of Coins never fully blocks a buff.
+  // Returns false either way (the ad-granted retry re-enters via retryAction).
+  spendBuff(key, cost, insufficientMessage, retryAction) {
     if ((this.save.buffs[key] || 0) > 0) {
       this.save.buffs[key] -= 1;
       saveState(this.save);
@@ -360,13 +369,47 @@ export default class GameScene extends Phaser.Scene {
       return true;
     }
     if (this.save.coins < cost) {
-      this.showToast(insufficientMessage);
-      playSound('error', this.save.soundMuted);
+      this.offerBuffAd(key, insufficientMessage, retryAction);
       return false;
     }
     this.spendCoins(cost);
     this.usedBuffThisAttempt = true;
     return true;
+  }
+
+  offerBuffAd(key, message, retryAction) {
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const panelW = width - 60, panelH = 220;
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
+    const title = this.add.text(width / 2, panelY + 34, '🟡 Not Enough Coins', {
+      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#b91c1c'
+    }).setOrigin(0.5);
+    const sub = this.add.text(width / 2, panelY + 68, message, {
+      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 30 }
+    }).setOrigin(0.5);
+
+    const btnW = panelW - 36;
+    const adBtn = makeButton(this, width / 2, panelY + panelH - 92, '📺 Watch Ad for 1 Free Use', { variant: 'gold', fontSize: '12px', width: btnW, shadow: true });
+    adBtn.on('pointerdown', () => {
+      showMockedAdOverlay(this, {
+        onDone: () => {
+          this.save.buffs[key] = (this.save.buffs[key] || 0) + 1;
+          saveState(this.save);
+          this.overlayContainer.setVisible(false);
+          this.overlayContainer.removeAll(true);
+          this.refreshBuffChips();
+          if (retryAction) retryAction();
+        }
+      });
+    });
+    const cancelBtn = makeButton(this, width / 2, panelY + panelH - 36, 'Cancel', { variant: 'ink', fontSize: '12px', width: btnW });
+    cancelBtn.on('pointerdown', () => { this.overlayContainer.setVisible(false); this.overlayContainer.removeAll(true); });
+
+    this.overlayContainer.add([bg, panel, title, sub, adBtn, cancelBtn]);
+    this.overlayContainer.setVisible(true);
   }
 
   useHint(cost) {
@@ -380,7 +423,7 @@ export default class GameScene extends Phaser.Scene {
       this.showToast('No hint available for this step.');
       return;
     }
-    if (!this.spendBuff('hint', cost, '🟡 Not enough Coins for a Hint!')) return;
+    if (!this.spendBuff('hint', cost, '🟡 Not enough Coins for a Hint!', () => this.useHint(cost))) return;
     const [r, c] = sol[chain.path.length];
     this.showHintAt(r, c);
   }
@@ -398,7 +441,7 @@ export default class GameScene extends Phaser.Scene {
       this.showToast('This level has no Walls to freeze.');
       return;
     }
-    if (!this.spendBuff('freeze', cost, '🟡 Not enough Coins for this Buff!')) return;
+    if (!this.spendBuff('freeze', cost, '🟡 Not enough Coins for this Buff!', () => this.useFreeze(cost))) return;
     this.buffState.freezeUsed = true;
     this.engine.freezeWalls = true;
     this.drawStaticBoard();
@@ -450,7 +493,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   useSkip(cost) {
-    if (!this.spendBuff('skip', cost, '🟡 Not enough Coins for this Buff!')) return;
+    if (!this.spendBuff('skip', cost, '🟡 Not enough Coins for this Buff!', () => this.useSkip(cost))) return;
     this.completeLevel(true);
   }
 
@@ -548,8 +591,8 @@ export default class GameScene extends Phaser.Scene {
     items.push(coinBtn);
     btnY += btnH + btnGap;
 
-    const retryBtn = makeButton(this, width / 2, btnY, '🔄 Retry Now (Free)', { variant: 'ink', fontSize: '11px', width: btnW });
-    retryBtn.on('pointerdown', () => this.loadLevel());
+    const retryBtn = makeButton(this, width / 2, btnY, '🔄 Retry Now (-1 ❤️)', { variant: 'ink', fontSize: '11px', width: btnW });
+    retryBtn.on('pointerdown', () => this.retryWithLifeCost());
     items.push(retryBtn);
 
     this.overlayContainer.add(items);
@@ -560,24 +603,7 @@ export default class GameScene extends Phaser.Scene {
   // purchase modal, since this demo has no real ad SDK to call.
   onWatchAdForTime() {
     this.timeoutAdUsesThisAttempt += 1;
-    this.overlayContainer.removeAll(true);
-    const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
-    const panelW = width - 80, panelH = 150;
-    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
-    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
-    const label = this.add.text(width / 2, panelY + panelH / 2 - 20, '📺 Watching ad…', {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
-    }).setOrigin(0.5);
-    const spinner = this.add.graphics().setPosition(width / 2, panelY + panelH / 2 + 20);
-    spinner.lineStyle(4, COLORS.gold, 1);
-    spinner.beginPath();
-    spinner.arc(0, 0, 14, 0, Math.PI * 1.4, false);
-    spinner.strokePath();
-    this.tweens.add({ targets: spinner, angle: 360, duration: 700, repeat: -1 });
-    this.overlayContainer.add([bg, panel, label, spinner]);
-    this.overlayContainer.setVisible(true);
-    this.time.delayedCall(900, () => this.grantTimeoutBonus());
+    showMockedAdOverlay(this, { onDone: () => this.grantTimeoutBonus() });
   }
 
   onSpendCurrencyForTime() {
@@ -618,6 +644,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.toastText) { this.toastText.destroy(); this.toastText = null; }
     this.buffState = { freezeUsed: false };
     this.usedBuffThisAttempt = false;
+    this.rescueUsedThisAttempt = 0;
     this.refreshBuffChips();
 
     // Level Timer System (GDD 3.8) — a layer on top of the 5 core mechanics,
@@ -997,7 +1024,7 @@ export default class GameScene extends Phaser.Scene {
       this.triggerExplosion(pos.r, pos.c, true);
       this.redrawChains();
       this.time.delayedCall(480, () => {
-        this.showLose('💥 You touched an armed Bomb! Next time, push a Push Rock into the Bomb before running a chain through it.');
+        this.showRescueOffer('💥 You touched an armed Bomb! Next time, push a Push Rock into the Bomb before running a chain through it.');
       });
     } else {
       // Không rung camera ở đây: BLOCKED xảy ra liên tục khi ngón tay lướt qua
@@ -1131,7 +1158,7 @@ export default class GameScene extends Phaser.Scene {
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
 
-    const panelW = width - 56, panelH = 300;
+    const panelW = width - 56, panelH = isSkip ? 260 : 410;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
 
@@ -1186,7 +1213,41 @@ export default class GameScene extends Phaser.Scene {
     });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
 
-    this.overlayContainer.add([bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn]);
+    const winItems = [bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn];
+
+    // CLAIM x2 (GDD-neutral reward-doubling, only for a real clear — Skip
+    // already short-circuits the run so it doesn't earn a doubling offer).
+    if (!isSkip) {
+      const baseReward = 20 + speedBonus;
+      const claimY = cardY + cardH + 12 + 36;
+      const x2Btn = makeButton(this, width / 2, claimY, '📺 CLAIM x2 REWARD', {
+        variant: 'gold', fontSize: '13px', minHeight: 40, width: panelW - 48, shadow: true
+      });
+      const skipTxt = this.add.text(width / 2, claimY + 26, 'No thanks, keep x1', {
+        fontFamily: 'Crimson Pro', fontSize: '11px', color: '#6b7280', fontStyle: 'italic'
+      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+      const claimPulse = this.tweens.add({ targets: x2Btn, scale: { from: 1, to: 1.05 }, yoyo: true, repeat: -1, duration: 500 });
+      const hideClaimUI = () => { claimPulse.stop(); x2Btn.destroy(); skipTxt.destroy(); };
+
+      x2Btn.on('pointerdown', () => {
+        showMockedAdOverlay(this, {
+          onDone: () => {
+            this.save.coins += baseReward;
+            saveState(this.save);
+            this.coinChip.setValue(this.save.coins);
+            rewardText.setText(`+${baseReward * 2} Coins (x2! 🎉)`);
+            playSound('coin', this.save.soundMuted);
+            hideClaimUI();
+          }
+        });
+      });
+      skipTxt.on('pointerdown', () => { playSound('switch', this.save.soundMuted); hideClaimUI(); });
+
+      winItems.push(x2Btn, skipTxt);
+    }
+
+    this.overlayContainer.add(winItems);
     this.overlayContainer.setVisible(true);
 
     if (!isSkip) {
@@ -1249,9 +1310,112 @@ export default class GameScene extends Phaser.Scene {
     }
   }
 
-  showLose(text) {
-    playSound('lose', this.save.soundMuted);
+  // ---------------- Rescue Offer (a 5s window right after losing, before ----
+  // ---------------- it's final) & Retry-costs-a-Life -----------------------
 
+  // Shown immediately after a Bomb kills the run — a brief chance to keep
+  // the SAME attempt going (via ad or Coins) before the loss is confirmed.
+  // Declining or letting the countdown expire moves on to finalizeLoss(),
+  // which is the point a Life actually gets spent (voluntary Quit/Restart
+  // already spend one via confirmQuit/confirmRestart; this is the "you lost"
+  // equivalent).
+  showRescueOffer(text) {
+    playSound('lose', this.save.soundMuted);
+    this.overlayContainer.removeAll(true);
+    const { width, height } = this.scale;
+    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+
+    const panelW = width - 50, panelH = 300;
+    const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
+    const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
+
+    const title = this.add.text(width / 2, panelY + 32, '💥 Oh No!', {
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+    }).setOrigin(0.5);
+    const sub = this.add.text(width / 2, panelY + 66, text, {
+      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 36 }
+    }).setOrigin(0.5);
+    const countdownTxt = this.add.text(width / 2, panelY + 108, '', {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#b91c1c'
+    }).setOrigin(0.5);
+
+    const items = [bg, panel, title, sub, countdownTxt];
+    const btnW = panelW - 40;
+    let btnY = panelY + 142;
+
+    const canRescue = this.rescueUsedThisAttempt < MAX_RESCUE_USES_PER_ATTEMPT;
+    if (canRescue) {
+      const adBtn = makeButton(this, width / 2, btnY, '📺 Watch Ad — Retry Free', { variant: 'gold', fontSize: '11px', width: btnW, shadow: true });
+      adBtn.on('pointerdown', () => {
+        if (this.rescueTimer) { this.rescueTimer.remove(); this.rescueTimer = null; }
+        this.rescueUsedThisAttempt += 1;
+        showMockedAdOverlay(this, { onDone: () => this.loadLevel() });
+      });
+      items.push(adBtn);
+      btnY += 50;
+
+      const coinBtn = makeButton(this, width / 2, btnY, `🟡 ${RESCUE_COIN_COST} Coins — Retry Free`, { variant: 'tealSolid', fontSize: '11px', width: btnW });
+      coinBtn.on('pointerdown', () => {
+        if (this.save.coins < RESCUE_COIN_COST) {
+          playSound('error', this.save.soundMuted);
+          this.showToast('🟡 Not enough Coins!');
+          return;
+        }
+        if (this.rescueTimer) { this.rescueTimer.remove(); this.rescueTimer = null; }
+        this.rescueUsedThisAttempt += 1;
+        this.save.coins -= RESCUE_COIN_COST;
+        saveState(this.save);
+        this.coinChip.setValue(this.save.coins);
+        this.loadLevel();
+      });
+      items.push(coinBtn);
+      btnY += 50;
+    }
+
+    const declineBtn = makeButton(this, width / 2, btnY, 'No Thanks', { variant: 'ink', fontSize: '11px', width: btnW });
+    declineBtn.on('pointerdown', () => {
+      if (this.rescueTimer) { this.rescueTimer.remove(); this.rescueTimer = null; }
+      this.finalizeLoss(text);
+    });
+    items.push(declineBtn);
+
+    this.overlayContainer.add(items);
+    this.overlayContainer.setVisible(true);
+
+    let secondsLeft = 5;
+    countdownTxt.setText(`Auto-declining in ${secondsLeft}s`);
+    this.rescueTimer = this.time.addEvent({
+      delay: 1000, repeat: 4,
+      callback: () => {
+        secondsLeft -= 1;
+        if (countdownTxt.active) countdownTxt.setText(`Auto-declining in ${Math.max(0, secondsLeft)}s`);
+        if (secondsLeft <= 0) this.finalizeLoss(text);
+      }
+    });
+  }
+
+  finalizeLoss(text) {
+    if (this.rescueTimer) { this.rescueTimer.remove(); this.rescueTimer = null; }
+    loseLife(this.save);
+    saveState(this.save);
+    this.showLose(text);
+  }
+
+  // Shared by the Lose screen's Retry and the Level Timer's "Retry Now"
+  // decline — both are a voluntary "confirmed, keep trying" action, so both
+  // spend a Life the same way Quit/Restart do (see confirmQuit/confirmRestart).
+  retryWithLifeCost() {
+    resolveLives(this.save);
+    if (this.save.lives.count <= 0) {
+      showOutOfLives(this, this.overlayContainer, { onGranted: () => this.retryWithLifeCost() });
+      return;
+    }
+    loseLife(this.save);
+    saveState(this.save);
+    this.loadLevel();
+  }
+
+  showLose(text) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
@@ -1260,18 +1424,18 @@ export default class GameScene extends Phaser.Scene {
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
-    const title = this.add.text(width / 2, panelY + 36, '💥 BẠN ĐÃ THUA!', {
-      fontFamily: 'Cinzel', fontSize: '22px', fontStyle: '900', color: '#b91c1c'
+    const title = this.add.text(width / 2, panelY + 36, '💥 LEVEL FAILED', {
+      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 84, text, {
       fontFamily: 'Crimson Pro', fontSize: '13px', color: '#42281d', align: 'center',
       wordWrap: { width: panelW - 36 }
     }).setOrigin(0.5);
 
-    const retryBtn = makeButton(this, width / 2, panelY + panelH - 42, 'THỬ LẠI MÀN NÀY 🔄', {
-      variant: 'gold', fontSize: '16px', minHeight: 48, width: panelW - 48
+    const retryBtn = makeButton(this, width / 2, panelY + panelH - 42, 'THỬ LẠI (-1 ❤️) 🔄', {
+      variant: 'gold', fontSize: '15px', minHeight: 48, width: panelW - 48
     });
-    retryBtn.on('pointerdown', () => this.loadLevel());
+    retryBtn.on('pointerdown', () => this.retryWithLifeCost());
 
     this.overlayContainer.add([bg, panel, title, sub, retryBtn]);
     this.overlayContainer.setVisible(true);
