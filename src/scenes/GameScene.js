@@ -4,7 +4,7 @@ import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { haptics, setHapticsEnabled } from '../utils/haptics.js';
 import { saveState, markLevelCompleted, registerNewLevelClear, hasSeenTutorial, markTutorialSeen } from '../utils/storage.js';
-import { TUTORIAL_CONTENT, getRelationshipHighlights, pickDemoChainId } from '../utils/tutorial.js';
+import { TUTORIAL_CONTENT, getRelationshipHighlights, orderChainsForTutorial } from '../utils/tutorial.js';
 import { getNextLevel, findFlatIndex } from '../utils/progression.js';
 import { getDifficulty, getDifficultyTier, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { resolveLives, loseLife } from '../utils/lives.js';
@@ -743,21 +743,22 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ---------------- Mechanic Tutorial (learn-by-doing, forced action) ----
-  // Shown once per mechanic: a short tooltip (+ a Switch<->Gate or
+  // Shown once per mechanic: a short caption (+ a Switch<->Gate or
   // Prism<->ColorGate relationship glow when relevant), then every input
-  // is ignored except tracing the ONE chain whose own solution actually
-  // demonstrates the mechanic — see onPointerDown/onPointerMove's
-  // `this.tutorialGate` checks. Completing that chain's path ends the
-  // tutorial and hands back completely normal free play, forever.
+  // is ignored except tracing EVERY chain's own solution, one chain at a
+  // time (the mechanic-demonstrating one first) — see onPointerDown/
+  // onPointerMove/onPointerUp's `this.tutorialGate` checks. By the time the
+  // last chain in the queue locks the whole level is solved, so the
+  // tutorial's own completion and the level win happen together.
 
   showMechanicTutorial(mechanic) {
     const content = TUTORIAL_CONTENT[mechanic];
     if (!content) return;
-    const chainId = pickDemoChainId(mechanic, this.levelDef);
-    const sol = chainId && this.levelDef.solution && this.levelDef.solution[chainId];
-    if (!sol || sol.length < 2) return; // nothing to demonstrate — skip silently
+    const chainQueue = orderChainsForTutorial(mechanic, this.levelDef)
+      .filter(id => this.levelDef.solution && this.levelDef.solution[id] && this.levelDef.solution[id].length >= 1);
+    if (chainQueue.length < 1) return;
 
-    this.tutorialGate = { active: true, chainId, steps: sol };
+    this.tutorialGate = { active: true, chainQueue, queueIndex: 0 };
     // loadLevel()'s own initial redrawChains() already ran before this
     // (the tutorial is shown 300ms later, after the board settles), drawing
     // every chain including the ones this gate is about to hide — redraw
@@ -768,6 +769,25 @@ export default class GameScene extends Phaser.Scene {
     getRelationshipHighlights(mechanic, this.levelDef).forEach(pair => this.spawnRelationshipGlow(pair.from, pair.to));
 
     this.showTutorialCaption(content);
+    this.updateTutorialPointer();
+  }
+
+  currentTutorialChainId() {
+    if (!this.tutorialGate) return null;
+    return this.tutorialGate.chainQueue[this.tutorialGate.queueIndex];
+  }
+
+  // Called from onPointerUp right after a gated chain locks — moves on to
+  // the next chain in the queue, or ends the tutorial once every chain
+  // (the whole level) has been traced.
+  advanceTutorialGate() {
+    this.tutorialGate.queueIndex += 1;
+    if (this.tutorialGate.queueIndex >= this.tutorialGate.chainQueue.length) {
+      this.completeTutorialGate();
+      return;
+    }
+    if (this.tutorialGate.queueIndex === 1) this.showTutorialCaption('Now finish the rest of the level');
+    this.redrawChains();
     this.updateTutorialPointer();
   }
 
@@ -824,9 +844,11 @@ export default class GameScene extends Phaser.Scene {
   updateTutorialPointer() {
     if (this.tutorialPointer) { this.tutorialPointer.destroy(); this.tutorialPointer = null; }
     if (!this.tutorialGate || !this.tutorialGate.active) return;
-    const chain = this.engine.getChain(this.tutorialGate.chainId);
+    const chainId = this.currentTutorialChainId();
+    const chain = this.engine.getChain(chainId);
+    const steps = this.levelDef.solution[chainId];
     const nextIdx = chain.path.length;
-    const target = this.tutorialGate.steps[nextIdx];
+    const target = steps[nextIdx];
     if (!target) return;
     const [r, c] = target;
     const { x, y } = this.cellCenter(r, c);
@@ -1132,16 +1154,20 @@ export default class GameScene extends Phaser.Scene {
     const thickness = cs - inset * 2;
     const newBeads = [];
 
-    // A forced mechanic tutorial only ever gates ONE chain — every other
-    // chain on the board just sits there, untouchable, for no reason the
-    // player can see, which reads as confusing rather than "precise"
-    // guidance. Hide every other chain's own rendering (its bead/number/
-    // rope) entirely while the gate is active; the board's non-chain tiles
-    // are unaffected, so nothing looks broken, just "not started yet".
-    const soloChainId = (this.tutorialGate && this.tutorialGate.active) ? this.tutorialGate.chainId : null;
+    // A forced mechanic tutorial guides one chain at a time, in queue
+    // order — chains whose turn hasn't come up yet just sit there,
+    // untouchable, for no reason the player can see, which reads as
+    // confusing rather than "precise" guidance. Hide their rendering
+    // entirely (not the already-completed ones, which stay visible so
+    // progress reads clearly) until it's their turn; the board's non-chain
+    // tiles are unaffected, so nothing looks broken, just "not started yet".
+    let notYetTurnIds = null;
+    if (this.tutorialGate && this.tutorialGate.active) {
+      notYetTurnIds = new Set(this.tutorialGate.chainQueue.slice(this.tutorialGate.queueIndex + 1));
+    }
 
     e.getAllChains().forEach(chain => {
-      if (soloChainId && chain.id !== soloChainId) return;
+      if (notYetTurnIds && notYetTurnIds.has(chain.id)) return;
       const displayColor = chain.colorTag ? (COLOR_HEX[chain.colorTag] || Phaser.Display.Color.HexStringToColor(chain.color).color)
         : Phaser.Display.Color.HexStringToColor(chain.color).color;
 
@@ -1219,10 +1245,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.overlayContainer.visible) return;
     const pos = this.cellFromTouch(pointer);
     if (!this.engine.inBounds(pos.r, pos.c)) return;
-    // Mechanic tutorial in progress — every other chain is untouchable
-    // until the gated one is fully traced (see loadLevel()'s trigger).
+    // Mechanic tutorial in progress — only the chain whose turn it is in
+    // the queue is touchable (see loadLevel()'s trigger).
     if (this.tutorialGate && this.tutorialGate.active) {
-      const gated = this.engine.getChain(this.tutorialGate.chainId);
+      const gated = this.engine.getChain(this.currentTutorialChainId());
       const onGatedChain = gated && (gated.row === pos.r && gated.col === pos.c || gated.path.some(p => p.r === pos.r && p.c === pos.c));
       if (!onGatedChain) return;
     }
@@ -1256,17 +1282,17 @@ export default class GameScene extends Phaser.Scene {
         // redrawDynamic() must run here too, not just on a forward step.
         this.redrawDynamic();
         this.redrawChains();
-        if (this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.tutorialGate.chainId) {
+        if (this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.currentTutorialChainId()) {
           this.updateTutorialPointer();
         }
         return;
       }
     }
 
-    const tutorialActive = this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.tutorialGate.chainId;
+    const tutorialActive = this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.currentTutorialChainId();
     if (tutorialActive) {
       const nextIdx = chain.path.length;
-      const target = this.tutorialGate.steps[nextIdx];
+      const target = this.levelDef.solution[this.currentTutorialChainId()][nextIdx];
       if (!target || pos.r !== target[0] || pos.c !== target[1]) {
         this.flashTutorialReject(pos.r, pos.c);
         return;
@@ -1290,10 +1316,11 @@ export default class GameScene extends Phaser.Scene {
       playSound('step', this.save.soundMuted);
       haptics.step();
       this.redrawChains();
-      if (tutorialActive) {
-        if (chain.path.length >= this.tutorialGate.steps.length) this.completeTutorialGate();
-        else this.updateTutorialPointer();
-      }
+      // Advancing to the next chain in the queue happens on LOCK (in
+      // onPointerUp), not here — a chain reaching its full path length
+      // mid-drag doesn't mean much until the player actually lifts their
+      // finger and endDrag() locks it.
+      if (tutorialActive) this.updateTutorialPointer();
     } else if (res.result === 'LOSE') {
       this.dragging = false;
       this.triggerExplosion(pos.r, pos.c, true);
@@ -1313,12 +1340,20 @@ export default class GameScene extends Phaser.Scene {
   onPointerUp() {
     if (!this.dragging) return;
     this.dragging = false;
+    const lockedChainId = this.engine.activeId;
     const res = this.engine.endDrag();
     if (res.locked) {
       playSound('lock', this.save.soundMuted);
       haptics.lock();
       this.pulseLockedChain();
-      this.lastLockedChainId = this.engine.activeId;
+      this.lastLockedChainId = lockedChainId;
+      // Advance the tutorial queue BEFORE completeLevel() — tracing the
+      // last chain in the queue both finishes the tutorial and wins the
+      // level in the same lock, and the tutorial's own "seen" flag should
+      // be saved regardless of what the Win screen does next.
+      if (this.tutorialGate && this.tutorialGate.active && lockedChainId === this.currentTutorialChainId()) {
+        this.advanceTutorialGate();
+      }
       if (res.win) {
         this.completeLevel(false);
         return;

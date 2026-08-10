@@ -1,10 +1,12 @@
 // One-time, learn-by-doing mechanic tutorials — shown the first time a
 // player reaches level 0 of a category that introduces a new core
 // mechanic (each category maps 1:1 to one `mechanic` value in levels.js).
-// GameScene forces the player to trace that level's own solution for one
-// chain — the exact one whose path actually touches the new mechanic —
-// before handing back normal free play. Nothing here ever touches
-// ChainEngine; it only reads levelDef/solution data GameScene already has.
+// GameScene forces the player to trace that level's own solution for
+// EVERY chain, one at a time — the mechanic-relevant one first — before
+// handing back normal free play. By the time the last chain in the queue
+// locks, the whole level is solved, so the tutorial naturally ends right
+// as the level is won. Nothing here ever touches ChainEngine; it only
+// reads levelDef/solution data GameScene already has.
 
 // One short imperative phrase each — the blinking cell highlight (see
 // GameScene.updateTutorialPointer) carries most of the teaching now, this
@@ -45,6 +47,15 @@ export function pickDemoChainId(mechanic, levelDef) {
     if (id) return id;
   }
   return ids[0];
+}
+
+// Every chain in the level, ordered so the mechanic-demonstrating one goes
+// first (its relationship glow / caption only make sense before it), then
+// the rest in whatever order they happen to be keyed.
+export function orderChainsForTutorial(mechanic, levelDef) {
+  const ids = Object.keys(levelDef.solution || {});
+  const demoId = pickDemoChainId(mechanic, levelDef);
+  return [demoId, ...ids.filter(id => id !== demoId)];
 }
 
 // Cell-pairs to glow-connect before the forced practice starts — only for
