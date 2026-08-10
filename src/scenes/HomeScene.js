@@ -4,13 +4,8 @@ import { saveState, isLevelCompleted, resolveDailyQuest, claimDailyQuestReward }
 import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, makeButton, makeIconButton, makeStatChip } from '../utils/theme.js';
+import { COLORS, makeStatChip } from '../utils/theme.js';
 import { buildSettingsModal } from '../utils/settingsModal.js';
-
-// Single continuous "Voyage" path across ALL 210 levels (all categories
-// merged into one track, per product decision — the player never picks a
-// category explicitly anymore). Node index 0 = level 1 at the BOTTOM;
-// higher levels stack upward, matching the reference mockup's map.
 
 const LOCK_BG = 0x7a5230;
 const LOCK_BORDER = 0x442711;
@@ -79,36 +74,37 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Top HUD ----------------
 
   buildTopBar(width) {
-    // Lives — real now (utils/lives.js): Quit/Restart mid-level spend one,
-    // refilling over time. Shows a countdown under the pill while below max.
     resolveLives(this.save);
-    const heartsX = 14, heartsY = 14, heartsW = 64, heartsH = 30;
+
+    // Coins Chip
+    this.coinChip = makeStatChip(this, 14 + 70, 12, '🟡', this.save.coins, COLORS.gold);
+
+    // Lives Pill
+    const heartsX = 170, heartsY = 12, heartsW = 75, heartsH = 30;
     const hg = this.add.graphics();
     hg.fillStyle(0xffffff, 1).fillRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
     hg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(heartsX, heartsY, heartsW, heartsH, 15);
-    this.add.text(heartsX + 15, heartsY + heartsH / 2, '❤️', { fontSize: '11px' }).setOrigin(0.5);
-    this.livesLabel = this.add.text(heartsX + 33, heartsY + heartsH / 2, `${this.save.lives.count}/${LIVES_MAX}`, {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+    this.add.text(heartsX + 15, heartsY + heartsH / 2, '❤️', { fontSize: '12px' }).setOrigin(0.5);
+    this.livesLabel = this.add.text(heartsX + 32, heartsY + heartsH / 2, `${this.save.lives.count}/${LIVES_MAX}`, {
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(0, 0.5);
-    this.livesTimerLabel = this.add.text(heartsX + heartsW / 2, heartsY + heartsH + 3, '', {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#0369a1'
+    this.livesTimerLabel = this.add.text(heartsX + heartsW / 2, heartsY + heartsH + 2, '', {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#0369a1'
     }).setOrigin(0.5, 0);
     this.refreshLivesDisplay();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshLivesDisplay() });
 
-    const gearX = width - 26, gearY = 24;
-    makeIconButton(this, gearX, gearY, '⚙️', {
-      size: 42, variant: 'teal', iconSize: '18px',
-      onClick: () => {
-        playSound('switch', this.save.soundMuted);
-        this.settingsOverlay.setVisible(true);
-      }
+    // Settings Square Button (Bo góc, viền dày)
+    const gearX = width - 26, gearY = 27;
+    const gearBtn = this.add.graphics();
+    gearBtn.fillStyle(COLORS.teal, 1).fillRoundedRect(gearX - 18, gearY - 18, 36, 36, 10);
+    gearBtn.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(gearX - 18, gearY - 18, 36, 36, 10);
+    this.add.text(gearX, gearY, '⚙️', { fontSize: '18px' }).setOrigin(0.5);
+    const gearHit = this.add.rectangle(gearX, gearY, 38, 38, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    gearHit.on('pointerdown', () => {
+      playSound('switch', this.save.soundMuted);
+      this.settingsOverlay.setVisible(true);
     });
-
-    const gemRightEdge = gearX - 28;
-    this.gemChip = makeStatChip(this, gemRightEdge, 7, '💎', this.save.gems, COLORS.teal);
-    const coinRightEdge = this.gemChip.rightEdge - 8;
-    this.coinChip = makeStatChip(this, coinRightEdge, 7, '🟡', this.save.coins, COLORS.gold);
   }
 
   refreshLivesDisplay() {
@@ -119,8 +115,6 @@ export default class HomeScene extends Phaser.Scene {
   }
 
   // ---------------- Daily Quest event bar ----------------
-  // Surfaces `dailyQuest` (newClearsToday/target/claimed) which already lived
-  // in storage.js but previously had no UI reading or claiming it.
 
   buildEventBar(width) {
     const x = 14, y = 54, w = width - 28, h = 26;
@@ -179,18 +173,12 @@ export default class HomeScene extends Phaser.Scene {
   }
 
   // ---------------- Voyage path (all levels, one continuous track) ----------------
-  // Full-bleed like the reference mockup and most modern mobile saga maps —
-  // the path sits directly on the sky/ocean background, edge to edge, rather
-  // than inside a bordered card floating in the middle of the screen.
 
   buildMap(width, height) {
     this.mapViewTop = 92;
     this.mapViewBottom = height - 150;
     this.mapCenterX = width / 2;
 
-    // Clip nodes to the area between the HUD and the bottom nav/CTA so
-    // scrolled-off content doesn't show through those bars — plain full-width
-    // rectangle now, no rounded "card" shape to match.
     this.mapMaskShape = this.make.graphics({ x: 0, y: 0 }, false);
     this.mapMaskShape.fillStyle(0xffffff).fillRect(0, this.mapViewTop, width, this.mapViewBottom - this.mapViewTop);
 
@@ -198,9 +186,6 @@ export default class HomeScene extends Phaser.Scene {
     this.pathContainer.setMask(this.mapMaskShape.createGeometryMask());
 
     this.rebuildMapContent();
-    // Input bounds stay narrower than the full-width visuals so drags don't
-    // steal taps meant for the floating side-menu/ADS buttons, which sit
-    // just outside the node lane's swing range.
     this.setupMapScroll(52, width - 104);
   }
 
@@ -216,7 +201,7 @@ export default class HomeScene extends Phaser.Scene {
 
     for (let i = total - 1; i >= 0; i--) {
       const item = flat[i];
-      const pos = total - 1 - i; // 0 = topmost (highest level)
+      const pos = total - 1 - i;
       const y = pos * NODE_SPACING + 50;
       const x = this.laneX(i);
       const done = isLevelCompleted(this.save, item.categoryId, item.levelIndex);
@@ -243,8 +228,6 @@ export default class HomeScene extends Phaser.Scene {
     base.lineBetween(px, py, x, y);
     this.pathContainer.add(base);
 
-    // Dashed centre stripe on top of the solid road base — mirrors the
-    // reference mockup's road (thick base + dashed line), not a bare line.
     const dash = this.add.graphics();
     dash.lineStyle(4, locked ? ROAD_STRIPE_LOCKED : ROAD_STRIPE, locked ? 0.35 : 0.9);
     const dist = Phaser.Math.Distance.Between(px, py, x, y);
@@ -283,8 +266,6 @@ export default class HomeScene extends Phaser.Scene {
       group.add(this.add.text(0, 0, String(item.globalIndex + 1), { fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#2b1e16' }).setOrigin(0.5));
     }
 
-    // Difficulty badge — only "hard"/"superhard" levels get a callout; easy
-    // and normal levels stay unmarked so the tag actually means something.
     const difficulty = getDifficulty(item.categoryId, item.levelIndex);
     if (difficulty) {
       const style = DIFFICULTY_STYLE[difficulty];
@@ -304,8 +285,6 @@ export default class HomeScene extends Phaser.Scene {
     return group;
   }
 
-  // Small vector padlock (instead of the 🔒 emoji) so locked nodes render
-  // identically across platforms/fonts instead of depending on emoji glyphs.
   drawLockIcon() {
     const lock = this.add.graphics();
     const s = 16;
@@ -370,92 +349,181 @@ export default class HomeScene extends Phaser.Scene {
     this.scene.start('Game', { categoryId: node.item.categoryId, levelIndex: node.item.levelIndex });
   }
 
-  // ---------------- Floating side-menu (decorative, matches the reference mockup) ----------------
-  // None of these buttons are wired to a real feature in this demo (there's
-  // no leaderboard, gift chest, purchasable hint, or ad system) — they only
-  // exist to match the reference layout; tapping shows a "coming soon" toast
-  // so it never claims to do something it doesn't.
+  // ---------------- Floating side-menu (Offers) ----------------
 
   buildSideMenu(width) {
-    const startY = this.mapViewTop + 26;
-    const btnSize = 36;
-    const leftX = 30;
-    const leftItems = [
-      { icon: '🎯', badge: true },
-      { icon: '🎁', badge: false },
-      { icon: '💡', badge: false }
-    ];
-    leftItems.forEach((item, i) => {
-      const y = startY + i * 46;
-      const g = this.add.graphics();
-      g.fillStyle(0xffffff, 1).fillRoundedRect(leftX - btnSize / 2, y - btnSize / 2, btnSize, btnSize, 10);
-      g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(leftX - btnSize / 2, y - btnSize / 2, btnSize, btnSize, 10);
-      this.add.text(leftX, y, item.icon, { fontSize: '16px' }).setOrigin(0.5);
-      if (item.badge) {
-        this.add.circle(leftX + btnSize / 2 - 5, y - btnSize / 2 + 5, 5, 0xef4444).setStrokeStyle(1.5, 0xffffff);
-      }
-      const hit = this.add.rectangle(leftX, y, btnSize + 6, btnSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => {
-        playSound('switch', this.save.soundMuted);
-        this.showToast('🚧 This feature is coming soon!');
-      });
+    const startY = this.mapViewTop + 30;
+
+    // Starter Offer (Trái)
+    const starterX = 36;
+    const starterY = startY;
+    const starterBox = this.add.container(starterX, starterY);
+
+    const starterBg = this.add.graphics();
+    starterBg.fillStyle(COLORS.gold, 1).fillRoundedRect(-20, -20, 40, 40, 10);
+    starterBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-20, -20, 40, 40, 10);
+    const starterIcon = this.add.text(0, -3, '🎁', { fontSize: '20px' }).setOrigin(0.5);
+    const starterTagBg = this.add.graphics();
+    starterTagBg.fillStyle(COLORS.woodDark, 0.95).fillRoundedRect(-24, 12, 48, 14, 7);
+    const starterTagTxt = this.add.text(0, 19, 'Starter', {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#ffffff'
+    }).setOrigin(0.5);
+
+    starterBox.add([starterBg, starterIcon, starterTagBg, starterTagTxt]);
+    const starterHit = this.add.rectangle(0, 0, 48, 48, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    starterBox.add(starterHit);
+    starterHit.on('pointerdown', () => {
+      playSound('switch', this.save.soundMuted);
+      this.showToast('🎁 Starter Offer: Special starter pack coming soon!');
     });
 
-    // "Remove Ads" shortcut — the diagonal slash over the icon is what marks
-    // it as "no ads", not just the red colour. Tapping it opens the real
-    // Shop scene (Remove Ads section); once purchased it turns into an
-    // "owned" badge instead of a shortcut.
+    // No Ads Floating Offer (Phải)
     const owned = !!this.save.adsRemoved;
-    const adsSize = 42;
-    const adsX = width - 30;
+    const adsX = width - 36;
     const adsY = startY;
+    const adsBox = this.add.container(adsX, adsY);
+
     const adsBg = this.add.graphics();
-    adsBg.fillStyle(owned ? COLORS.teal : 0xf43f5e, 1).fillRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
-    adsBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
-    this.add.text(adsX, adsY - 6, owned ? '✓' : '📺', { fontSize: owned ? '18px' : '15px', color: '#ffffff' }).setOrigin(0.5);
-    this.add.text(adsX, adsY + 11, 'ADS', {
-      fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
+    adsBg.fillStyle(owned ? COLORS.teal : 0xf43f5e, 1).fillRoundedRect(-20, -20, 40, 40, 10);
+    adsBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-20, -20, 40, 40, 10);
+    const adsIcon = this.add.text(0, -3, owned ? '✓' : '🚫', { fontSize: '18px' }).setOrigin(0.5);
+
+    const adsTagBg = this.add.graphics();
+    adsTagBg.fillStyle(COLORS.woodDark, 0.95).fillRoundedRect(-24, 12, 48, 14, 7);
+    const adsTagTxt = this.add.text(0, 19, owned ? 'Owned' : 'No Ads', {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: 'bold', color: '#ffffff'
     }).setOrigin(0.5);
-    if (!owned) {
-      const slashInset = adsSize / 2 - 5;
-      const slash = this.add.graphics();
-      slash.lineStyle(4.5, 0x2b1e16, 0.9);
-      slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
-      slash.lineStyle(2.5, 0xffffff, 1);
-      slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
-    }
-    const adsHit = this.add.rectangle(adsX, adsY, adsSize + 6, adsSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+
+    adsBox.add([adsBg, adsIcon, adsTagBg, adsTagTxt]);
+
+    const adsHit = this.add.rectangle(0, 0, 48, 48, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    adsBox.add(adsHit);
     adsHit.on('pointerdown', () => {
       playSound('switch', this.save.soundMuted);
-      if (owned) { this.showToast('✓ Ads already removed — thanks for your support!'); return; }
+      if (owned) {
+        this.showToast('✓ Ads already removed — thanks for your support!');
+        return;
+      }
       this.scene.start('Shop');
     });
   }
 
-  // ---------------- CTA + bottom nav ----------------
+  // ---------------- CTA / Play Level Button (Chỉnh theo đúng Yêu cầu Mockup) ----------------
 
   buildCTA(width, height) {
-    this.ctaY = this.mapViewBottom + 34;
-    const btnW = Math.min(width * 0.85, 280);
-    const label = `▶️ ${this.ctaLabel()}`;
-    this.ctaBtn = makeButton(this, width / 2, this.ctaY, label, {
-      variant: 'gold', fontSize: '17px', shadow: true, shadowOffset: 6, width: btnW, minHeight: 52,
-      onClick: () => this.onNodeTap(this.currentNode())
+    this.ctaY = this.mapViewBottom + 36;
+    const btnW = Math.min(width * 0.8, 260);
+    const btnH = 58;
+    const x = width / 2;
+    const y = this.ctaY;
+
+    // Thông tin level hiện tại
+    const currentItem = this.flatLevels[this.currentGlobalIdx];
+    const levelNum = this.currentGlobalIdx + 1;
+    const diff = currentItem ? getDifficulty(currentItem.categoryId, currentItem.levelIndex) : null;
+
+    // Thiết lập màu sắc theo độ khó quy định trong hướng dẫn thiết kế:
+    // Normal: Màu xanh lá (0x22c55e)
+    // Hard: Màu Tím/Hồng đậm (0xc026d3) + Tag HARD
+    // Super Hard: Màu Đỏ/Cam (0xea580c) + Tag SUPER HARD
+    let bgColor = 0x22c55e;
+    let borderColor = 0x15803d;
+    let shadowColor = 0x14532d;
+    let diffTagText = null;
+
+    if (diff === 'hard') {
+      bgColor = 0xc026d3;
+      borderColor = 0x86198f;
+      shadowColor = 0x4a044e;
+      diffTagText = 'HARD';
+    } else if (diff === 'superhard' || diff === 'extreme') {
+      bgColor = 0xea580c;
+      borderColor = 0x9a3412;
+      shadowColor = 0x431407;
+      diffTagText = 'SUPER HARD';
+    }
+
+    this.ctaContainer = this.add.container(x, y);
+
+    // 1. Bóng đổ (Shadow) bên dưới
+    const shadow = this.add.graphics();
+    shadow.fillStyle(shadowColor, 0.8);
+    shadow.fillRoundedRect(-btnW / 2, -btnH / 2 + 6, btnW, btnH, 20);
+    this.ctaContainer.add(shadow);
+
+    // 2. Thân nút chính (Main Button Body)
+    const btnBg = this.add.graphics();
+    btnBg.fillStyle(bgColor, 1);
+    btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 20);
+    btnBg.lineStyle(4, 0xffffff, 0.95);
+    btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 20);
+    this.ctaContainer.add(btnBg);
+
+    // 3. Hiệu ứng viền sáng/Highlight mặt trên nút
+    const shine = this.add.graphics();
+    shine.fillStyle(0xffffff, 0.25);
+    shine.fillRoundedRect(-btnW / 2 + 6, -btnH / 2 + 4, btnW - 12, btnH / 2 - 2, { tl: 14, tr: 14, bl: 4, br: 4 });
+    this.ctaContainer.add(shine);
+
+    // 4. Nhãn Level
+    const levelLabel = this.add.text(0, diffTagText ? -7 : 0, `Level ${levelNum}`, {
+      fontFamily: 'Cinzel',
+      fontSize: '22px',
+      fontStyle: '900',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 3
+    }).setOrigin(0.5);
+    this.ctaContainer.add(levelLabel);
+
+    // 5. Badge/Tag Thể hiện Độ khó (khi là Hard hoặc Super Hard)
+    if (diffTagText) {
+      const tagContainer = this.add.container(0, 16);
+      const tagW = diffTagText.length * 8 + 16;
+      const tagH = 15;
+      const tagBg = this.add.graphics();
+      tagBg.fillStyle(0x000000, 0.45);
+      tagBg.fillRoundedRect(-tagW / 2, -tagH / 2, tagW, tagH, 7);
+      const tagTxt = this.add.text(0, 0, diffTagText, {
+        fontFamily: 'Cinzel',
+        fontSize: '10px',
+        fontStyle: '900',
+        color: '#ffedd5'
+      }).setOrigin(0.5);
+      tagContainer.add([tagBg, tagTxt]);
+      this.ctaContainer.add(tagContainer);
+    }
+
+    // Tương tác bấm nút
+    const hitRect = this.add.rectangle(0, 0, btnW, btnH, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    this.ctaContainer.add(hitRect);
+
+    hitRect.on('pointerdown', () => {
+      this.onNodeTap(this.currentNode());
     });
+
+    // Hiệu ứng mạch đập (Pulse animation)
     this.tweens.add({
-      targets: this.ctaBtn, scaleX: 1.03, scaleY: 1.03, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut'
+      targets: this.ctaContainer,
+      scaleX: 1.04,
+      scaleY: 1.04,
+      duration: 850,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
     });
   }
 
   currentNode() {
     const item = this.flatLevels[this.currentGlobalIdx];
-    return { item, locked: false };
+    if (!item) return { item: null, locked: true };
+    const done = isLevelCompleted(this.save, item.categoryId, item.levelIndex);
+    const isCurrent = this.currentGlobalIdx === firstIncompleteGlobalIndex(this.save);
+    const locked = !done && !isCurrent;
+    return { item, locked };
   }
 
-  ctaLabel() {
-    const isFirst = this.currentGlobalIdx === 0 && totalCompleted(this.save) === 0;
-    return isFirst ? 'START THE VOYAGE' : `LEVEL ${this.currentGlobalIdx + 1}`;
-  }
+  // ---------------- Bottom Navigation ----------------
 
   buildBottomNav(width, height) {
     const barH = 64;
@@ -494,7 +562,7 @@ export default class HomeScene extends Phaser.Scene {
     if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 
-  // ---------------- Settings overlay (shared with GameScene) ----------------
+  // ---------------- Settings overlay ----------------
 
   buildSettingsOverlay(width, height) {
     const { items } = buildSettingsModal(this, width, height, {
