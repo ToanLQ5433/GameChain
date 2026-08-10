@@ -1,15 +1,16 @@
-:root {
-  --w: 405px;
-  --h: 720px;
-}
-
 * { box-sizing: border-box; }
 
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
-  height: 100%;
+  /* 100dvh (dynamic viewport height) excludes the mobile browser chrome
+     that 100vh doesn't — without it, real phones report a taller "100vh"
+     than what's actually visible above/below the address bar, and the
+     game canvas gets pushed partly off-screen. Browsers without dvh
+     support just keep the 100vh fallback above. */
+  height: 100vh;
+  height: 100dvh;
   background: #0f0b08;
   overflow: hidden;
   font-family: 'Cinzel', serif;
@@ -18,8 +19,6 @@ html, body {
   touch-action: none;
 }
 
-/* Trên desktop: hiện khung điện thoại 9:16 để test giao diện mobile.
-   Trên màn hình nhỏ (điện thoại thật): full-bleed, không viền. */
 #phone-frame {
   width: 100%;
   height: 100%;
@@ -28,19 +27,28 @@ html, body {
   justify-content: center;
 }
 
+/* Real phones (this media query doesn't match): full-bleed, no fixed
+   aspect ratio — Phaser's logical resolution is computed per-device in
+   main.js, so the canvas already matches the device's actual aspect and
+   this just has to get out of the way and fill the real viewport. Forcing
+   a 9:16 box here (the old behaviour) let the CSS aspect-ratio win over
+   the device's real (usually taller, ~19.5:9) shape and letterbox off a
+   meaningful chunk of vertical space on real hardware. */
 #game-container {
   position: relative;
-  width: var(--w);
-  height: var(--h);
-  max-width: 100vw;
-  max-height: 100vh;
-  aspect-ratio: 9 / 16;
+  width: 100%;
+  height: 100%;
   background: #0f0b08;
   overflow: hidden;
 }
 
+/* Desktop preview only: show a portrait phone mockup instead of stretching
+   the game across a wide browser window. */
 @media (min-width: 480px) and (min-height: 700px) {
   #game-container {
+    width: min(100vw, 480px);
+    height: min(100dvh, 100vh, 960px);
+    aspect-ratio: 9 / 16;
     border-radius: 36px;
     border: 10px solid #1c1410;
     box-shadow: 0 30px 70px rgba(0,0,0,0.7), inset 0 0 0 2px #3d2b1f;

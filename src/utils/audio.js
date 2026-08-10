@@ -53,6 +53,21 @@ export function playSound(type, muted) {
         setTimeout(() => tone(f, 'sine', 0.3, 0.12), i * 90);
       });
       break;
+    // 'lose' — descending minor sting for the fail modal itself, distinct
+    // from 'explode' (which plays for the bomb blast a beat earlier).
+    case 'lose':
+      [392, 349.23, 293.66].forEach((f, i) => {
+        setTimeout(() => tone(f, 'triangle', 0.28, 0.1), i * 140);
+      });
+      break;
+    // 'coin' — a single soft tick, meant to be fired several times in a
+    // row for a reward count-up (Shop purchases, win-screen reward reveal).
+    case 'coin': tone(880, 'square', 0.05, 0.05); break;
+    // 'freeze' — icy chime when the Freeze buff activates.
+    case 'freeze':
+      tone(1400, 'sine', 0.12, 0.06);
+      setTimeout(() => tone(1800, 'sine', 0.15, 0.05), 60);
+      break;
     default: break;
   }
 }

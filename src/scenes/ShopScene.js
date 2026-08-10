@@ -21,9 +21,12 @@ const BUFF_ORDER = ['hint', 'freeze', 'skip'];
 
 // Two big, eye-catching packs — this is the "hot deals" shelf every mobile
 // shop leads with.
+// Bright, not the app's darkest tones — these are full-size cards, not small
+// chips, so a dark fill here reads as a "dead" tile rather than an accent.
+const PACK_ACCENT_WARM = 0xd98c3d;
 const FEATURED_PACKS = [
-  { key: 'starter', title: 'Starter Pack', coins: 2000, buffs: { hint: 3, freeze: 3, skip: 1 }, price: '$2.99', tag: 'POPULAR', accent: COLORS.woodDark },
-  { key: 'mega', title: 'Mega VIP Combo', coins: 5000, buffs: { hint: 5, freeze: 5, skip: 3 }, price: '$4.99', tag: 'BEST VALUE', accent: COLORS.tealDim, includeAdsRemoval: true }
+  { key: 'starter', title: 'Starter Pack', coins: 2000, buffs: { hint: 3, freeze: 3, skip: 1 }, price: '$2.99', tag: 'POPULAR', accent: PACK_ACCENT_WARM },
+  { key: 'mega', title: 'Mega VIP Combo', coins: 5000, buffs: { hint: 5, freeze: 5, skip: 3 }, price: '$4.99', tag: 'BEST VALUE', accent: COLORS.teal, includeAdsRemoval: true }
 ];
 
 // Smaller, plainer packs beneath the featured shelf.
@@ -309,8 +312,8 @@ export default class ShopScene extends Phaser.Scene {
   drawBundleCard(x, y, w, bundle) {
     const h = 100;
     const g = this.add.graphics();
-    g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(x, y, w, h, 14);
-    g.lineStyle(2.5, COLORS.gold, 0.8).strokeRoundedRect(x, y, w, h, 14);
+    g.fillStyle(0xfff8e7, 1).fillRoundedRect(x, y, w, h, 14);
+    g.lineStyle(2.5, COLORS.gold, 1).strokeRoundedRect(x, y, w, h, 14);
     this.content.add(g);
 
     if (bundle.tag) {
@@ -324,10 +327,10 @@ export default class ShopScene extends Phaser.Scene {
     }
 
     this.content.add(this.add.text(x + 14, y + 16, bundle.title, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#f4e8cf'
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
     }).setOrigin(0, 0.5));
     this.content.add(this.add.text(x + 14, y + 32, `${fmt(bundle.coins)} Coins`, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f'
+      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#b45309'
     }).setOrigin(0, 0.5));
     this.drawBuffRow(x + 14, y + 44, w - 28 - 100, bundle.buffs);
 
@@ -359,8 +362,8 @@ export default class ShopScene extends Phaser.Scene {
 
   drawCoinCard(x, y, w, h, pack) {
     const g = this.add.graphics();
-    g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(x, y, w, h, 14);
-    g.lineStyle(2.5, COLORS.gold, 0.8).strokeRoundedRect(x, y, w, h, 14);
+    g.fillStyle(0xfff8e7, 1).fillRoundedRect(x, y, w, h, 14);
+    g.lineStyle(2.5, COLORS.gold, 1).strokeRoundedRect(x, y, w, h, 14);
     this.content.add(g);
 
     if (pack.tag) {
@@ -375,7 +378,7 @@ export default class ShopScene extends Phaser.Scene {
 
     this.content.add(this.add.text(x + w / 2, y + 26, '🟡', { fontSize: '22px' }).setOrigin(0.5));
     this.content.add(this.add.text(x + w / 2, y + 50, fmt(pack.coins), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#f4e8cf'
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#42281d'
     }).setOrigin(0.5));
 
     const btnW = w - 16, btnH = 26;
@@ -452,16 +455,16 @@ export default class ShopScene extends Phaser.Scene {
     const bg = this.add.rectangle(0, 0, width, height, 0x04070d, 0.85).setOrigin(0).setInteractive().setDepth(100);
     const panelW = width - 70, panelH = 260, px = width / 2 - panelW / 2, py = height / 2 - panelH / 2;
     const panel = this.add.graphics().setDepth(101);
-    panel.fillStyle(COLORS.cardBg, 1).fillRoundedRect(px, py, panelW, panelH, 18);
+    panel.fillStyle(COLORS.parchment, 1).fillRoundedRect(px, py, panelW, panelH, 18);
     panel.lineStyle(3, COLORS.gold, 1).strokeRoundedRect(px, py, panelW, panelH, 18);
 
     const iconBg = this.add.circle(width / 2, py + 44, 30, 0xffffff).setStrokeStyle(3, COLORS.woodDark).setDepth(101);
     const iconTxt = this.add.text(width / 2, py + 44, icon, { fontSize: '24px' }).setOrigin(0.5).setDepth(101);
     const titleTxt = this.add.text(width / 2, py + 88, title, {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#f4e8cf', align: 'center', wordWrap: { width: panelW - 40 }
+      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#42281d', align: 'center', wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5).setDepth(101);
     const subTxt = this.add.text(width / 2, py + 116, subtitle, {
-      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#9fb8c9', align: 'center', wordWrap: { width: panelW - 30 }
+      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#5c4a3e', align: 'center', wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5).setDepth(101);
     const priceTxt = this.add.text(width / 2, py + 154, price, {
       fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f'

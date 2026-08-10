@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { ChainEngine } from '../engine/ChainEngine.js';
 import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
+import { haptics } from '../utils/haptics.js';
 import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
 import { getNextLevel } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
@@ -29,6 +30,8 @@ const TILE = {
 };
 
 const COLOR_HEX = { red: TILE.prismRed, blue: TILE.prismBlue, green: TILE.prismGreen };
+const ICE_COLOR = 0x7dd3fc;
+const ICE_COLOR_DARK = 0x0284c7;
 
 // One small boat icon per chain id (A-E) — purely cosmetic, shown at the
 // moving head of a chain once it has left its anchor, echoing the reference
@@ -211,6 +214,7 @@ export default class GameScene extends Phaser.Scene {
     container.input.cursor = 'pointer';
     container.on('pointerdown', () => {
       this.tweens.add({ targets: container, scale: 0.94, duration: 60, yoyo: true });
+      haptics.tap();
       this.useBuff(item.key, item.cost);
     });
     container.drawBg = drawBg;
@@ -309,8 +313,50 @@ export default class GameScene extends Phaser.Scene {
     this.engine.freezeWalls = true;
     this.drawStaticBoard();
     this.refreshBuffChips();
-    playSound('switch', this.save.soundMuted);
-    this.showToast('⏸️ Walls are temporarily disabled for this run!');
+    playSound('freeze', this.save.soundMuted);
+    this.spawnFreezeEffect();
+    this.showToast('⏸️❄️ Walls are frozen for this run!');
+  }
+
+  // One-time frost burst on activation (screen-wide cold flash + a handful
+  // of drifting snowflakes from each wall) plus a persistent "Frozen" badge
+  // that stays up for the rest of the level — Freeze used to just quietly
+  // dim the walls with no feedback that anything actually happened.
+  spawnFreezeEffect() {
+    const { width, height } = this.scale;
+    const flash = this.add.rectangle(0, 0, width, height, ICE_COLOR, 0.22).setOrigin(0);
+    this.fxContainer.add(flash);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
+
+    this.engine.walls.forEach(w => {
+      const p1 = this.cellToPixel(w.r1, w.c1);
+      const p2 = this.cellToPixel(w.r2, w.c2);
+      const cx = (p1.x + p2.x) / 2 + this.cellSize / 2, cy = (p1.y + p2.y) / 2 + this.cellSize / 2;
+      for (let i = 0; i < 6; i++) {
+        const flake = this.add.text(cx, cy, '❄️', { fontSize: Math.round(this.cellSize * 0.28) + 'px' }).setOrigin(0.5).setAlpha(0.9);
+        this.fxContainer.add(flake);
+        const angle = Math.random() * Math.PI * 2, dist = this.cellSize * (0.6 + Math.random() * 0.8);
+        this.tweens.add({
+          targets: flake, x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist - 10,
+          alpha: 0, angle: Math.random() * 180, duration: 600 + Math.random() * 300, ease: 'Cubic.Out',
+          onComplete: () => flake.destroy()
+        });
+      }
+    });
+
+    if (this.freezeBadge) this.freezeBadge.destroy();
+    const badgeW = 84, badgeH = 22;
+    const bx = this.boardOriginX + (this.cellSize * this.engine.cols) / 2 - badgeW / 2;
+    const by = this.boardOriginY - Math.max(12, Math.round(this.cellSize * 0.18)) - badgeH - 4;
+    const bg = this.add.graphics();
+    bg.fillStyle(ICE_COLOR, 1).fillRoundedRect(0, 0, badgeW, badgeH, 11);
+    bg.lineStyle(2, ICE_COLOR_DARK, 1).strokeRoundedRect(0, 0, badgeW, badgeH, 11);
+    const label = this.add.text(badgeW / 2, badgeH / 2, '❄️ FROZEN', {
+      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#0c4a6e'
+    }).setOrigin(0.5);
+    this.freezeBadge = this.add.container(bx, by, [bg, label]);
+    this.fxContainer.add(this.freezeBadge);
+    this.tweens.add({ targets: this.freezeBadge, scale: { from: 1, to: 1.06 }, duration: 700, yoyo: true, repeat: -1 });
   }
 
   useSkip(cost) {
@@ -338,6 +384,7 @@ export default class GameScene extends Phaser.Scene {
     this.overlayContainer.setVisible(false);
     this.overlayContainer.removeAll(true);
     this.fxContainer.removeAll(true);
+    this.freezeBadge = null;
     if (this.toastText) { this.toastText.destroy(); this.toastText = null; }
     this.buffState = { freezeUsed: false };
     this.refreshBuffChips();
@@ -475,8 +522,8 @@ export default class GameScene extends Phaser.Scene {
       const p2 = this.cellToPixel(w.r2, w.c2);
       const glow = this.add.graphics();
       const line = this.add.graphics();
-      const drawAt = (g, width, alpha) => {
-        g.lineStyle(width, TILE.wall, alpha);
+      const drawAt = (g, width, color, alpha) => {
+        g.lineStyle(width, color, alpha);
         if (w.r1 === w.r2) {
           const x = Math.max(p1.x, p2.x);
           g.lineBetween(x, p1.y, x, p1.y + cs);
@@ -485,10 +532,31 @@ export default class GameScene extends Phaser.Scene {
           g.lineBetween(p1.x, y, p1.x + cs, y);
         }
       };
-      // Buff "Đóng Băng" đang bật -> vẽ Vách Ngăn mờ hẳn để báo đang vô hiệu hoá.
+      // Buff "Đóng Băng" đang bật -> vẽ Vách Ngăn dạng "đóng đá" (viền băng
+      // xanh nhạt, đứt đoạn) thay vì chỉ làm mờ màu gỗ như trước — rõ ràng
+      // là ĐANG bị đóng băng, không phải chỉ mờ đi vô nghĩa.
       const frozen = !!e.freezeWalls;
-      drawAt(glow, 8, frozen ? 0.05 : 0.25);
-      drawAt(line, 3, frozen ? 0.2 : 1);
+      if (frozen) {
+        drawAt(glow, 10, ICE_COLOR, 0.35);
+        // Nét đứt để gợi cảm giác "vách nứt đông đá" — vẽ từng đoạn nhỏ.
+        const dashLen = 5, gapLen = 4;
+        const dist = w.r1 === w.r2 ? cs : cs;
+        let d = 0;
+        while (d < dist) {
+          const ed = Math.min(d + dashLen, dist);
+          if (w.r1 === w.r2) {
+            const x = Math.max(p1.x, p2.x);
+            line.lineStyle(3, ICE_COLOR_DARK, 0.9).lineBetween(x, p1.y + d, x, p1.y + ed);
+          } else {
+            const y = Math.max(p1.y, p2.y);
+            line.lineStyle(3, ICE_COLOR_DARK, 0.9).lineBetween(p1.x + d, y, p1.x + ed, y);
+          }
+          d += dashLen + gapLen;
+        }
+      } else {
+        drawAt(glow, 8, TILE.wall, 0.25);
+        drawAt(line, 3, TILE.wall, 1);
+      }
       this.boardStaticContainer.add([glow, line]);
     });
   }
@@ -617,6 +685,7 @@ export default class GameScene extends Phaser.Scene {
     this.dragging = true;
     this.chainLengths[chain.id] = chain.path.length;
     playSound('step', this.save.soundMuted);
+    haptics.step();
     this.redrawChains();
     this.updateStatus();
   }
@@ -637,6 +706,7 @@ export default class GameScene extends Phaser.Scene {
         this.engine.backtrackTo(chain.path.length - 2);
         this.chainLengths[chain.id] = chain.path.length;
         playSound('step', this.save.soundMuted);
+        haptics.step();
         this.redrawChains();
         this.updateStatus();
         return;
@@ -651,6 +721,7 @@ export default class GameScene extends Phaser.Scene {
       newlyDestroyed.forEach(b => this.triggerExplosion(b.r, b.c, false));
       if (newlyDestroyed.length) this.redrawDynamic();
       playSound('step', this.save.soundMuted);
+      haptics.step();
       this.redrawChains();
       this.updateStatus();
     } else if (res.result === 'LOSE') {
@@ -676,6 +747,7 @@ export default class GameScene extends Phaser.Scene {
     const res = this.engine.endDrag();
     if (res.locked) {
       playSound('lock', this.save.soundMuted);
+      haptics.lock();
       this.pulseLockedChain();
       if (res.win) {
         this.completeLevel(false);
@@ -717,6 +789,7 @@ export default class GameScene extends Phaser.Scene {
 
     if (big) {
       playSound('explode', this.save.soundMuted);
+      haptics.fail();
       this.cameras.main.shake(260, 0.014);
       const flash = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0xffffff, 0.55).setOrigin(0);
       this.fxContainer.add(flash);
@@ -766,6 +839,7 @@ export default class GameScene extends Phaser.Scene {
 
   completeLevel(isSkip) {
     playSound('win', this.save.soundMuted);
+    haptics.win();
     const already = (this.save.completedLevels[this.categoryId] || []).includes(this.levelIndex);
     if (!already && !isSkip) this.save.coins += 20;
     if (!already) registerNewLevelClear(this.save);
@@ -839,21 +913,84 @@ export default class GameScene extends Phaser.Scene {
     this.overlayContainer.add([bg, panel, eyebrow, title, ...stars, rewardFrame, rewardIcon, rewardText, nextBtn, homeBtn]);
     this.overlayContainer.setVisible(true);
 
+    // Sound + haptic already fired once in completeLevel() right as the
+    // chain locked — repeating them here (the old code called
+    // `playSound('win', false)` again, ignoring the mute setting too) just
+    // doubled up the fanfare. This is purely the visual celebration layer.
     if (!isSkip) {
-      playSound('win', false);
-      for (let i = 0; i < 16; i++) {
-        const x = width / 2 + (Math.random() - 0.5) * panelW;
-        const star = this.add.text(x, panelY - 10, '✨', { fontSize: (10 + Math.random() * 10) + 'px' }).setOrigin(0.5).setAlpha(0);
-        this.overlayContainer.add(star);
-        this.tweens.add({
-          targets: star, y: star.y + 140 + Math.random() * 80, alpha: { from: 1, to: 0 }, angle: Math.random() * 180,
-          delay: i * 40, duration: 900 + Math.random() * 300, ease: 'Cubic.In'
-        });
-      }
+      this.spawnVictoryCelebration(width, height);
+      this.playCoinCountUp();
+    }
+  }
+
+  // Full-screen confetti + falling coins + the original sparkle drizzle —
+  // the old version only rained a few sparkles inside the panel's width,
+  // which barely read as a celebration. This is the "Victory Confetti"
+  // moment every modern match-style mobile game leads its win screen with.
+  spawnVictoryCelebration(width, height) {
+    const confettiColors = [COLORS.gold, COLORS.teal, 0xee4343, 0x22c55e, 0x9333ea];
+    for (let i = 0; i < 32; i++) {
+      const x = Math.random() * width;
+      const color = confettiColors[i % confettiColors.length];
+      const piece = this.add.rectangle(x, -20 - Math.random() * 80, 7 + Math.random() * 5, 12 + Math.random() * 6, color)
+        .setAngle(Math.random() * 360);
+      this.overlayContainer.add(piece);
+      this.tweens.add({
+        targets: piece,
+        y: height + 30,
+        x: x + (Math.random() - 0.5) * 90,
+        angle: piece.angle + (Math.random() > 0.5 ? 360 : -360),
+        alpha: { from: 1, to: 0.2 },
+        delay: Math.random() * 400,
+        duration: 1400 + Math.random() * 700,
+        ease: 'Cubic.In',
+        onComplete: () => piece.destroy()
+      });
+    }
+
+    for (let i = 0; i < 12; i++) {
+      const x = Math.random() * width;
+      const coin = this.add.text(x, -20 - Math.random() * 100, '🪙', { fontSize: (16 + Math.random() * 8) + 'px' }).setOrigin(0.5);
+      this.overlayContainer.add(coin);
+      this.tweens.add({
+        targets: coin,
+        y: height + 30,
+        x: x + (Math.random() - 0.5) * 50,
+        angle: Math.random() * 180 - 90,
+        delay: 150 + Math.random() * 500,
+        duration: 1300 + Math.random() * 600,
+        ease: 'Cubic.In',
+        onComplete: () => coin.destroy()
+      });
+    }
+
+    for (let i = 0; i < 14; i++) {
+      const x = Math.random() * width;
+      const star = this.add.text(x, -10 - Math.random() * 60, '✨', { fontSize: (10 + Math.random() * 10) + 'px' }).setOrigin(0.5).setAlpha(0);
+      this.overlayContainer.add(star);
+      this.tweens.add({
+        targets: star, y: star.y + 220 + Math.random() * 100, alpha: { from: 1, to: 0 }, angle: Math.random() * 180,
+        delay: i * 40, duration: 900 + Math.random() * 300, ease: 'Cubic.In'
+      });
+    }
+  }
+
+  // A handful of quick "coin" ticks timed to the reward reveal — the mobile
+  // game equivalent of a coin counter clicking upward, instead of the
+  // reward number just silently appearing.
+  playCoinCountUp() {
+    for (let i = 0; i < 5; i++) {
+      this.time.delayedCall(150 + i * 90, () => playSound('coin', this.save.soundMuted));
     }
   }
 
   showLose(text) {
+    // Distinct from 'explode' (already played a beat earlier, right when the
+    // bomb went off) — this is the "you lost" sting for the modal itself,
+    // so the failure has two separate, clearly-timed audio beats instead of
+    // silence between the blast and the retry screen.
+    playSound('lose', this.save.soundMuted);
+
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
@@ -875,5 +1012,11 @@ export default class GameScene extends Phaser.Scene {
 
     this.overlayContainer.add([bg, panel, title, sub, retryBtn]);
     this.overlayContainer.setVisible(true);
+
+    // A quick side-to-side shake on the title, echoing the reference
+    // mockup's fail-icon shake — reads as "impact" without needing motion
+    // on the whole panel (which would also throw off the retry button hitbox).
+    title.setPosition(width / 2, panelY + 40);
+    this.tweens.add({ targets: title, x: { from: width / 2 - 8, to: width / 2 + 8 }, duration: 60, repeat: 4, yoyo: true, onComplete: () => title.setX(width / 2) });
   }
 }
