@@ -18,7 +18,11 @@ const defaultState = {
   viewedCategoryId: null,
   dailyQuest: { date: '', newClearsToday: 0, target: DAILY_QUEST_TARGET, claimed: false },
   // Set by the (mocked, no real payment) "Remove Ads" purchase in the Shop.
-  adsRemoved: false
+  adsRemoved: false,
+  // Buff inventory granted by Shop packs — GameScene spends from here first
+  // (free) before falling back to paying Coins per use, so a "Hint x3" pack
+  // actually grants 3 free hints instead of just being a coin bundle in disguise.
+  buffs: { hint: 0, freeze: 0, skip: 0 }
 };
 
 export function loadSave() {

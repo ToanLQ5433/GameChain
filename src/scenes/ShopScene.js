@@ -3,10 +3,11 @@ import { playSound } from '../utils/audio.js';
 import { saveState } from '../utils/storage.js';
 import { COLORS } from '../utils/theme.js';
 
-// Real Shop screen for the systems this demo actually has: Coins (spent on
-// Buffs in-level) and a "Remove Ads" flag. No booster/lives inventory exists
-// in the engine, so bundles only ever grant Coins (+ Remove Ads) — nothing
-// promised here that the game doesn't actually track.
+// Real Shop screen for the systems this demo actually tracks: Coins, the 3
+// real Buffs (Hint/Freeze/Skip, same keys GameScene's buff bar already
+// spends), and a "Remove Ads" flag. Every "×N" on a pack is a real grant to
+// save.buffs — GameScene.spendBuff() consumes from that inventory before
+// ever charging Coins — so a pack's contents are exactly what it says.
 //
 // There is no payment backend in this demo, so every purchase runs through
 // showPurchaseModal(): a mocked confirm -> processing -> success flow that
@@ -15,19 +16,33 @@ import { COLORS } from '../utils/theme.js';
 
 const REMOVE_ADS_PRICE = '$2.99';
 
-const COIN_PACKS = [
-  { coins: 500, price: '$0.99' },
-  { coins: 1200, price: '$1.99' },
-  { coins: 2500, price: '$3.99' },
-  { coins: 6500, price: '$7.99', tag: 'POPULAR' },
-  { coins: 15000, price: '$14.99' },
-  { coins: 40000, price: '$29.99', tag: 'BEST VALUE' }
+const BUFF_ICONS = { hint: '💡', freeze: '⏸️', skip: '⏩' };
+const BUFF_ORDER = ['hint', 'freeze', 'skip'];
+
+// Two big, eye-catching packs — this is the "hot deals" shelf every mobile
+// shop leads with.
+const FEATURED_PACKS = [
+  { key: 'starter', title: 'Starter Pack', coins: 2000, buffs: { hint: 3, freeze: 3, skip: 1 }, price: '$2.99', tag: 'POPULAR', accent: COLORS.woodDark },
+  { key: 'mega', title: 'Mega VIP Combo', coins: 5000, buffs: { hint: 5, freeze: 5, skip: 3 }, price: '$4.99', tag: 'BEST VALUE', accent: COLORS.tealDim, includeAdsRemoval: true }
 ];
 
-const BUNDLES = [
-  { key: 'starter', title: 'Starter Bundle', coins: 800, price: '$2.99', tag: 'POPULAR', includeAdsRemoval: true },
-  { key: 'mega', title: 'Mega Bundle', coins: 5000, price: '$6.99', tag: 'BEST VALUE', includeAdsRemoval: true }
+// Smaller, plainer packs beneath the featured shelf.
+const ITEM_BUNDLES = [
+  { key: 'small', title: 'Small Bundle', coins: 1200, buffs: { hint: 2, freeze: 2 }, price: '$1.99' },
+  { key: 'jumbo', title: 'Jumbo Bundle', coins: 15000, buffs: { hint: 10, freeze: 10, skip: 5 }, price: '$9.99', tag: 'SUPER' }
 ];
+
+// Coins-only, no buffs — the plain "top up" ladder, standard F2P price anchors.
+const COIN_PACKS = [
+  { coins: 1000, price: '$0.99' },
+  { coins: 3000, price: '$2.99' },
+  { coins: 6000, price: '$4.99', tag: 'POPULAR' },
+  { coins: 14000, price: '$9.99' },
+  { coins: 30000, price: '$19.99' },
+  { coins: 100000, price: '$49.99', tag: 'BEST VALUE' }
+];
+
+function fmt(n) { return n.toLocaleString('en-US'); }
 
 export default class ShopScene extends Phaser.Scene {
   constructor() { super('Shop'); }
@@ -48,10 +63,19 @@ export default class ShopScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillGradientStyle(0x1c3a52, 0x1c3a52, 0x0a1d33, 0x0a1d33, 1);
     bg.fillRect(0, 0, width, height);
-    // Faint canvas-tent stripes behind the header, echoing a market-stall shop front.
+    // Diagonal gold/parchment canopy stripe under the header, echoing a
+    // market-stall awning without borrowing the reference's purple accent.
     const stripes = this.add.graphics();
-    stripes.fillStyle(COLORS.gold, 0.06);
-    for (let x = -40; x < width + 40; x += 44) stripes.fillRect(x, 0, 22, 92);
+    stripes.fillStyle(COLORS.gold, 1);
+    stripes.fillRect(0, 46, width, 6);
+    stripes.fillStyle(COLORS.woodDark, 1);
+    for (let x = -20; x < width + 20; x += 34) {
+      stripes.save();
+      stripes.translateCanvas(x, 46);
+      stripes.rotateCanvas(-0.6);
+      stripes.fillRect(0, 0, 12, 10);
+      stripes.restore();
+    }
   }
 
   buildTopBar(width) {
@@ -68,8 +92,21 @@ export default class ShopScene extends Phaser.Scene {
 
     const gemRightEdge = closeX - 8;
     this.gemChip = this.makeStatChip(gemRightEdge, 12, '💎', this.save.gems, COLORS.teal);
-    const coinRightEdge = this.gemChip.rightEdge - 8;
+    const coinRightEdge = this.gemChip.rightEdge - 16;
     this.coinChip = this.makeStatChip(coinRightEdge, 12, '🟡', this.save.coins, COLORS.gold);
+
+    // "+" shortcut — jumps straight to the Gold Shop grid, same affordance
+    // players expect from tapping the "+" next to a currency pill. Sits in
+    // the gap between the coin and gem chips.
+    const plusX = coinRightEdge + 8, plusY = 12 + 15;
+    this.add.circle(plusX, plusY, 9, COLORS.tealDim).setStrokeStyle(2, COLORS.woodDark);
+    this.add.text(plusX, plusY, '+', { fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
+    this.add.circle(plusX, plusY, 13, 0xffffff, 0.001).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        playSound('switch', this.save.soundMuted);
+        const target = Phaser.Math.Clamp(this.viewTop - this.goldShopY, Math.min(this.viewTop, this.viewTop + (this.viewBottom - this.viewTop) - this.contentHeight), this.viewTop);
+        this.tweens.add({ targets: this.content, y: target, duration: 350, ease: 'Cubic.Out' });
+      });
   }
 
   makeStatChip(rightEdgeX, y, icon, value, accentColor) {
@@ -92,7 +129,7 @@ export default class ShopScene extends Phaser.Scene {
   // of a price button can never trigger an accidental purchase.
 
   buildScrollArea(width, height) {
-    this.viewTop = 56;
+    this.viewTop = 62;
     this.viewBottom = height - 76;
 
     this.maskShape = this.make.graphics({ x: 0, y: 0 }, false);
@@ -100,15 +137,24 @@ export default class ShopScene extends Phaser.Scene {
     this.content = this.add.container(0, this.viewTop);
     this.content.setMask(this.maskShape.createGeometryMask());
 
+    this.rebuildContent(width);
+    this.setupScroll();
+  }
+
+  rebuildContent(width) {
+    this.content.removeAll(true);
+    this.hitAreas = [];
+
     let y = 10;
     y = this.drawRemoveAdsBanner(width, y) + 18;
-    y = this.drawSectionLabel(width, y, 'Coin Bundles') + 10;
-    y = this.drawCoinGrid(width, y) + 18;
-    y = this.drawSectionLabel(width, y, 'Value Bundles') + 10;
-    y = this.drawBundles(width, y) + 20;
+    y = this.drawSectionLabel(width, y, 'Hot Deals') + 10;
+    y = this.drawFeaturedPacks(width, y) + 18;
+    y = this.drawSectionLabel(width, y, 'Item Bundles') + 10;
+    y = this.drawItemBundles(width, y) + 18;
+    this.goldShopY = y;
+    y = this.drawSectionLabel(width, y, 'Gold Shop') + 10;
+    y = this.drawCoinGrid(width, y) + 20;
     this.contentHeight = y;
-
-    this.setupScroll(width);
   }
 
   drawSectionLabel(width, y, text) {
@@ -116,8 +162,8 @@ export default class ShopScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillStyle(COLORS.parchment, 1).fillRoundedRect(14, y, width - 28, h, 10);
     g.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(14, y, width - 28, h, 10);
-    const label = this.add.text(width / 2, y + h / 2, text, {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+    const label = this.add.text(width / 2, y + h / 2, text.toUpperCase(), {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16', letterSpacing: 1
     }).setOrigin(0.5);
     this.content.add([g, label]);
     return y + h;
@@ -150,7 +196,7 @@ export default class ShopScene extends Phaser.Scene {
         onConfirm: () => {
           this.save.adsRemoved = true;
           saveState(this.save);
-          this.refreshRemoveAdsBanner();
+          this.rebuildContent(this.scale.width);
         }
       });
     });
@@ -158,74 +204,120 @@ export default class ShopScene extends Phaser.Scene {
     return y + h;
   }
 
-  refreshRemoveAdsBanner() {
-    this.content.removeAll(true);
-    this.hitAreas = [];
-    let y = 10;
-    y = this.drawRemoveAdsBanner(this.scale.width, y) + 18;
-    y = this.drawSectionLabel(this.scale.width, y, 'Coin Bundles') + 10;
-    y = this.drawCoinGrid(this.scale.width, y) + 18;
-    y = this.drawSectionLabel(this.scale.width, y, 'Value Bundles') + 10;
-    y = this.drawBundles(this.scale.width, y) + 20;
-    this.contentHeight = y;
-  }
+  // ---------------- Buff grid (shared by featured packs + item bundles) ----------------
 
-  drawCoinGrid(width, y) {
-    const gap = 12, x = 14, gridW = width - 28;
-    const cw = (gridW - gap) / 2, ch = 108;
-    COIN_PACKS.forEach((pack, i) => {
-      const col = i % 2, row = Math.floor(i / 2);
-      const cx = x + col * (cw + gap), cy = y + row * (ch + gap);
-      this.drawCoinCard(cx, cy, cw, ch, pack);
+  drawBuffRow(x, y, w, buffs) {
+    const keys = BUFF_ORDER.filter(k => buffs[k]);
+    const gap = 6, slotW = (w - gap * (keys.length - 1)) / keys.length, slotH = 40;
+    keys.forEach((key, i) => {
+      const sx = x + i * (slotW + gap);
+      const g = this.add.graphics();
+      g.fillStyle(0xffffff, 1).fillRoundedRect(sx, y, slotW, slotH, 8);
+      g.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(sx, y, slotW, slotH, 8);
+      this.content.add(g);
+      this.content.add(this.add.text(sx + slotW / 2, y + 15, BUFF_ICONS[key], { fontSize: '16px' }).setOrigin(0.5));
+      this.content.add(this.add.text(sx + slotW - 4, y + slotH - 3, `×${buffs[key]}`, {
+        fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#2b1e16'
+      }).setOrigin(1, 1));
     });
-    const rows = Math.ceil(COIN_PACKS.length / 2);
-    return y + rows * ch + (rows - 1) * gap;
+    return slotH;
   }
 
-  drawCoinCard(x, y, w, h, pack) {
+  grantPack(pack) {
+    this.save.coins += pack.coins;
+    BUFF_ORDER.forEach(key => {
+      if (pack.buffs && pack.buffs[key]) this.save.buffs[key] = (this.save.buffs[key] || 0) + pack.buffs[key];
+    });
+    if (pack.includeAdsRemoval) this.save.adsRemoved = true;
+    saveState(this.save);
+    this.coinChip.setValue(this.save.coins);
+  }
+
+  packPerkText(pack) {
+    const buffBits = BUFF_ORDER.filter(k => pack.buffs && pack.buffs[k]).map(k => `${BUFF_ICONS[k]}×${pack.buffs[k]}`);
+    const bits = [`${fmt(pack.coins)} Coins`, ...buffBits];
+    if (pack.includeAdsRemoval && !this.save.adsRemoved) bits.push('Remove Ads');
+    return bits.join('  ·  ');
+  }
+
+  // ---------------- Featured packs (big, ribboned) ----------------
+
+  drawFeaturedPacks(width, y) {
+    const x = 14, w = width - 28, gap = 14;
+    let cy = y;
+    FEATURED_PACKS.forEach(pack => { cy = this.drawFeaturedPack(x, cy, w, pack) + gap; });
+    return cy - gap;
+  }
+
+  drawFeaturedPack(x, y, w, pack) {
+    const h = 150;
     const g = this.add.graphics();
-    g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(x, y, w, h, 14);
-    g.lineStyle(2.5, COLORS.gold, 0.8).strokeRoundedRect(x, y, w, h, 14);
+    g.fillStyle(pack.accent, 1).fillRoundedRect(x, y, w, h, 18);
+    g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, 18);
     this.content.add(g);
 
-    if (pack.tag) {
-      const tagW = pack.tag.length * 5.4 + 14;
-      const tg = this.add.graphics();
-      tg.fillStyle(0xf43f5e, 1).fillRoundedRect(x + w / 2 - tagW / 2, y - 8, tagW, 16, 8);
-      this.content.add(tg);
-      this.content.add(this.add.text(x + w / 2, y, pack.tag, {
+    // Ribbon tag, tilted like a hand-stuck price sticker.
+    const ribbon = this.add.container(x + 26, y + 4);
+    const rw = pack.tag.length * 5.8 + 18;
+    const rg = this.add.graphics();
+    rg.fillStyle(0xf43f5e, 1).fillRoundedRect(-rw / 2, -9, rw, 18, 5);
+    rg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(-rw / 2, -9, rw, 18, 5);
+    const rt = this.add.text(0, 0, pack.tag, { fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
+    ribbon.add([rg, rt]);
+    ribbon.setRotation(-0.12);
+    this.content.add(ribbon);
+
+    if (pack.includeAdsRemoval && !this.save.adsRemoved) {
+      const badgeW = 58;
+      const bg2 = this.add.graphics();
+      bg2.fillStyle(0x22c55e, 1).fillRoundedRect(x + w - 12 - badgeW, y + 10, badgeW, 16, 8);
+      bg2.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(x + w - 12 - badgeW, y + 10, badgeW, 16, 8);
+      this.content.add(bg2);
+      this.content.add(this.add.text(x + w - 12 - badgeW / 2, y + 18, 'NO ADS', {
         fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     }
 
-    this.content.add(this.add.text(x + w / 2, y + 30, '🟡', { fontSize: '26px' }).setOrigin(0.5));
-    this.content.add(this.add.text(x + w / 2, y + 58, pack.coins.toLocaleString('en-US'), {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#f4e8cf'
-    }).setOrigin(0.5));
+    // Inner parchment box: coin badge + buff row.
+    const boxX = x + 12, boxY = y + 26, boxW = w - 24;
+    const boxG = this.add.graphics();
+    boxG.fillStyle(COLORS.parchment, 1).fillRoundedRect(boxX, boxY, boxW, 66, 12);
+    boxG.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(boxX, boxY, boxW, 66, 12);
+    this.content.add(boxG);
 
-    const btnW = w - 20, btnH = 26;
-    this.drawPriceButton(x + 10, y + h - 14 - btnH, btnW, btnH, pack.price, COLORS.gold, () => {
+    const coinW = 64;
+    this.content.add(this.add.text(boxX + coinW / 2, boxY + 20, '🟡', { fontSize: '18px' }).setOrigin(0.5));
+    this.content.add(this.add.text(boxX + coinW / 2, boxY + 42, fmt(pack.coins), {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+    }).setOrigin(0.5));
+    this.drawBuffRow(boxX + coinW + 8, boxY + 13, boxW - coinW - 16, pack.buffs);
+
+    this.content.add(this.add.text(x + 16, y + h - 16, pack.title, {
+      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#ffffff'
+    }).setOrigin(0, 0.5));
+
+    const btnW = 92, btnH = 32;
+    this.drawPriceButton(x + w - 14 - btnW, y + h - 16 - btnH / 2, btnW, btnH, pack.price, COLORS.gold, () => {
       this.showPurchaseModal({
-        icon: '🟡', title: `${pack.coins.toLocaleString('en-US')} Coins`, subtitle: 'Coins are added to your balance instantly.', price: pack.price,
-        onConfirm: () => {
-          this.save.coins += pack.coins;
-          saveState(this.save);
-          this.coinChip.setValue(this.save.coins);
-        }
+        icon: '🟡', title: pack.title, subtitle: this.packPerkText(pack), price: pack.price,
+        onConfirm: () => { this.grantPack(pack); this.rebuildContent(this.scale.width); }
       });
     });
+
+    return y + h;
   }
 
-  drawBundles(width, y) {
-    const x = 14, w = width - 28, h = 108, gap = 12;
-    BUNDLES.forEach((bundle, i) => {
-      const by = y + i * (h + gap);
-      this.drawBundleCard(x, by, w, h, bundle);
-    });
-    return y + BUNDLES.length * h + (BUNDLES.length - 1) * gap;
+  // ---------------- Item bundles (smaller, plainer cards) ----------------
+
+  drawItemBundles(width, y) {
+    const x = 14, w = width - 28, gap = 12;
+    let cy = y;
+    ITEM_BUNDLES.forEach(bundle => { cy = this.drawBundleCard(x, cy, w, bundle) + gap; });
+    return cy - gap;
   }
 
-  drawBundleCard(x, y, w, h, bundle) {
+  drawBundleCard(x, y, w, bundle) {
+    const h = 100;
     const g = this.add.graphics();
     g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(x, y, w, h, 14);
     g.lineStyle(2.5, COLORS.gold, 0.8).strokeRoundedRect(x, y, w, h, 14);
@@ -241,31 +333,74 @@ export default class ShopScene extends Phaser.Scene {
       }).setOrigin(0.5));
     }
 
-    this.content.add(this.add.text(x + 20, y + 34, '🟡', { fontSize: '28px' }).setOrigin(0.5));
-    this.content.add(this.add.text(x + 46, y + 24, bundle.title, {
+    this.content.add(this.add.text(x + 14, y + 16, bundle.title, {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#f4e8cf'
     }).setOrigin(0, 0.5));
-    const owned = !!this.save.adsRemoved;
-    const perkText = bundle.includeAdsRemoval && !owned
-      ? `${bundle.coins.toLocaleString('en-US')} Coins + Remove Ads`
-      : `${bundle.coins.toLocaleString('en-US')} Coins`;
-    this.content.add(this.add.text(x + 46, y + 44, perkText, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f', wordWrap: { width: w - 140 }
+    this.content.add(this.add.text(x + 14, y + 32, `${fmt(bundle.coins)} Coins`, {
+      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f'
     }).setOrigin(0, 0.5));
+    this.drawBuffRow(x + 14, y + 44, w - 28 - 100, bundle.buffs);
 
-    const btnW = 92, btnH = 30;
-    this.drawPriceButton(x + w - 14 - btnW, y + h - 16 - btnH, btnW, btnH, bundle.price, COLORS.gold, () => {
+    const btnW = 84, btnH = 30;
+    this.drawPriceButton(x + w - 14 - btnW, y + h / 2 - btnH / 2, btnW, btnH, bundle.price, COLORS.gold, () => {
       this.showPurchaseModal({
-        icon: '🟡', title: bundle.title, subtitle: perkText, price: bundle.price,
+        icon: '🟡', title: bundle.title, subtitle: this.packPerkText(bundle), price: bundle.price,
+        onConfirm: () => { this.grantPack(bundle); this.rebuildContent(this.scale.width); }
+      });
+    });
+
+    return y + h;
+  }
+
+  // ---------------- Gold Shop (plain coin ladder) ----------------
+
+  drawCoinGrid(width, y) {
+    const gap = 10, x = 14, gridW = width - 28;
+    const cols = 3;
+    const cw = (gridW - gap * (cols - 1)) / cols, ch = 106;
+    COIN_PACKS.forEach((pack, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const cx = x + col * (cw + gap), cy = y + row * (ch + gap);
+      this.drawCoinCard(cx, cy, cw, ch, pack);
+    });
+    const rows = Math.ceil(COIN_PACKS.length / cols);
+    return y + rows * ch + (rows - 1) * gap;
+  }
+
+  drawCoinCard(x, y, w, h, pack) {
+    const g = this.add.graphics();
+    g.fillStyle(COLORS.cardBg, 1).fillRoundedRect(x, y, w, h, 14);
+    g.lineStyle(2.5, COLORS.gold, 0.8).strokeRoundedRect(x, y, w, h, 14);
+    this.content.add(g);
+
+    if (pack.tag) {
+      const tagW = Math.min(w - 6, pack.tag.length * 4.6 + 12);
+      const tg = this.add.graphics();
+      tg.fillStyle(0xf43f5e, 1).fillRoundedRect(x + w / 2 - tagW / 2, y - 7, tagW, 14, 7);
+      this.content.add(tg);
+      this.content.add(this.add.text(x + w / 2, y, pack.tag, {
+        fontFamily: 'Cinzel', fontSize: '6px', fontStyle: '900', color: '#ffffff'
+      }).setOrigin(0.5));
+    }
+
+    this.content.add(this.add.text(x + w / 2, y + 26, '🟡', { fontSize: '22px' }).setOrigin(0.5));
+    this.content.add(this.add.text(x + w / 2, y + 50, fmt(pack.coins), {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#f4e8cf'
+    }).setOrigin(0.5));
+
+    const btnW = w - 16, btnH = 26;
+    this.drawPriceButton(x + 8, y + h - 12 - btnH, btnW, btnH, pack.price, COLORS.gold, () => {
+      this.showPurchaseModal({
+        icon: '🟡', title: `${fmt(pack.coins)} Coins`, subtitle: 'Coins are added to your balance instantly.', price: pack.price,
         onConfirm: () => {
-          this.save.coins += bundle.coins;
-          if (bundle.includeAdsRemoval) this.save.adsRemoved = true;
+          this.save.coins += pack.coins;
           saveState(this.save);
           this.coinChip.setValue(this.save.coins);
-          this.refreshRemoveAdsBanner();
         }
       });
     });
+
+    return y + h;
   }
 
   // Draws a gold pill + registers a tap target in this.hitAreas (content-local
@@ -282,9 +417,8 @@ export default class ShopScene extends Phaser.Scene {
     this.hitAreas.push({ x, y, w, h: h + 3, onTap });
   }
 
-  setupScroll(width) {
+  setupScroll() {
     let pressY = 0, pressContainerY = 0, moved = false, isPressed = false, pressedHit = null;
-    const viewH = this.viewBottom - this.viewTop;
 
     this.input.on('pointerdown', (p) => {
       // The purchase modal draws its own buttons on top, but the price
@@ -301,6 +435,7 @@ export default class ShopScene extends Phaser.Scene {
     });
     this.input.on('pointermove', (p) => {
       if (!isPressed) return;
+      const viewH = this.viewBottom - this.viewTop;
       const dy = p.y - pressY;
       if (Math.abs(dy) > 8) moved = true;
       if (moved && this.contentHeight > viewH) {
@@ -325,20 +460,20 @@ export default class ShopScene extends Phaser.Scene {
     this.modalOpen = true;
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, 0x04070d, 0.85).setOrigin(0).setInteractive().setDepth(100);
-    const panelW = width - 70, panelH = 250, px = width / 2 - panelW / 2, py = height / 2 - panelH / 2;
+    const panelW = width - 70, panelH = 260, px = width / 2 - panelW / 2, py = height / 2 - panelH / 2;
     const panel = this.add.graphics().setDepth(101);
     panel.fillStyle(COLORS.cardBg, 1).fillRoundedRect(px, py, panelW, panelH, 18);
     panel.lineStyle(3, COLORS.gold, 1).strokeRoundedRect(px, py, panelW, panelH, 18);
 
-    const iconBg = this.add.circle(width / 2, py + 46, 30, 0xffffff).setStrokeStyle(3, COLORS.woodDark).setDepth(101);
-    const iconTxt = this.add.text(width / 2, py + 46, icon, { fontSize: '24px' }).setOrigin(0.5).setDepth(101);
-    const titleTxt = this.add.text(width / 2, py + 92, title, {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#f4e8cf', align: 'center', wordWrap: { width: panelW - 40 }
+    const iconBg = this.add.circle(width / 2, py + 44, 30, 0xffffff).setStrokeStyle(3, COLORS.woodDark).setDepth(101);
+    const iconTxt = this.add.text(width / 2, py + 44, icon, { fontSize: '24px' }).setOrigin(0.5).setDepth(101);
+    const titleTxt = this.add.text(width / 2, py + 88, title, {
+      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#f4e8cf', align: 'center', wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5).setDepth(101);
     const subTxt = this.add.text(width / 2, py + 116, subtitle, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#9fb8c9', align: 'center', wordWrap: { width: panelW - 40 }
+      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#9fb8c9', align: 'center', wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5).setDepth(101);
-    const priceTxt = this.add.text(width / 2, py + 144, price, {
+    const priceTxt = this.add.text(width / 2, py + 154, price, {
       fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f'
     }).setOrigin(0.5).setDepth(101);
 

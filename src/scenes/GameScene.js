@@ -153,11 +153,11 @@ export default class GameScene extends Phaser.Scene {
     const name = this.add.text(0, 8, item.name, {
       fontFamily: 'Cinzel', fontSize: '8px', fontStyle: 'bold', color: '#f4e8cf'
     }).setOrigin(0.5);
-    const cost = this.add.text(0, 20, `${item.cost} Coins`, {
+    const costText = this.add.text(0, 20, '', {
       fontFamily: 'Cinzel', fontSize: '8px', color: '#f3c64f'
     }).setOrigin(0.5);
 
-    const container = this.add.container(x, y, [g, icon, name, cost]);
+    const container = this.add.container(x, y, [g, icon, name, costText]);
     container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
     container.input.cursor = 'pointer';
     container.on('pointerdown', () => {
@@ -165,7 +165,16 @@ export default class GameScene extends Phaser.Scene {
       this.useBuff(item.key, item.cost);
     });
     container.drawBg = drawBg;
-    container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, cost].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
+    container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, costText].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
+    // Shop-granted inventory is spent before Coins — show "Free ×N" while
+    // any is left so the player can see the pack they bought is actually
+    // being used, not just decorative.
+    container.updateCost = () => {
+      const count = this.save.buffs[item.key] || 0;
+      costText.setText(count > 0 ? `Free ×${count}` : `${item.cost} Coins`);
+      costText.setColor(count > 0 ? '#7fe9de' : '#f3c64f');
+    };
+    container.updateCost();
     return container;
   }
 
@@ -174,6 +183,7 @@ export default class GameScene extends Phaser.Scene {
     Object.entries(this.buffChips).forEach(([key, chip]) => {
       const usable = key !== 'freeze' || !this.buffState.freezeUsed;
       chip.setEnabledLook(usable);
+      chip.updateCost();
     });
   }
 
@@ -185,11 +195,6 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     if (key === 'hint') { this.useHint(cost); return; }
-    if (this.save.coins < cost) {
-      this.showToast('🟡 Not enough Coins for this Buff!');
-      playSound('error', this.save.soundMuted);
-      return;
-    }
     if (key === 'freeze') this.useFreeze(cost);
     else if (key === 'skip') this.useSkip(cost);
   }
@@ -199,6 +204,25 @@ export default class GameScene extends Phaser.Scene {
     saveState(this.save);
     this.coinChip.setValueText(`🟡 ${this.save.coins}`);
     this.refreshBuffChips();
+  }
+
+  // Spends 1 unit of a Shop-granted buff if the player has any in inventory
+  // (free) — otherwise falls back to paying `cost` Coins as before. Returns
+  // false (after toasting) if neither is available.
+  spendBuff(key, cost, insufficientMessage) {
+    if ((this.save.buffs[key] || 0) > 0) {
+      this.save.buffs[key] -= 1;
+      saveState(this.save);
+      this.refreshBuffChips();
+      return true;
+    }
+    if (this.save.coins < cost) {
+      this.showToast(insufficientMessage);
+      playSound('error', this.save.soundMuted);
+      return false;
+    }
+    this.spendCoins(cost);
+    return true;
   }
 
   useHint(cost) {
@@ -212,12 +236,7 @@ export default class GameScene extends Phaser.Scene {
       this.showToast('No hint available for this step.');
       return;
     }
-    if (this.save.coins < cost) {
-      this.showToast('🟡 Not enough Coins for a Hint!');
-      playSound('error', this.save.soundMuted);
-      return;
-    }
-    this.spendCoins(cost);
+    if (!this.spendBuff('hint', cost, '🟡 Not enough Coins for a Hint!')) return;
     const [r, c] = sol[chain.path.length];
     this.showHintAt(r, c, chain.id);
   }
@@ -236,7 +255,7 @@ export default class GameScene extends Phaser.Scene {
       this.showToast('This level has no Walls to freeze.');
       return;
     }
-    this.spendCoins(cost);
+    if (!this.spendBuff('freeze', cost, '🟡 Not enough Coins for this Buff!')) return;
     this.buffState.freezeUsed = true;
     this.engine.freezeWalls = true;
     this.drawStaticBoard();
@@ -246,7 +265,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   useSkip(cost) {
-    this.spendCoins(cost);
+    if (!this.spendBuff('skip', cost, '🟡 Not enough Coins for this Buff!')) return;
     this.completeLevel(true);
   }
 
