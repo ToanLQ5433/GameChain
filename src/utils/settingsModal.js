@@ -10,7 +10,7 @@
 import { saveState } from './storage.js';
 import { setHapticsEnabled } from './haptics.js';
 import { startMusic, stopMusic, playSound } from './audio.js';
-import { COLORS, makeButton, drawPanel } from './theme.js';
+import { COLORS, makeButton, makeIconButton, drawPanel } from './theme.js';
 
 const APP_VERSION = '0.1.0';
 
