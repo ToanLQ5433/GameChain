@@ -253,6 +253,13 @@ export class ChainEngine {
     }
 
     chain.locked = true;
+    // updateLatches() otherwise only runs at the top of step() — meaning a
+    // chain's LAST cell (placed by the step() call right before this one)
+    // never got a chance to register as a live Latch Switch, since no
+    // further step() happens after it before the chain locks here. Without
+    // this, a Latch Switch sitting exactly on a chain's final cell would
+    // silently fail to latch.
+    this.updateLatches();
     return { locked: true, win: this.isWon() };
   }
 }

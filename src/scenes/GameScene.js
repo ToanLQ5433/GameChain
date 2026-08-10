@@ -37,7 +37,10 @@ const TILE = {
   cellBorder: 0xd9c49a,
   rock: 0x8a7259,
   rockBorder: 0x4a2c11,
-  pushRock: 0xc9a876,
+  crateWood: 0xb9814a,
+  crateWoodDark: 0x6b4423,
+  crateSteel: 0xb0b8bf,
+  crateSteelDark: 0x5b6670,
   bombBg: 0xffe0dc,
   bombBorder: 0xee4343,
   gateClosedBg: 0xffe0dc,
@@ -916,13 +919,37 @@ export default class GameScene extends Phaser.Scene {
       this.boardDynamicContainer.add([g, gicon]);
     });
 
+    // Reinforced wooden crate (was a plain push rock) — wood body, plank
+    // seams, 2 riveted steel bands, and a bottom skid rail so it visually
+    // reads as something that SLIDES when shoved, not a rock that's dragged.
     e.pushRocks.forEach(pr => {
       const { x, y } = this.cellToPixel(pr.r, pr.c);
+      const pad = 3;
+      const bx = x + pad, by = y + pad, bw = cs - pad * 2, bh = cs - pad * 2;
       const g = this.add.graphics();
-      g.fillStyle(TILE.pushRock, 1).fillRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
-      g.lineStyle(2, 0x5c4a3e, 1).strokeRoundedRect(x + 3, y + 3, cs - 6, cs - 6, radius);
-      const icon = this.add.text(x + cs / 2, y + cs / 2, '🪨', { fontSize: Math.round(cs * 0.42) + 'px' }).setOrigin(0.5);
-      this.boardDynamicContainer.add([g, icon]);
+
+      g.fillStyle(TILE.crateWood, 1).fillRoundedRect(bx, by, bw, bh, radius);
+      g.lineStyle(2, TILE.crateWoodDark, 1).strokeRoundedRect(bx, by, bw, bh, radius);
+
+      g.lineStyle(1, TILE.crateWoodDark, 0.5);
+      g.lineBetween(bx + bw * 0.33, by, bx + bw * 0.33, by + bh);
+      g.lineBetween(bx + bw * 0.66, by, bx + bw * 0.66, by + bh);
+
+      const bandH = Math.max(3, bh * 0.15);
+      [0.2, 0.62].forEach(f => {
+        const byBand = by + bh * f;
+        g.fillStyle(TILE.crateSteel, 1).fillRect(bx, byBand, bw, bandH);
+        g.lineStyle(1, TILE.crateSteelDark, 1).strokeRect(bx, byBand, bw, bandH);
+        [0.15, 0.5, 0.85].forEach(rf => {
+          g.fillStyle(TILE.crateSteelDark, 1).fillCircle(bx + bw * rf, byBand + bandH / 2, Math.max(1, bandH * 0.22));
+        });
+      });
+
+      // Bottom skid rail — the "rollers" that sell the sliding motion.
+      const skidH = Math.max(3, bh * 0.08);
+      g.fillStyle(TILE.crateWoodDark, 1).fillRoundedRect(bx + bw * 0.12, by + bh - skidH, bw * 0.76, skidH, 2);
+
+      this.boardDynamicContainer.add(g);
     });
 
     e.bombs.forEach(b => {
@@ -1054,6 +1081,9 @@ export default class GameScene extends Phaser.Scene {
         this.chainLengths[chain.id] = chain.path.length;
         playSound('step', this.save.soundMuted);
         haptics.step();
+        // Backing off a Switch cell can flip its Gate (unless latched) —
+        // redrawDynamic() must run here too, not just on a forward step.
+        this.redrawDynamic();
         this.redrawChains();
         return;
       }
@@ -1064,8 +1094,15 @@ export default class GameScene extends Phaser.Scene {
 
     if (res.result === 'OK') {
       const newlyDestroyed = this.engine.bombs.filter(b => b.destroyed && aliveBefore.includes(`${b.r},${b.c}`));
-      newlyDestroyed.forEach(b => this.triggerExplosion(b.r, b.c, false));
-      if (newlyDestroyed.length) this.redrawDynamic();
+      newlyDestroyed.forEach(b => { this.triggerExplosion(b.r, b.c, false); this.spawnCrateBreak(b.r, b.c); });
+      // ALWAYS redraw the dynamic layer on a successful step, not only when
+      // a bomb just got destroyed — a Push Rock sliding into an empty cell,
+      // or a Switch's Gate flipping open/closed, are both engine-state
+      // changes on every ordinary OK step too. Gating this behind
+      // `newlyDestroyed.length` meant pushing a crate anywhere except onto
+      // a bomb silently did nothing on screen even though the engine had
+      // already moved it — the exact "can't push" bug this was fixing.
+      this.redrawDynamic();
       playSound('step', this.save.soundMuted);
       haptics.step();
       this.redrawChains();
@@ -1074,7 +1111,7 @@ export default class GameScene extends Phaser.Scene {
       this.triggerExplosion(pos.r, pos.c, true);
       this.redrawChains();
       this.time.delayedCall(480, () => {
-        this.showRescueOffer('💥 You touched an armed Bomb! Next time, push a Push Rock into the Bomb before running a chain through it.');
+        this.showRescueOffer('💥 You touched an armed Bomb! Next time, push a Crate into the Bomb before running a chain through it.');
       });
     } else {
       // Không rung camera ở đây: BLOCKED xảy ra liên tục khi ngón tay lướt qua
@@ -1168,6 +1205,35 @@ export default class GameScene extends Phaser.Scene {
       targets: emoji, scale: big ? 1.3 : 1, alpha: 0, duration: big ? 420 : 320, ease: 'Cubic.Out',
       onComplete: () => emoji.destroy()
     });
+  }
+
+  // A crate shoved into a Bomb is consumed along with it — this layers
+  // wood-colored splinter chips on top of triggerExplosion()'s generic
+  // spark/ring burst at the same cell, so it reads as "the crate shattered"
+  // rather than just another bomb going off. No sound here — the paired
+  // triggerExplosion() call already covers that.
+  spawnCrateBreak(r, c) {
+    const { x: cx, y: cy } = this.cellCenter(r, c);
+    const cs = this.cellSize;
+    for (let i = 0; i < 10; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = cs * (0.5 + Math.random() * 0.7);
+      const w = 3 + Math.random() * 4, h = 6 + Math.random() * 6;
+      const chip = this.add.rectangle(cx, cy, w, h, TILE.crateWood, 1)
+        .setStrokeStyle(1, TILE.crateWoodDark, 0.8)
+        .setAngle(Math.random() * 360);
+      this.fxContainer.add(chip);
+      this.tweens.add({
+        targets: chip,
+        x: cx + Math.cos(angle) * dist,
+        y: cy + Math.sin(angle) * dist,
+        angle: chip.angle + (Math.random() > 0.5 ? 180 : -180),
+        alpha: 0,
+        duration: 420 + Math.random() * 260,
+        ease: 'Cubic.Out',
+        onComplete: () => chip.destroy()
+      });
+    }
   }
 
   // ---------------- Thắng / Thua ----------------
