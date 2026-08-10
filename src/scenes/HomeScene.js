@@ -109,11 +109,16 @@ export default class HomeScene extends Phaser.Scene {
       value: this.save.coins, onBuy: () => this.watchAdForCoins()
     });
 
+    // Lives cluster matches the reference exactly: the count sits as a
+    // small red badge ON the heart icon itself, and the pill next to it
+    // shows the regen countdown ("19:19") instead of repeating the count.
+    const remaining = msUntilNextLife(this.save);
     this.livesCluster = this.buildStatCluster(this.coinChip.rightEdge + 18, 8, {
-      icon: '❤️', iconBg: 0xff8a8a, iconBorder: 0xc23b3b, valueColor: '#b91c1c',
-      value: this.save.lives.count, onBuy: () => this.addLifeViaAd()
+      icon: '❤️', iconBg: 0xff8a8a, iconBorder: 0xc23b3b, valueColor: '#0369a1',
+      value: remaining > 0 ? formatMs(remaining) : 'FULL', measureText: '20:00',
+      badge: this.save.lives.count, badgeColor: 0xef4444,
+      onBuy: () => this.addLifeViaAd()
     });
-    this.refreshLivesDisplay();
     this.time.addEvent({ delay: 1000, loop: true, callback: () => this.refreshLivesDisplay() });
 
     // Settings — the shared chunky 3D icon button (blue, matches the
@@ -126,11 +131,16 @@ export default class HomeScene extends Phaser.Scene {
     });
   }
 
-  // Icon-in-circle + cream pill (blue border, bold brown value) + optional
-  // green "+" quick-action button — shared shape for the Coins and Lives
-  // HUD clusters. Returns rightEdge so callers can chain the next cluster's
-  // x position off it, and setValue/setBelow to keep it live.
-  buildStatCluster(x, y, { icon, iconBg, iconBorder, value, valueColor, onBuy }) {
+  // Icon-in-circle + cream pill (blue border, bold value) + optional green
+  // "+" quick-action button — shared shape for the Coins and Lives HUD
+  // clusters, matching the reference 1:1: an optional small red `badge`
+  // (the Lives count) rides ON the icon itself, drawn AFTER the pill so it
+  // sits visibly in front of the icon/pill seam instead of buried under it;
+  // the pill's own text is a separate `value` (Coins count, or the Lives
+  // regen countdown) — the two are independent, not the same number twice.
+  // Returns rightEdge so callers can chain the next cluster's x position off
+  // it, plus setValue/setBadge to keep both numbers live.
+  buildStatCluster(x, y, { icon, iconBg, iconBorder, value, measureText, valueColor, onBuy, badge, badgeColor }) {
     const iconR = 18;
     const cx = x + iconR, cy = y + iconR;
     this.add.circle(cx, cy, iconR, iconBg).setStrokeStyle(4, iconBorder);
@@ -138,10 +148,10 @@ export default class HomeScene extends Phaser.Scene {
 
     const pillH = 32, pillOverlap = 12, textPad = 10;
     const pillX = cx + iconR - pillOverlap;
-    // Measure the label's width with a throwaway text object first, so the
-    // real value text can be created AFTER the pill graphics (and so drawn
-    // on top of it in the display list) instead of getting buried under it.
-    const measureTxt = this.add.text(0, 0, String(value), {
+    // Measure width with a throwaway text object first (using measureText
+    // when the live value's length will fluctuate, e.g. a "M:SS" countdown),
+    // so the pill is sized once up front and never needs to be redrawn.
+    const measureTxt = this.add.text(0, 0, measureText !== undefined ? measureText : String(value), {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900'
     });
     const textWidth = measureTxt.width;
@@ -155,6 +165,16 @@ export default class HomeScene extends Phaser.Scene {
     const valueTxt = this.add.text(pillX + pillOverlap + textPad, cy, String(value), {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor || '#996150'
     }).setOrigin(0, 0.5);
+
+    let badgeTxt = null;
+    if (badge !== undefined) {
+      const badgeR = 9;
+      const bx = cx + iconR - 3, by = cy + iconR * 0.55;
+      this.add.circle(bx, by, badgeR, badgeColor || 0xef4444).setStrokeStyle(2, 0xffffff);
+      badgeTxt = this.add.text(bx, by, String(badge), {
+        fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
+      }).setOrigin(0.5);
+    }
 
     let rightEdge = pillX + pillW;
     if (onBuy) {
@@ -173,22 +193,18 @@ export default class HomeScene extends Phaser.Scene {
       rightEdge = buyX + buyR;
     }
 
-    const belowTxt = this.add.text(pillX + pillW / 2, cy + pillH / 2 + 2, '', {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#0369a1'
-    }).setOrigin(0.5, 0);
-
     return {
       rightEdge,
       setValue: (v) => valueTxt.setText(String(v)),
-      setBelow: (v) => belowTxt.setText(v)
+      setBadge: (v) => { if (badgeTxt) badgeTxt.setText(String(v)); }
     };
   }
 
   refreshLivesDisplay() {
     resolveLives(this.save);
-    this.livesCluster.setValue(this.save.lives.count);
+    this.livesCluster.setBadge(this.save.lives.count);
     const remaining = msUntilNextLife(this.save);
-    this.livesCluster.setBelow(remaining > 0 ? `+1 in ${formatMs(remaining)}` : (this.save.lives.count >= LIVES_MAX ? 'FULL' : ''));
+    this.livesCluster.setValue(remaining > 0 ? formatMs(remaining) : 'FULL');
   }
 
   addLifeViaAd() {
