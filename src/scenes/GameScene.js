@@ -3,7 +3,8 @@ import { ChainEngine } from '../engine/ChainEngine.js';
 import { getCategory } from '../data/levels.js';
 import { playSound } from '../utils/audio.js';
 import { haptics, setHapticsEnabled } from '../utils/haptics.js';
-import { saveState, markLevelCompleted, registerNewLevelClear } from '../utils/storage.js';
+import { saveState, markLevelCompleted, registerNewLevelClear, hasSeenTutorial, markTutorialSeen } from '../utils/storage.js';
+import { TUTORIAL_CONTENT, getRelationshipHighlights, pickDemoChainId } from '../utils/tutorial.js';
 import { getNextLevel, findFlatIndex } from '../utils/progression.js';
 import { getDifficulty, getDifficultyTier, DIFFICULTY_STYLE } from '../utils/difficulty.js';
 import { resolveLives, loseLife } from '../utils/lives.js';
@@ -698,6 +699,9 @@ export default class GameScene extends Phaser.Scene {
     this.usedBuffThisAttempt = false;
     this.rescueUsedThisAttempt = 0;
     this.lastLockedChainId = null;
+    this.tutorialGate = null;
+    this.tutorialPointer = null;
+    this.tutorialTooltip = null;
     this.refreshBuffChips();
 
     // Level Timer System (GDD 3.8) — a layer on top of the 5 core mechanics,
@@ -725,9 +729,128 @@ export default class GameScene extends Phaser.Scene {
     this.redrawDynamic();
     this.redrawChains();
 
+    // One-time mechanic tutorial — only level 0 of a category, only the
+    // first time this category's mechanic is ever encountered. Slight
+    // delay so the board is fully drawn/settled before it appears.
+    const mechanic = this.category.mechanic;
+    if (this.levelIndex === 0 && mechanic && mechanic !== 'COMBO' && !hasSeenTutorial(this.save, mechanic)) {
+      this.time.delayedCall(300, () => this.showMechanicTutorial(mechanic));
+    }
+
     // Expose cho debug/QA thủ công qua console — vô hại trong bản demo.
     window.__engine = this.engine;
     window.__scene = this;
+  }
+
+  // ---------------- Mechanic Tutorial (learn-by-doing, forced action) ----
+  // Shown once per mechanic: a short tooltip (+ a Switch<->Gate or
+  // Prism<->ColorGate relationship glow when relevant), then every input
+  // is ignored except tracing the ONE chain whose own solution actually
+  // demonstrates the mechanic — see onPointerDown/onPointerMove's
+  // `this.tutorialGate` checks. Completing that chain's path ends the
+  // tutorial and hands back completely normal free play, forever.
+
+  showMechanicTutorial(mechanic) {
+    const content = TUTORIAL_CONTENT[mechanic];
+    if (!content) return;
+    const chainId = pickDemoChainId(mechanic, this.levelDef);
+    const sol = chainId && this.levelDef.solution && this.levelDef.solution[chainId];
+    if (!sol || sol.length < 2) return; // nothing to demonstrate — skip silently
+
+    this.tutorialGate = { active: true, chainId, steps: sol };
+
+    getRelationshipHighlights(mechanic, this.levelDef).forEach(pair => this.spawnRelationshipGlow(pair.from, pair.to));
+
+    const [tr, tc] = sol[1];
+    this.showTutorialTooltip(content, tr, tc);
+    this.updateTutorialPointer();
+  }
+
+  // A pulsing gold line + rings connecting two related cells (Switch<->its
+  // Gate, Prism<->its matching ColorGate) — fades after ~2s, purely to show
+  // the relationship exists before the player is asked to act on it.
+  spawnRelationshipGlow(from, to) {
+    const a = this.cellCenter(from.r, from.c), b = this.cellCenter(to.r, to.c);
+    const line = this.add.graphics();
+    line.lineStyle(4, COLORS.gold, 0.8);
+    line.lineBetween(a.x, a.y, b.x, b.y);
+    this.fxContainer.add(line);
+    [a, b].forEach(p => {
+      const ring = this.add.circle(p.x, p.y, this.cellSize * 0.4, COLORS.gold, 0.25).setStrokeStyle(3, COLORS.gold, 1);
+      this.fxContainer.add(ring);
+      this.tweens.add({
+        targets: ring, scale: { from: 0.8, to: 1.3 }, alpha: { from: 0.8, to: 0 },
+        duration: 700, repeat: 2, onComplete: () => ring.destroy()
+      });
+    });
+    this.tweens.add({ targets: line, alpha: 0, delay: 1600, duration: 400, onComplete: () => line.destroy() });
+  }
+
+  // Small speech-bubble anchored near the target cell, flipping below it
+  // if too close to the top of the screen.
+  showTutorialTooltip(content, r, c) {
+    if (this.tutorialTooltip) { this.tutorialTooltip.destroy(); this.tutorialTooltip = null; }
+    const { x: cx, y: cy } = this.cellCenter(r, c);
+    const { width } = this.scale;
+    const bubbleW = Math.min(width - 40, 230), h = 54;
+    const above = cy > this.headerBottom + 90;
+    const by = above ? cy - this.cellSize * 0.9 : cy + this.cellSize * 0.9;
+    const bx = Phaser.Math.Clamp(cx, bubbleW / 2 + 8, width - bubbleW / 2 - 8);
+
+    const box = this.add.container(bx, by);
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1f2937, 0.95).fillRoundedRect(-bubbleW / 2, -h / 2, bubbleW, h, 12);
+    bg.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(-bubbleW / 2, -h / 2, bubbleW, h, 12);
+    const titleTxt = this.add.text(0, -h / 2 + 14, content.title, {
+      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#f3c64f'
+    }).setOrigin(0.5);
+    const bodyTxt = this.add.text(0, h / 2 - 15, content.body, {
+      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#ffffff', align: 'center', wordWrap: { width: bubbleW - 24 }
+    }).setOrigin(0.5);
+    box.add([bg, titleTxt, bodyTxt]);
+    this.fxContainer.add(box);
+    this.tutorialTooltip = box;
+  }
+
+  // A bobbing hand sitting on whatever cell the gated chain needs to reach
+  // NEXT — re-called after every successful gated step (and on backtrack,
+  // since the "next" index is derived live from the chain's current path
+  // length, not a separately-tracked counter that could drift out of sync).
+  updateTutorialPointer() {
+    if (this.tutorialPointer) { this.tutorialPointer.destroy(); this.tutorialPointer = null; }
+    if (!this.tutorialGate || !this.tutorialGate.active) return;
+    const chain = this.engine.getChain(this.tutorialGate.chainId);
+    const nextIdx = chain.path.length;
+    const target = this.tutorialGate.steps[nextIdx];
+    if (!target) return;
+    const [r, c] = target;
+    const { x, y } = this.cellCenter(r, c);
+    const hand = this.add.text(x, y - this.cellSize * 0.1, '👆', { fontSize: Math.round(this.cellSize * 0.5) + 'px' }).setOrigin(0.5);
+    this.fxContainer.add(hand);
+    this.tweens.add({ targets: hand, y: y - this.cellSize * 0.3, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tutorialPointer = hand;
+  }
+
+  // Brief red pulse on a cell the player tried but that isn't the gated
+  // chain's next required step — throttled so a lingering drag over the
+  // wrong cell doesn't spam a flash every single pointermove frame.
+  flashTutorialReject(r, c) {
+    const now = this.time.now;
+    if (this._lastRejectFlash && now - this._lastRejectFlash < 300) return;
+    this._lastRejectFlash = now;
+    const { x, y } = this.cellCenter(r, c);
+    const ring = this.add.circle(x, y, this.cellSize * 0.3, COLORS.ruby, 0.35).setStrokeStyle(2, COLORS.ruby, 1);
+    this.fxContainer.add(ring);
+    this.tweens.add({ targets: ring, scale: 1.3, alpha: 0, duration: 260, onComplete: () => ring.destroy() });
+  }
+
+  completeTutorialGate() {
+    this.tutorialGate.active = false;
+    if (this.tutorialPointer) { this.tutorialPointer.destroy(); this.tutorialPointer = null; }
+    if (this.tutorialTooltip) { this.tutorialTooltip.destroy(); this.tutorialTooltip = null; }
+    markTutorialSeen(this.save, this.category.mechanic);
+    saveState(this.save);
+    this.showToast('✅ Got it — keep going!');
   }
 
   computeBoardMetrics() {
@@ -1063,6 +1186,13 @@ export default class GameScene extends Phaser.Scene {
     if (this.overlayContainer.visible) return;
     const pos = this.cellFromTouch(pointer);
     if (!this.engine.inBounds(pos.r, pos.c)) return;
+    // Mechanic tutorial in progress — every other chain is untouchable
+    // until the gated one is fully traced (see loadLevel()'s trigger).
+    if (this.tutorialGate && this.tutorialGate.active) {
+      const gated = this.engine.getChain(this.tutorialGate.chainId);
+      const onGatedChain = gated && (gated.row === pos.r && gated.col === pos.c || gated.path.some(p => p.r === pos.r && p.c === pos.c));
+      if (!onGatedChain) return;
+    }
     const chain = this.engine.startDrag(pos.r, pos.c);
     if (!chain) return;
     this.dragging = true;
@@ -1093,6 +1223,19 @@ export default class GameScene extends Phaser.Scene {
         // redrawDynamic() must run here too, not just on a forward step.
         this.redrawDynamic();
         this.redrawChains();
+        if (this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.tutorialGate.chainId) {
+          this.updateTutorialPointer();
+        }
+        return;
+      }
+    }
+
+    const tutorialActive = this.tutorialGate && this.tutorialGate.active && this.engine.activeId === this.tutorialGate.chainId;
+    if (tutorialActive) {
+      const nextIdx = chain.path.length;
+      const target = this.tutorialGate.steps[nextIdx];
+      if (!target || pos.r !== target[0] || pos.c !== target[1]) {
+        this.flashTutorialReject(pos.r, pos.c);
         return;
       }
     }
@@ -1114,6 +1257,10 @@ export default class GameScene extends Phaser.Scene {
       playSound('step', this.save.soundMuted);
       haptics.step();
       this.redrawChains();
+      if (tutorialActive) {
+        if (chain.path.length >= this.tutorialGate.steps.length) this.completeTutorialGate();
+        else this.updateTutorialPointer();
+      }
     } else if (res.result === 'LOSE') {
       this.dragging = false;
       this.triggerExplosion(pos.r, pos.c, true);

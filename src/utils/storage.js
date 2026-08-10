@@ -36,7 +36,11 @@ const defaultState = {
   // (a synthesized ambient loop, see utils/audio.js) and Haptic toggles so
   // the full Settings menu isn't partly decorative.
   musicMuted: true,
-  hapticsEnabled: true
+  hapticsEnabled: true,
+  // Which one-time mechanic tutorials (keyed by levels.js's category
+  // `mechanic` field — CORE/MEC-01../MEC-05) the player has already
+  // completed — see utils/tutorial.js. Never re-shown once true.
+  seenTutorials: {}
 };
 
 export function loadSave() {
@@ -109,4 +113,13 @@ export function claimDailyCheckIn(state) {
   state.dailyCheckIn.claimed = true;
   state.coins += DAILY_CHECKIN_COINS;
   return true;
+}
+
+export function hasSeenTutorial(state, mechanic) {
+  return !!(state.seenTutorials && state.seenTutorials[mechanic]);
+}
+
+export function markTutorialSeen(state, mechanic) {
+  if (!state.seenTutorials) state.seenTutorials = {};
+  state.seenTutorials[mechanic] = true;
 }
