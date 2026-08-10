@@ -404,29 +404,34 @@ export default class HomeScene extends Phaser.Scene {
       });
     });
 
-    // "Remove Ads" IAP button — the diagonal slash over the icon is what
-    // marks it as "no ads", not just the red colour, so it reads correctly
-    // even to players who don't know this app has ads to begin with.
+    // "Remove Ads" shortcut — the diagonal slash over the icon is what marks
+    // it as "no ads", not just the red colour. Tapping it opens the real
+    // Shop scene (Remove Ads section); once purchased it turns into an
+    // "owned" badge instead of a shortcut.
+    const owned = !!this.save.adsRemoved;
     const adsSize = 42;
     const adsX = width - 30;
     const adsY = startY;
     const adsBg = this.add.graphics();
-    adsBg.fillStyle(0xf43f5e, 1).fillRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
+    adsBg.fillStyle(owned ? COLORS.teal : 0xf43f5e, 1).fillRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
     adsBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(adsX - adsSize / 2, adsY - adsSize / 2, adsSize, adsSize, 12);
-    this.add.text(adsX, adsY - 6, '📺', { fontSize: '15px' }).setOrigin(0.5);
+    this.add.text(adsX, adsY - 6, owned ? '✓' : '📺', { fontSize: owned ? '18px' : '15px', color: '#ffffff' }).setOrigin(0.5);
     this.add.text(adsX, adsY + 11, 'ADS', {
       fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
-    const slashInset = adsSize / 2 - 5;
-    const slash = this.add.graphics();
-    slash.lineStyle(4.5, 0x2b1e16, 0.9);
-    slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
-    slash.lineStyle(2.5, 0xffffff, 1);
-    slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
+    if (!owned) {
+      const slashInset = adsSize / 2 - 5;
+      const slash = this.add.graphics();
+      slash.lineStyle(4.5, 0x2b1e16, 0.9);
+      slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
+      slash.lineStyle(2.5, 0xffffff, 1);
+      slash.lineBetween(adsX - slashInset, adsY - slashInset, adsX + slashInset, adsY + slashInset);
+    }
     const adsHit = this.add.rectangle(adsX, adsY, adsSize + 6, adsSize + 6, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
     adsHit.on('pointerdown', () => {
       playSound('switch', this.save.soundMuted);
-      this.showToast('🚫 Remove Ads is not available in this demo.');
+      if (owned) { this.showToast('✓ Ads already removed — thanks for your support!'); return; }
+      this.scene.start('Shop');
     });
   }
 
@@ -483,7 +488,7 @@ export default class HomeScene extends Phaser.Scene {
 
   onNavTap(key) {
     if (key === 'journey') return;
-    if (key === 'shop') { this.showToast('🏪 The Shop is coming soon!'); return; }
+    if (key === 'shop') { playSound('switch', this.save.soundMuted); this.scene.start('Shop'); return; }
     if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 

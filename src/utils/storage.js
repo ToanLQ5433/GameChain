@@ -16,7 +16,9 @@ const defaultState = {
   // Category đang xem trên bản đồ Hải Trình ở Home (độc lập với lastCategoryId
   // — cho phép lướt xem category khác mà không đổi điểm resume thật).
   viewedCategoryId: null,
-  dailyQuest: { date: '', newClearsToday: 0, target: DAILY_QUEST_TARGET, claimed: false }
+  dailyQuest: { date: '', newClearsToday: 0, target: DAILY_QUEST_TARGET, claimed: false },
+  // Set by the (mocked, no real payment) "Remove Ads" purchase in the Shop.
+  adsRemoved: false
 };
 
 export function loadSave() {

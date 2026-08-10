@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import BootScene from './scenes/BootScene.js';
 import HomeScene from './scenes/HomeScene.js';
+import ShopScene from './scenes/ShopScene.js';
 import GameScene from './scenes/GameScene.js';
 
 // Thiết kế chuẩn tỉ lệ 9:16 (mobile portrait). Phaser.Scale.FIT sẽ tự co giãn
@@ -19,7 +20,7 @@ const config = {
   input: {
     activePointers: 1
   },
-  scene: [BootScene, HomeScene, GameScene]
+  scene: [BootScene, HomeScene, ShopScene, GameScene]
 };
 
 window.game = new Phaser.Game(config);
