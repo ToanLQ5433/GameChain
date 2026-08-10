@@ -118,39 +118,61 @@ export default class GameScene extends Phaser.Scene {
   // Settings modal (see openSettings()), both behind a Life-cost confirm.
 
   buildTopBar(width) {
-    const topY = 10, rowH = 42;
+    const topY = 10, rowH = 52;
+    const cy = topY + rowH / 2;  // vertical center of the bar
 
-    // Home back button (left)
-    makeIconButton(this, 26, topY + rowH / 2, '🏠', {
-      size: 42, variant: 'wood', iconSize: '18px',
-      onClick: () => this.confirmQuit()
-    });
+    // ── LEFT: gold coin pill (icon + number) ────────────────────────────────
+    // Pill shape: white bg, gold circle icon on left, number bold on right
+    const pillH = 38, pillW = 110;
+    const pillX = 10;
+    const pillBg = this.add.graphics();
+    pillBg.fillStyle(0xffffff, 1).fillRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+    pillBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+    this.add.circle(pillX + pillH / 2, cy, pillH / 2 - 3, COLORS.gold).setStrokeStyle(2, COLORS.woodDark);
+    this.add.text(pillX + pillH / 2, cy, '🪙', { fontSize: '16px' }).setOrigin(0.5);
+    const coinValTxt = this.add.text(pillX + pillH + 6, cy, String(this.save.coins), {
+      fontFamily: 'Cinzel', fontSize: '16px', fontStyle: '900', color: '#2b1e16'
+    }).setOrigin(0, 0.5);
+    this.coinChip = { setValue: (v) => coinValTxt.setText(String(v)) };
 
-    // Settings gear (right)
-    makeIconButton(this, width - 26, topY + rowH / 2, '⚙️', {
-      size: 42, variant: 'teal', iconSize: '18px',
-      onClick: () => this.openSettings()
-    });
-
-    // Coin chip next to back button
-    this.coinChip = makeStatChip(this, 134, topY + 4, '🟡', this.save.coins, COLORS.gold);
-
-    // Level Badge (Center)
-    const badgeR = 24, badgeCX = width / 2, badgeCY = topY + rowH / 2;
-    this.add.circle(badgeCX, badgeCY, badgeR, COLORS.gold).setStrokeStyle(3, COLORS.woodDark);
-    this.levelNumberText = this.add.text(badgeCX, badgeCY, '', {
-      fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#2b1e16'
+    // ── CENTER: "Level X" banner pill ───────────────────────────────────────
+    const bannerW = 120, bannerH = 38, bannerX = width / 2 - bannerW / 2;
+    const bannerBg = this.add.graphics();
+    bannerBg.fillStyle(0x5c3a21, 1).fillRoundedRect(bannerX, cy - bannerH / 2, bannerW, bannerH, bannerH / 2);
+    bannerBg.lineStyle(3, COLORS.gold, 1).strokeRoundedRect(bannerX, cy - bannerH / 2, bannerW, bannerH, bannerH / 2);
+    this.add.text(width / 2, cy - 6, 'LEVEL', {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#f3c64f', letterSpacing: 2
     }).setOrigin(0.5);
-    this.levelBadgeBottom = badgeCY + badgeR;
+    this.levelNumberText = this.add.text(width / 2, cy + 8, '', {
+      fontFamily: 'Cinzel', fontSize: '16px', fontStyle: '900', color: '#ffffff'
+    }).setOrigin(0.5);
+    this.levelBadgeBottom = cy + bannerH / 2;
 
-    // Level Timer pill (GDD 3.8) — under the coin chip; hidden on Easy levels
-    const timerY = topY + rowH + 4, timerW = 86, timerH = 30;
+    // ── RIGHT: Settings gear (blue rounded square, ref image 2 style) ───────
+    const gearSize = 50;
+    const gearX = width - 10 - gearSize / 2;
+    const gearBg = this.add.graphics();
+    gearBg.fillStyle(0x0284c7, 1).fillRoundedRect(gearX - gearSize / 2, cy - gearSize / 2, gearSize, gearSize, 14);
+    gearBg.lineStyle(3, 0x0369a1, 1).strokeRoundedRect(gearX - gearSize / 2, cy - gearSize / 2, gearSize, gearSize, 14);
+    // 3D shadow
+    const gearShadow = this.add.graphics();
+    gearShadow.fillStyle(0x0369a1, 1).fillRoundedRect(gearX - gearSize / 2, cy - gearSize / 2 + 4, gearSize, gearSize, 14);
+    gearShadow.setDepth(-1);
+    const gearIcon = this.add.text(gearX, cy, '⚙️', { fontSize: '26px' }).setOrigin(0.5);
+    const gearHit = this.add.rectangle(gearX, cy, gearSize + 8, gearSize + 8, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    gearHit.on('pointerdown', () => {
+      this.tweens.add({ targets: [gearBg, gearIcon], scale: 0.92, duration: 60, yoyo: true });
+      this.openSettings();
+    });
+
+    // ── TIMER pill (GDD 3.8) — below coins pill; hidden on Easy ─────────────
+    const timerY = topY + rowH + 6, timerW = 100, timerH = 28;
     const timerBg = this.add.graphics();
-    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(12, timerY, timerW, timerH, 15);
-    timerBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(12, timerY, timerW, timerH, 15);
-    const timerIcon = this.add.text(12 + 16, timerY + timerH / 2, '⏱️', { fontSize: '13px' }).setOrigin(0.5);
-    this.timerPillLabel = this.add.text(12 + timerW - 10, timerY + timerH / 2, '0:00', {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#2b1e16'
+    timerBg.fillStyle(0xffffff, 1).fillRoundedRect(pillX, timerY, timerW, timerH, 14);
+    timerBg.lineStyle(2.5, COLORS.woodDark, 1).strokeRoundedRect(pillX, timerY, timerW, timerH, 14);
+    const timerIcon = this.add.text(pillX + 18, timerY + timerH / 2, '⏱️', { fontSize: '14px' }).setOrigin(0.5);
+    this.timerPillLabel = this.add.text(pillX + timerW - 10, timerY + timerH / 2, '0:00', {
+      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#2b1e16'
     }).setOrigin(1, 0.5);
     this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
@@ -241,38 +263,41 @@ export default class GameScene extends Phaser.Scene {
       { key: 'freeze', icon: '⏸️', name: 'Freeze', cost: 25 },
       { key: 'skip', icon: '⏩', name: 'Skip', cost: 50 }
     ];
-    // Sits lower than before now that the standalone Replay button is gone
-    // (moved into Settings) — buffs get the reclaimed space and the thumb-
-    // reach real estate right above it.
-    const y = height - 56;
+    // Buff bar sits at the very bottom — large thumb-friendly chips
+    // matching reference image 2's bottom-button style.
+    const barH = 100;  // total height reserved for buff bar
+    const cy = height - barH / 2 - 6;  // vertical center of chips
     const gap = 10;
     const chipW = (width - 24 - gap * (items.length - 1)) / items.length;
     this.buffChips = {};
     this.buffState = { freezeUsed: false };
     items.forEach((item, i) => {
       const x = 12 + chipW / 2 + i * (chipW + gap);
-      this.buffChips[item.key] = this.createBuffChip(x, y, chipW, item);
+      this.buffChips[item.key] = this.createBuffChip(x, cy, chipW, item);
     });
   }
 
   createBuffChip(x, y, w, item) {
-    const h = 72;
+    const h = 88;  // taller chips — easier to tap on mobile
     const g = this.add.graphics();
     const drawBg = (enabled) => {
       g.clear();
-      g.fillStyle(0xffffff, enabled ? 1 : 0.55).fillRoundedRect(-w / 2, -h / 2, w, h, 14);
-      g.lineStyle(3, COLORS.woodDark, enabled ? 1 : 0.35).strokeRoundedRect(-w / 2, -h / 2, w, h, 14);
+      // Shadow
+      g.fillStyle(COLORS.woodDark, enabled ? 0.5 : 0.2).fillRoundedRect(-w / 2, -h / 2 + 5, w, h, 16);
+      // Main face
+      g.fillStyle(0xfff8eb, enabled ? 1 : 0.55).fillRoundedRect(-w / 2, -h / 2, w, h, 16);
+      g.lineStyle(3, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 16);
     };
     drawBg(true);
-    const icon = this.add.text(0, -18, item.icon, { fontSize: '25px' }).setOrigin(0.5);
-    const name = this.add.text(0, 10, item.name, {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#42281d'
+    const icon = this.add.text(0, -22, item.icon, { fontSize: '30px' }).setOrigin(0.5);
+    const name = this.add.text(0, 12, item.name, {
+      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
     }).setOrigin(0.5);
-    const costText = this.add.text(0, 25, '', {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ee4343'
+    const costText = this.add.text(0, 30, '', {
+      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#ee4343'
     }).setOrigin(0.5);
 
-    const container = this.add.container(x, y - 8, [g, icon, name, costText]);
+    const container = this.add.container(x, y, [g, icon, name, costText]);
     container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
     container.input.cursor = 'pointer';
     container.on('pointerdown', () => {
@@ -429,8 +454,8 @@ export default class GameScene extends Phaser.Scene {
     if (this.toastText) this.toastText.destroy();
     const { width } = this.scale;
     this.toastText = this.add.text(width / 2, this.headerBottom + 6, text, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
-      backgroundColor: '#2b1e16', padding: { x: 10, y: 5 }, align: 'center',
+      fontFamily: 'Crimson Pro', fontSize: '13px', color: '#f3c64f',
+      backgroundColor: '#2b1e16', padding: { x: 12, y: 6 }, align: 'center',
       wordWrap: { width: width - 60 }
     }).setOrigin(0.5, 0).setDepth(50);
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });
@@ -624,17 +649,16 @@ export default class GameScene extends Phaser.Scene {
   computeBoardMetrics() {
     const { width, height } = this.scale;
     const topOffset = this.headerBottom + 6;
-    const bottomOffset = 100; // shrunk along with the header now that the Replay button is gone
-    const marginX = 16; // tighter than before — removing the hint/status text freed room to widen the board
+    // Reserve enough vertical room for the tall buff chips (88px) + padding
+    const bottomOffset = 116;
+    const marginX = 14;
     const { rows, cols } = this.engine;
 
     const areaW = width - marginX * 2;
     const areaH = height - topOffset - bottomOffset;
-    // Fitts's Law floor: cells (the actual drag targets) never render under
-    // 44px even if that means the board slightly exceeds the "ideal" area —
-    // a board that's a few px taller than planned beats one that's too
-    // small to reliably touch.
-    const cell = Math.max(44, Math.floor(Math.min(areaW / cols, areaH / rows)));
+    // Fitts's Law floor: cells never under 44px so they remain draggable.
+    // Also cap cell size so very small grids don't balloon and crowd other UI.
+    const cell = Math.max(44, Math.min(72, Math.floor(Math.min(areaW / cols, areaH / rows))));
 
     this.cellSize = cell;
     this.boardOriginX = Math.round((width - cell * cols) / 2);
