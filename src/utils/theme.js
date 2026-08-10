@@ -181,6 +181,72 @@ export function makeHudChip(scene, x, y, label, value, opts = {}) {
   return container;
 }
 
+// Icon-in-circle + cream pill (blue border, bold value) + optional green "+"
+// quick-action button and/or a small red count `badge` riding on the icon
+// itself (drawn AFTER the pill so it sits on top of the icon/pill seam
+// instead of buried under it) — the big HUD stat cluster shared by Home and
+// Shop's top bars, so both read as the same app instead of drifting apart.
+// Icon and pill sit with a clean gap (no overlap) so nothing can ever visibly
+// collide regardless of how long the pill's text gets.
+// Returns rightEdge (to chain the next cluster's x off it) plus
+// setValue/setBadge to keep both numbers live.
+export function buildStatCluster(scene, x, y, { icon, iconBg, iconBorder, value, measureText, valueColor, onBuy, badge, badgeColor }) {
+  const iconR = 18;
+  const cx = x + iconR, cy = y + iconR;
+  scene.add.circle(cx, cy, iconR, iconBg).setStrokeStyle(4, iconBorder);
+  scene.add.text(cx, cy, icon, { fontSize: '16px' }).setOrigin(0.5);
+
+  const pillH = 32, pillGap = 6, textPad = 10;
+  const pillX = cx + iconR + pillGap;
+  const measureTxt = scene.add.text(0, 0, measureText !== undefined ? measureText : String(value), {
+    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900'
+  });
+  const textWidth = measureTxt.width;
+  measureTxt.destroy();
+
+  const pillW = Math.max(56, textWidth + textPad * 2);
+  const pillG = scene.add.graphics();
+  pillG.fillStyle(0xfff1de, 1).fillRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+  pillG.lineStyle(4, 0x16a5ff, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
+
+  const valueTxt = scene.add.text(pillX + textPad, cy, String(value), {
+    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor || '#996150'
+  }).setOrigin(0, 0.5);
+
+  let badgeTxt = null;
+  if (badge !== undefined) {
+    const badgeR = 9;
+    const bx = cx + iconR * 0.68, by = cy - iconR * 0.68;
+    scene.add.circle(bx, by, badgeR, badgeColor || 0xef4444).setStrokeStyle(2, 0xffffff);
+    badgeTxt = scene.add.text(bx, by, String(badge), {
+      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
+    }).setOrigin(0.5);
+  }
+
+  let rightEdge = pillX + pillW;
+  if (onBuy) {
+    const buyR = 12;
+    const buyX = rightEdge + buyR + 2, buyY = cy;
+    const buyBg = scene.add.circle(buyX, buyY, buyR, 0x67ee07).setStrokeStyle(3, 0x2f8c04);
+    const plus = scene.add.graphics();
+    plus.lineStyle(3, 0xd5ffb8, 1);
+    plus.lineBetween(buyX - 5, buyY, buyX + 5, buyY);
+    plus.lineBetween(buyX, buyY - 5, buyX, buyY + 5);
+    const buyHit = scene.add.rectangle(buyX, buyY, buyR * 2 + 14, buyR * 2 + 14, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    buyHit.on('pointerdown', () => {
+      scene.tweens.add({ targets: [buyBg, plus], scale: 0.85, duration: 60, yoyo: true });
+      onBuy();
+    });
+    rightEdge = buyX + buyR;
+  }
+
+  return {
+    rightEdge,
+    setValue: (v) => valueTxt.setText(String(v)),
+    setBadge: (v) => { if (badgeTxt) badgeTxt.setText(String(v)); }
+  };
+}
+
 // White pill chip (coloured icon circle + bold value) — dùng cho Coins/Lives
 // trên mọi HUD (Home, Shop, Game top bar). `rightEdgeX` là mép phải của chip.
 export function makeStatChip(scene, rightEdgeX, y, icon, value, accentColor) {

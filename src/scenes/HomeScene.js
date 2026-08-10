@@ -7,10 +7,11 @@ import {
 import { resolveLives, msUntilNextLife, formatMs, LIVES_MAX } from '../utils/lives.js';
 import { getFlatLevels, firstIncompleteGlobalIndex } from '../utils/progression.js';
 import { getDifficulty, DIFFICULTY_STYLE } from '../utils/difficulty.js';
-import { COLORS, makeStatChip, makeIconButton } from '../utils/theme.js';
+import { COLORS, makeStatChip, makeIconButton, buildStatCluster } from '../utils/theme.js';
 import { buildSettingsModal } from '../utils/settingsModal.js';
 import { showOutOfLives } from '../utils/livesModal.js';
 import { showMockedAdOverlay } from '../utils/mockAd.js';
+import { buildBottomDock, DOCK_HOME_H } from '../utils/dock.js';
 
 const AD_COINS_REWARD = 50;
 
@@ -33,10 +34,13 @@ const NODE_TOP_PAD = 70;
 // is the TALLEST thing at the bottom of the screen (taller than its own
 // side panels), so both the map mask and the CTA button anchor off its top
 // edge (DOCK_HOME_H), not the shorter side panels, or the CTA's rounded
-// corners get clipped by the podium sitting in front of it.
-const DOCK_HOME_H = 92;
+// corners get clipped by the podium sitting in front of it. CTA_DOCK_GAP
+// also has to cover the CTA's own drop-shadow, which extends 6px BELOW the
+// button's nominal bottom edge — without that, the gap looks fine on paper
+// but the shadow still visibly touches the dock.
 const CTA_H = 62;
-const CTA_DOCK_GAP = 10;
+const CTA_SHADOW_BLEED = 6;
+const CTA_DOCK_GAP = 26;
 const MAP_CTA_GAP = 8;
 
 function totalCompleted(save) {
@@ -70,21 +74,23 @@ export default class HomeScene extends Phaser.Scene {
     sky.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
     sky.fillRect(0, 0, width, height);
 
-    // Small, soft, low-opacity background dressing — big saturated ellipses
-    // with a hard dark outline read as placeholder art, so these are
-    // shrunk and faded well behind the map/UI instead of competing with it.
+    // Soft, low-opacity background haze — no outline at all, since even a
+    // faint stroke around a flat ellipse still reads as a "drawn shape"
+    // placeholder rather than atmosphere. Each blob is also layered from a
+    // wider/fainter pass to a smaller/denser one, a cheap stand-in for a
+    // real blur.
     const deco = this.add.graphics();
     const island = (cx, cy, w, h, rot) => {
       deco.save();
       deco.translateCanvas(cx, cy);
       deco.rotateCanvas(rot);
-      deco.fillStyle(0x4ade80, 0.4).fillEllipse(0, 0, w, h);
-      deco.lineStyle(2, COLORS.woodDark, 0.25).strokeEllipse(0, 0, w, h);
+      deco.fillStyle(0x4ade80, 0.14).fillEllipse(0, 0, w * 1.3, h * 1.3);
+      deco.fillStyle(0x4ade80, 0.22).fillEllipse(0, 0, w, h);
       deco.restore();
     };
     const cloud = (cx, cy, w, h) => {
-      deco.fillStyle(0xffffff, 0.55).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
-      deco.lineStyle(1.5, 0xcbd5e1, 0.5).strokeRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
+      deco.fillStyle(0xffffff, 0.2).fillRoundedRect(cx - w * 0.65, cy - h * 0.65, w * 1.3, h * 1.3, h * 0.65);
+      deco.fillStyle(0xffffff, 0.35).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
     };
     island(width * 0.12, height * 0.16, 62, 38, -0.15);
     island(width * 0.92, height * 0.4, 70, 42, 0.2);
@@ -104,7 +110,7 @@ export default class HomeScene extends Phaser.Scene {
     // fixed but positions chain off each other's rightEdge, so the whole
     // cluster self-adjusts across the 320-480px width range without ever
     // needing per-breakpoint tuning.
-    this.coinChip = this.buildStatCluster(6, 8, {
+    this.coinChip = buildStatCluster(this, 6, 8, {
       icon: '🪙', iconBg: 0xffd94d, iconBorder: 0xc9971f,
       value: this.save.coins, onBuy: () => this.watchAdForCoins()
     });
@@ -113,7 +119,7 @@ export default class HomeScene extends Phaser.Scene {
     // small red badge ON the heart icon itself, and the pill next to it
     // shows the regen countdown ("19:19") instead of repeating the count.
     const remaining = msUntilNextLife(this.save);
-    this.livesCluster = this.buildStatCluster(this.coinChip.rightEdge + 18, 8, {
+    this.livesCluster = buildStatCluster(this, this.coinChip.rightEdge + 18, 8, {
       icon: '❤️', iconBg: 0xff8a8a, iconBorder: 0xc23b3b, valueColor: '#0369a1',
       value: remaining > 0 ? formatMs(remaining) : 'FULL', measureText: '20:00',
       badge: this.save.lives.count, badgeColor: 0xef4444,
@@ -129,75 +135,6 @@ export default class HomeScene extends Phaser.Scene {
       size: gearSize, variant: 'blue', iconSize: '22px',
       onClick: () => { playSound('switch', this.save.soundMuted); this.settingsOverlay.setVisible(true); }
     });
-  }
-
-  // Icon-in-circle + cream pill (blue border, bold value) + optional green
-  // "+" quick-action button — shared shape for the Coins and Lives HUD
-  // clusters, matching the reference 1:1: an optional small red `badge`
-  // (the Lives count) rides ON the icon itself, drawn AFTER the pill so it
-  // sits visibly in front of the icon/pill seam instead of buried under it;
-  // the pill's own text is a separate `value` (Coins count, or the Lives
-  // regen countdown) — the two are independent, not the same number twice.
-  // Returns rightEdge so callers can chain the next cluster's x position off
-  // it, plus setValue/setBadge to keep both numbers live.
-  buildStatCluster(x, y, { icon, iconBg, iconBorder, value, measureText, valueColor, onBuy, badge, badgeColor }) {
-    const iconR = 18;
-    const cx = x + iconR, cy = y + iconR;
-    this.add.circle(cx, cy, iconR, iconBg).setStrokeStyle(4, iconBorder);
-    this.add.text(cx, cy, icon, { fontSize: '16px' }).setOrigin(0.5);
-
-    const pillH = 32, pillOverlap = 12, textPad = 10;
-    const pillX = cx + iconR - pillOverlap;
-    // Measure width with a throwaway text object first (using measureText
-    // when the live value's length will fluctuate, e.g. a "M:SS" countdown),
-    // so the pill is sized once up front and never needs to be redrawn.
-    const measureTxt = this.add.text(0, 0, measureText !== undefined ? measureText : String(value), {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900'
-    });
-    const textWidth = measureTxt.width;
-    measureTxt.destroy();
-
-    const pillW = Math.max(56, textWidth + textPad * 2 + pillOverlap);
-    const pillG = this.add.graphics();
-    pillG.fillStyle(0xfff1de, 1).fillRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
-    pillG.lineStyle(4, 0x16a5ff, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
-
-    const valueTxt = this.add.text(pillX + pillOverlap + textPad, cy, String(value), {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor || '#996150'
-    }).setOrigin(0, 0.5);
-
-    let badgeTxt = null;
-    if (badge !== undefined) {
-      const badgeR = 9;
-      const bx = cx + iconR - 3, by = cy + iconR * 0.55;
-      this.add.circle(bx, by, badgeR, badgeColor || 0xef4444).setStrokeStyle(2, 0xffffff);
-      badgeTxt = this.add.text(bx, by, String(badge), {
-        fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
-      }).setOrigin(0.5);
-    }
-
-    let rightEdge = pillX + pillW;
-    if (onBuy) {
-      const buyR = 12;
-      const buyX = rightEdge + buyR + 2, buyY = cy;
-      const buyBg = this.add.circle(buyX, buyY, buyR, 0x67ee07).setStrokeStyle(3, 0x2f8c04);
-      const plus = this.add.graphics();
-      plus.lineStyle(3, 0xd5ffb8, 1);
-      plus.lineBetween(buyX - 5, buyY, buyX + 5, buyY);
-      plus.lineBetween(buyX, buyY - 5, buyX, buyY + 5);
-      const buyHit = this.add.rectangle(buyX, buyY, buyR * 2 + 14, buyR * 2 + 14, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-      buyHit.on('pointerdown', () => {
-        this.tweens.add({ targets: [buyBg, plus], scale: 0.85, duration: 60, yoyo: true });
-        onBuy();
-      });
-      rightEdge = buyX + buyR;
-    }
-
-    return {
-      rightEdge,
-      setValue: (v) => valueTxt.setText(String(v)),
-      setBadge: (v) => { if (badgeTxt) badgeTxt.setText(String(v)); }
-    };
   }
 
   refreshLivesDisplay() {
@@ -414,8 +351,11 @@ export default class HomeScene extends Phaser.Scene {
     }
 
     if (isCurrent) {
-      const avatar = this.add.text(0, -r - 20, '⛵', { fontSize: '24px' }).setOrigin(0.5);
-      this.tweens.add({ targets: avatar, y: { from: -r - 24, to: -r - 16 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+      // Extra clearance above the node's own top edge (r) — emoji glyphs
+      // render with more visual ink than their nominal font box suggests,
+      // so the old -r-16 minimum still visibly touched the node's rim.
+      const avatar = this.add.text(0, -r - 34, '⛵', { fontSize: '24px' }).setOrigin(0.5);
+      this.tweens.add({ targets: avatar, y: { from: -r - 38, to: -r - 30 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
       group.add(avatar);
     }
 
@@ -733,56 +673,15 @@ export default class HomeScene extends Phaser.Scene {
 
   // ---------------- Bottom Navigation ----------------
 
-  // A single continuous 3-panel "dock" (cream Shop/Lock side panels + a
-  // taller gold-accented Home podium in the middle) instead of 3 separate
-  // floating rounded squares — each panel bleeds off the bottom edge of the
-  // screen so only its outer top corner reads as rounded, matching the
-  // reference's chunky "candy dock" look.
+  // Shared with Shop (utils/dock.js) so both screens' nav bar is pixel-for-
+  // pixel the same chrome instead of two independently-drawn look-alikes.
   buildBottomNav(width, height) {
-    const sideH = 76, homeH = DOCK_HOME_H, bleed = 30, R = 28;
-    const homeW = Math.min(width * 0.38, 150);
-    const homeX = width / 2 - homeW / 2;
-    const sideW = (width - homeW) / 2;
-    const sideY = height - sideH;
-    const homeY = height - homeH;
-
-    const drawDockPanel = (x, y, w, h, fill, radii) => {
-      const g = this.add.graphics();
-      g.fillStyle(fill, 1).fillRoundedRect(x, y, w, h + bleed, radii);
-      g.lineStyle(5, 0xe7ccb1, 1).strokeRoundedRect(x, y, w, h + bleed, radii);
-    };
-
-    drawDockPanel(0, sideY, sideW, sideH, 0xfee1b9, { tl: R, tr: 0, bl: 0, br: 0 });
-    drawDockPanel(width - sideW, sideY, sideW, sideH, 0xfee1b9, { tl: 0, tr: R, bl: 0, br: 0 });
-    drawDockPanel(homeX, homeY, homeW, homeH, 0xfff1de, { tl: R, tr: R, bl: 0, br: 0 });
-
-    this.buildDockButton(sideW / 2, sideY + 6, '🏪', 'SHOP', () => this.onNavTap('shop'), false);
-    this.buildDockButton(homeX + homeW / 2, homeY + 2, '🏠', 'HOME', () => this.onNavTap('journey'), true);
-    this.buildDockButton(width - sideW / 2, sideY + 6, '🔒', 'SOON', () => this.onNavTap('lock'), false);
-  }
-
-  buildDockButton(cx, topY, icon, label, onClick, isHome) {
-    const size = isHome ? 58 : 46;
-    const iconY = topY + size / 2 + 4;
-    const iconBg = this.add.graphics();
-    iconBg.fillStyle(isHome ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
-    iconBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
-    this.add.text(cx, iconY, icon, { fontSize: (isHome ? 26 : 20) + 'px' }).setOrigin(0.5);
-    this.add.text(cx, iconY + size / 2 + 12, label, {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#36324c'
-    }).setOrigin(0.5);
-
-    const hit = this.add.rectangle(cx, topY + 40, size + 22, 90, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-    hit.on('pointerdown', () => {
-      this.tweens.add({ targets: iconBg, scale: 0.9, duration: 60, yoyo: true });
-      onClick();
+    buildBottomDock(this, width, height, {
+      active: 'home',
+      onShop: () => { playSound('switch', this.save.soundMuted); this.scene.start('Shop'); },
+      onHome: () => {},
+      onLock: () => this.showToast('🔒 More content is coming soon!')
     });
-  }
-
-  onNavTap(key) {
-    if (key === 'journey') return;
-    if (key === 'shop') { playSound('switch', this.save.soundMuted); this.scene.start('Shop'); return; }
-    if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 
   // ---------------- Settings overlay ----------------

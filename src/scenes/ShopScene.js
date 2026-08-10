@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { playSound } from '../utils/audio.js';
 import { saveState } from '../utils/storage.js';
-import { COLORS, makeIconButton, makeStatChip, makeButton } from '../utils/theme.js';
+import { COLORS, makeIconButton, makeButton, buildStatCluster } from '../utils/theme.js';
+import { buildBottomDock, DOCK_HOME_H } from '../utils/dock.js';
 
 // Real Shop screen for the systems this demo actually tracks: Coins, the 3
 // real Buffs (Hint/Freeze/Skip, same keys GameScene's buff bar already
@@ -67,7 +68,7 @@ export default class ShopScene extends Phaser.Scene {
   // brightness consistent instead of the shop reading as a different, gloomier app.
   drawBackground(width, height) {
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x5fc4f0, 0x5fc4f0, 0x0b4f78, 0x0b4f78, 1);
+    bg.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
     bg.fillRect(0, 0, width, height);
     // Diagonal gold/wood canopy stripe under the header, echoing a
     // market-stall awning without borrowing the reference's purple accent.
@@ -84,22 +85,25 @@ export default class ShopScene extends Phaser.Scene {
     }
   }
 
+  // Same icon-in-circle + cream pill HUD clusters as Home's top bar (see
+  // buildStatCluster in theme.js) — Home and Shop used to draw their top
+  // bars with two completely different systems (big clusters vs. tiny
+  // makeStatChip pills + a plain text title), which is exactly why
+  // switching between them felt like leaving one app for another.
   buildTopBar(width) {
-    this.add.text(16, 24, 'SHOP 🏪', {
-      fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#f3c64f',
-      stroke: '#4a2c11', strokeThickness: 3
-    }).setOrigin(0, 0.5);
-
-    const closeX = width - 26, closeY = 24;
-    makeIconButton(this, closeX, closeY, '✕', {
-      size: 42, variant: 'ruby', iconSize: '16px',
-      onClick: () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); }
+    this.coinChip = buildStatCluster(this, 6, 8, {
+      icon: '🪙', iconBg: 0xffd94d, iconBorder: 0xc9971f, value: this.save.coins
+    });
+    this.gemChip = buildStatCluster(this, this.coinChip.rightEdge + 18, 8, {
+      icon: '💎', iconBg: 0x5eead4, iconBorder: 0x0f766e, valueColor: '#0f766e', value: this.save.gems
     });
 
-    const gemRightEdge = closeX - 28;
-    this.gemChip = makeStatChip(this, gemRightEdge, 7, '💎', this.save.gems, COLORS.teal);
-    const coinRightEdge = this.gemChip.rightEdge - 8;
-    this.coinChip = makeStatChip(this, coinRightEdge, 7, '🟡', this.save.coins, COLORS.gold);
+    const closeSize = 48;
+    const closeX = width - 10 - closeSize / 2, closeY = 8 + closeSize / 2;
+    makeIconButton(this, closeX, closeY, '✕', {
+      size: closeSize, variant: 'ruby', iconSize: '20px',
+      onClick: () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); }
+    });
   }
 
   // ---------------- Scrollable content ----------------
@@ -109,7 +113,7 @@ export default class ShopScene extends Phaser.Scene {
 
   buildScrollArea(width, height) {
     this.viewTop = 62;
-    this.viewBottom = height - 76;
+    this.viewBottom = height - DOCK_HOME_H - 12;
 
     this.maskShape = this.make.graphics({ x: 0, y: 0 }, false);
     this.maskShape.fillStyle(0xffffff).fillRect(0, this.viewTop, width, this.viewBottom - this.viewTop);
@@ -514,43 +518,15 @@ export default class ShopScene extends Phaser.Scene {
     });
   }
 
-  // ---------------- Bottom nav (same look as Home, Shop is the active tab) ----------------
+  // ---------------- Bottom nav — shared with Home (utils/dock.js) ----------------
 
   buildBottomNav(width, height) {
-    const barH = 60;
-    const barY = height - barH - 6;
-    const bar = this.add.graphics();
-    bar.fillStyle(COLORS.teal, 1).fillRoundedRect(10, barY, width - 20, barH, 20);
-    bar.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(10, barY, width - 20, barH, 20);
-
-    const items = [
-      { key: 'shop', icon: '🏪' },
-      { key: 'journey', icon: '🧭' },
-      { key: 'lock', icon: '🔒' }
-    ];
-    const step = (width - 20) / items.length;
-    const baseY = barY + barH / 2;
-
-    items.forEach((item, i) => {
-      const cx = 10 + step * i + step / 2;
-      const active = item.key === 'shop';
-      const size = active ? 50 : 42;
-      const cy = baseY - (active ? 10 : 0);
-
-      const btnBg = this.add.graphics();
-      btnBg.fillStyle(active ? COLORS.gold : 0xffffff, 1).fillRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
-      btnBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(cx - size / 2, cy - size / 2, size, size, 12);
-      this.add.text(cx, cy, item.icon, { fontSize: active ? '18px' : '15px' }).setOrigin(0.5);
-
-      const hit = this.add.rectangle(cx, baseY, step - 6, barH, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
-      hit.on('pointerdown', () => this.onNavTap(item.key));
+    buildBottomDock(this, width, height, {
+      active: 'shop',
+      onShop: () => {},
+      onHome: () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); },
+      onLock: () => this.showToast('🔒 More content is coming soon!')
     });
-  }
-
-  onNavTap(key) {
-    if (key === 'shop') return;
-    if (key === 'journey') { this.scene.start('Home'); return; }
-    if (key === 'lock') { this.showToast('🔒 More content is coming soon!'); return; }
   }
 
   showToast(text) {
