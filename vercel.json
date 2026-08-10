@@ -1,5 +1,9 @@
 {
-  "buildCommand": "npm run build",
+  "framework": "vite",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": true
+  "installCommand": "npm install",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
