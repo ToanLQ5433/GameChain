@@ -758,6 +758,12 @@ export default class GameScene extends Phaser.Scene {
     if (!sol || sol.length < 2) return; // nothing to demonstrate — skip silently
 
     this.tutorialGate = { active: true, chainId, steps: sol };
+    // loadLevel()'s own initial redrawChains() already ran before this
+    // (the tutorial is shown 300ms later, after the board settles), drawing
+    // every chain including the ones this gate is about to hide — redraw
+    // now that tutorialGate is actually set, or the other chain(s) would
+    // stay visible until the player's first successful gated step.
+    this.redrawChains();
 
     getRelationshipHighlights(mechanic, this.levelDef).forEach(pair => this.spawnRelationshipGlow(pair.from, pair.to));
 
@@ -865,6 +871,10 @@ export default class GameScene extends Phaser.Scene {
     markTutorialSeen(this.save, this.category.mechanic);
     saveState(this.save);
     this.showToast('✅ Got it — keep going!');
+    // Reveal every other chain now that soloChainId no longer applies —
+    // the caller's own redrawChains() call ran just before this, while the
+    // gate was still active, so it wouldn't have shown them yet.
+    this.redrawChains();
   }
 
   computeBoardMetrics() {
@@ -1122,7 +1132,16 @@ export default class GameScene extends Phaser.Scene {
     const thickness = cs - inset * 2;
     const newBeads = [];
 
+    // A forced mechanic tutorial only ever gates ONE chain — every other
+    // chain on the board just sits there, untouchable, for no reason the
+    // player can see, which reads as confusing rather than "precise"
+    // guidance. Hide every other chain's own rendering (its bead/number/
+    // rope) entirely while the gate is active; the board's non-chain tiles
+    // are unaffected, so nothing looks broken, just "not started yet".
+    const soloChainId = (this.tutorialGate && this.tutorialGate.active) ? this.tutorialGate.chainId : null;
+
     e.getAllChains().forEach(chain => {
+      if (soloChainId && chain.id !== soloChainId) return;
       const displayColor = chain.colorTag ? (COLOR_HEX[chain.colorTag] || Phaser.Display.Color.HexStringToColor(chain.color).color)
         : Phaser.Display.Color.HexStringToColor(chain.color).color;
 
