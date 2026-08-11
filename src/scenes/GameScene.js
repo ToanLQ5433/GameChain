@@ -324,6 +324,15 @@ export default class GameScene extends Phaser.Scene {
     container.drawBg = drawBg;
     container.setEnabledLook = (enabled) => { drawBg(enabled); [icon, name, costText].forEach(t => t.setAlpha(enabled ? 1 : 0.45)); };
     container.updateCost = () => {
+      // Freeze only ever affects Walls (MEC-01) — on the majority of
+      // levels, which have none, it was a silent no-op that still looked
+      // fully tappable/priced, reading as "this buff is broken" rather
+      // than "not applicable here". Label it honestly instead.
+      if (item.key === 'freeze' && !(this.levelDef.walls && this.levelDef.walls.length)) {
+        costText.setText('No Walls');
+        costText.setColor('#9c8b7a');
+        return;
+      }
       const count = this.save.buffs[item.key] || 0;
       costText.setText(count > 0 ? `Free x${count}` : `${item.cost} Coins`);
       costText.setColor(count > 0 ? '#12826c' : '#ee4343');
@@ -334,8 +343,9 @@ export default class GameScene extends Phaser.Scene {
 
   refreshBuffChips() {
     if (!this.buffChips) return;
+    const hasWalls = !!(this.levelDef.walls && this.levelDef.walls.length);
     Object.entries(this.buffChips).forEach(([key, chip]) => {
-      const usable = key !== 'freeze' || !this.buffState.freezeUsed;
+      const usable = key !== 'freeze' || (hasWalls && !this.buffState.freezeUsed);
       chip.setEnabledLook(usable);
       chip.updateCost();
     });
@@ -1326,7 +1336,7 @@ export default class GameScene extends Phaser.Scene {
       this.triggerExplosion(pos.r, pos.c, true);
       this.redrawChains();
       this.time.delayedCall(480, () => {
-        this.showRescueOffer('💥 You touched an armed Bomb! Next time, push a Crate into the Bomb before running a chain through it.');
+        this.showRescueOffer('💥 Touched a Bomb — push a Crate into it next time.');
       });
     } else {
       // Không rung camera ở đây: BLOCKED xảy ra liên tục khi ngón tay lướt qua
@@ -1497,23 +1507,59 @@ export default class GameScene extends Phaser.Scene {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
     const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const panelW = width - 56;
 
-    const panelW = width - 56, panelH = isSkip ? 260 : 410;
+    // Layout is built top-down from a running cursor (Y offset from the
+    // panel's eventual top edge), not independently hand-tuned magic
+    // numbers — that's exactly what let the CLAIM x2 section, and the
+    // isSkip variant's shorter panel, end up with buttons overlapping the
+    // reward card / each other: "panelY + panelH - 72" only stays correct
+    // for the one panelH it was tuned against, and silently drifts into an
+    // overlap the moment panelH changes for any reason (a shorter Skip
+    // panel, an extra section added later, ...).
+    let y = 22; // eyebrow
+    const eyebrowY = y;
+    y += 18;
+    const titleY = y;
+    y += 56; // room for up to ~2 title lines
+    const starsY = y;
+    y += 34;
+    const cardY = y;
+    const cardW = 96, cardH = 96;
+    y = cardY + cardH + 16;
+    const rewardTextY = y;
+    y += 8;
+
+    let claimY = null, skipTxtY = null;
+    if (!isSkip) {
+      y += 16 + 20;
+      claimY = y;
+      y += 20 + 8 + 7;
+      skipTxtY = y;
+      y += 7;
+    }
+
+    y += 14 + 24;
+    const nextY = y;
+    y += 24 + 10 + 20;
+    const homeY = y;
+    y += 20 + 14;
+
+    const panelH = y;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
 
-    const eyebrow = this.add.text(width / 2, panelY + 22, isSkip ? 'SKIPPED' : 'VICTORY!', {
+    const eyebrow = this.add.text(width / 2, panelY + eyebrowY, isSkip ? 'SKIPPED' : 'VICTORY!', {
       fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#12826c', letterSpacing: 2
     }).setOrigin(0.5);
-    const title = this.add.text(width / 2, panelY + 40, this.levelDef.name, {
+    const title = this.add.text(width / 2, panelY + titleY, this.levelDef.name, {
       fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#42281d', align: 'center',
       wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5, 0);
 
-    const starsY = panelY + 92;
     const stars = [];
     for (let i = 0; i < 3; i++) {
-      const s = this.add.text(width / 2 + (i - 1) * 32, starsY, isSkip ? '☆' : '★', {
+      const s = this.add.text(width / 2 + (i - 1) * 32, panelY + starsY, isSkip ? '☆' : '★', {
         fontSize: '26px', color: '#ffc200', stroke: '#4a2c11', strokeThickness: 2
       }).setOrigin(0.5).setScale(0);
       stars.push(s);
@@ -1521,23 +1567,23 @@ export default class GameScene extends Phaser.Scene {
     }
 
     // Thẻ phần thưởng phát sáng — cùng ngôn ngữ "mảnh bản đồ" với Home.
-    const cardW = 96, cardH = 96, cardX = width / 2 - cardW / 2, cardY = starsY + 34;
-    const rewardFrame = drawPanel(this, cardX, cardY, cardW, cardH, { radius: 10, fill: 0xffffff, border: COLORS.gold, borderWidth: 2 });
-    const rewardIcon = this.add.text(width / 2, cardY + cardH / 2, isSkip ? '📦' : this.category.icon, { fontSize: '40px' }).setOrigin(0.5);
+    const cardX = width / 2 - cardW / 2;
+    const rewardFrame = drawPanel(this, cardX, panelY + cardY, cardW, cardH, { radius: 10, fill: 0xffffff, border: COLORS.gold, borderWidth: 2 });
+    const rewardIcon = this.add.text(width / 2, panelY + cardY + cardH / 2, isSkip ? '📦' : this.category.icon, { fontSize: '40px' }).setOrigin(0.5);
     if (!isSkip) {
       this.tweens.add({ targets: [rewardFrame, rewardIcon], alpha: { from: 0.6, to: 1 }, yoyo: true, repeat: -1, duration: 700 });
     }
 
     // Speed bonus (GDD 2.5 "Coin Tốc Độ") folded into the same line rather
-    // than a second text element, so the reward card's fixed height never
-    // has to grow/collide with the buttons below it.
+    // than a second text element, so the reward card's height never has to
+    // grow/collide with the buttons below it.
     const rewardAmount = isSkip ? '' : `+${20 + speedBonus} Coins${speedBonus > 0 ? ` (⚡+${speedBonus})` : ''}`;
-    const rewardText = this.add.text(width / 2, cardY + cardH + 12, rewardAmount, {
+    const rewardText = this.add.text(width / 2, panelY + rewardTextY, rewardAmount, {
       fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#c68a00'
     }).setOrigin(0.5);
 
     const next = getNextLevel(this.categoryId, this.levelIndex);
-    const nextBtn = makeButton(this, width / 2, panelY + panelH - 72, next ? 'NEXT ⏩' : 'HOME 🏠', {
+    const nextBtn = makeButton(this, width / 2, panelY + nextY, next ? 'NEXT ⏩' : 'HOME 🏠', {
       variant: 'gold', fontSize: '16px', minHeight: 48, width: panelW - 48
     });
     nextBtn.on('pointerdown', () => {
@@ -1548,7 +1594,7 @@ export default class GameScene extends Phaser.Scene {
       }
     });
 
-    const homeBtn = makeButton(this, width / 2, panelY + panelH - 20, 'HOME 🏠', {
+    const homeBtn = makeButton(this, width / 2, panelY + homeY, 'HOME 🏠', {
       variant: 'ink', fontSize: '14px', minHeight: 40, width: panelW - 48
     });
     homeBtn.on('pointerdown', () => this.scene.start('Home'));
@@ -1559,11 +1605,10 @@ export default class GameScene extends Phaser.Scene {
     // already short-circuits the run so it doesn't earn a doubling offer).
     if (!isSkip) {
       const baseReward = 20 + speedBonus;
-      const claimY = cardY + cardH + 12 + 36;
-      const x2Btn = makeButton(this, width / 2, claimY, '📺 CLAIM x2 REWARD', {
+      const x2Btn = makeButton(this, width / 2, panelY + claimY, '📺 CLAIM x2 REWARD', {
         variant: 'gold', fontSize: '13px', minHeight: 40, width: panelW - 48, shadow: true
       });
-      const skipTxt = this.add.text(width / 2, claimY + 26, 'No thanks, keep x1', {
+      const skipTxt = this.add.text(width / 2, panelY + skipTxtY, 'No thanks, keep x1', {
         fontFamily: 'Crimson Pro', fontSize: '11px', color: '#6b7280', fontStyle: 'italic'
       }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
