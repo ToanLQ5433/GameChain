@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Out of Lives</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1c1410; font-family: 'Crimson Pro', serif; }
+.phone { width: 360px; height: 740px; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #4cb3ec 0%, #1c7dc4 100%); }
+.dim { position: absolute; inset: 0; background: rgba(4,7,13,.82); }
+
+.panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 304px; background: #fff0ee; border: 3px solid #a82e2e; border-radius: 18px; padding: 22px 18px 20px; text-align: center; }
+.title { font-family: 'Cinzel', serif; font-size: 19px; font-weight: 900; color: #b91c1c; }
+.sub { font-size: 12px; color: #42281d; margin-top: 10px; }
+
+.btn { display: block; width: 100%; border: none; border-radius: 23px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; padding: 13px 0; margin-top: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.btn.gold { background: #f3c64f; color: #2b1e16; box-shadow: 0 4px 0 #8a6a10; }
+.btn.blue { background: #0284c7; color: #fff; box-shadow: 0 4px 0 #0369a1; }
+.btn.ink { background: #3d2b1f; color: #f4e8cf; box-shadow: 0 4px 0 #1a120c; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="dim"></div>
+  <div class="panel">
+    <div class="title">💔 Out of Lives!</div>
+    <div class="sub">Next free Life in 5:00</div>
+    <button class="btn gold">🟡 Refill 5 Lives — 500 Coins</button>
+    <button class="btn blue">📺 Watch Ad for +1 Life</button>
+    <button class="btn ink">⏳ Wait (5:00)</button>
+  </div>
+</div>
+</body>
+</html>

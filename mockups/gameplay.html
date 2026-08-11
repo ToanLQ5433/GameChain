@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Gameplay</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1c1410; font-family: 'Crimson Pro', serif; }
+.phone { width: 360px; height: 740px; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #fff3d6 0%, #f3e3b8 100%); }
+
+/* top bar */
+.coin-pill { position: absolute; top: 10px; left: 10px; height: 38px; width: 110px; background: #fff; border: 3px solid #3d2b1f; border-radius: 19px; display: flex; align-items: center; padding: 0 10px; gap: 6px; }
+.coin-pill .dot { width: 26px; height: 26px; border-radius: 50%; background: #f3c64f; border: 2px solid #3d2b1f; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.coin-pill .val { font-family: 'Cinzel', serif; font-weight: 900; font-size: 16px; color: #2b1e16; }
+
+.level-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 38px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 19px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.level-banner .lbl { font-family: 'Cinzel', serif; font-size: 9px; font-weight: 900; color: #f3c64f; letter-spacing: 2px; }
+.level-banner .num { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #fff; }
+
+.gear { position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; border-radius: 14px; background: #0284c7; border: 3px solid #0369a1; box-shadow: 0 4px 0 #0369a1; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+
+.diff-chip { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); background: #7c3aed; border: 2px solid #2b1e16; border-radius: 10px; padding: 3px 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; color: #fff; }
+
+.timer-pill { position: absolute; top: 56px; left: 10px; width: 100px; height: 28px; background: #fff; border: 2.5px solid #3d2b1f; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #ee4343; }
+
+/* board */
+.board-frame { position: absolute; top: 92px; left: 12px; right: 12px; bottom: 116px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 16px; padding: 12px; }
+.grid { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; }
+.tile { background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.tile.rock { background: #8a7259; }
+.tile.bomb { background: #ffe0dc; border-color: #ee4343; }
+.tile.gate-open { background: #dcf7e3; border-color: #2a7b4c; }
+.tile.gate-closed { background: #ffe0dc; border-color: #a82e2e; }
+.lock-badge { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 2.5px solid; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+.crate { width: 80%; height: 80%; background: #b9814a; border: 2px solid #6b4423; border-radius: 6px; position: relative; }
+.crate .band { position: absolute; left: 0; right: 0; height: 18%; background: #b0b8bf; border: 1px solid #5b6670; }
+.rope { position: absolute; border-radius: 6px; }
+.bead { position: absolute; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 900; color: #fff; font-size: 13px; border: 1.5px solid rgba(255,255,255,.85); }
+
+/* buff bar */
+.buff-bar { position: absolute; bottom: 6px; left: 12px; right: 12px; height: 100px; display: flex; gap: 10px; }
+.buff-chip { flex: 1; background: #fff8eb; border: 3px solid #3d2b1f; border-radius: 16px; box-shadow: 0 5px 0 rgba(61,43,31,.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.buff-chip .icon { font-size: 26px; }
+.buff-chip .name { font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; color: #42281d; }
+.buff-chip .cost { font-family: 'Cinzel', serif; font-weight: 900; font-size: 10px; color: #ee4343; }
+.buff-chip.disabled { opacity: .5; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="coin-pill"><div class="dot">🪙</div><div class="val">1234</div></div>
+  <div class="level-banner"><div class="lbl">LEVEL</div><div class="num">47</div></div>
+  <div class="gear">⚙️</div>
+  <div class="diff-chip">💀 SUPER HARD</div>
+  <div class="timer-pill"><span>⏱️</span><span>1:40</span></div>
+
+  <div class="board-frame">
+    <div class="grid">
+      <div class="tile"></div><div class="tile"></div><div class="tile rock">🪨</div><div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div><div class="tile gate-closed"><div class="lock-badge" style="border-color:#a82e2e;">🔒</div></div><div class="tile"></div><div class="tile"><span style="font-size:20px;">🔌</span></div><div class="tile"></div>
+      <div class="tile" style="position:relative;"><div class="crate"><div class="band" style="top:22%;"></div><div class="band" style="top:64%;"></div></div></div><div class="tile"></div><div class="tile bomb">💣</div><div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div><div class="tile"></div><div class="tile">⬆️</div><div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div><div class="tile gate-open"><div class="lock-badge" style="border-color:#2a7b4c;">🔓</div></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
+      <div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div><div class="tile"></div>
+    </div>
+    <!-- chain rope overlay (approximate) -->
+    <svg style="position:absolute; top:12px; left:12px; width:calc(100% - 24px); height:calc(100% - 24px); pointer-events:none;">
+      <line x1="10%" y1="10%" x2="10%" y2="45%" stroke="#1b5e8a" stroke-width="22" stroke-linecap="round" opacity="0.92"/>
+      <circle cx="10%" cy="10%" r="15" fill="#1b5e8a" stroke="#fff" stroke-width="2"/>
+      <circle cx="10%" cy="45%" r="15" fill="#1b5e8a" stroke="#f3c64f" stroke-width="3"/>
+    </svg>
+  </div>
+
+  <div class="buff-bar">
+    <div class="buff-chip"><div class="icon">💡</div><div class="name">Hint</div><div class="cost">30 Coins</div></div>
+    <div class="buff-chip disabled"><div class="icon">❄️</div><div class="name">Freeze</div><div class="cost">No Walls</div></div>
+    <div class="buff-chip"><div class="icon">↩️</div><div class="name">Undo</div><div class="cost">10 Coins</div></div>
+    <div class="buff-chip"><div class="icon">⏩</div><div class="name">Skip</div><div class="cost">50 Coins</div></div>
+  </div>
+</div>
+</body>
+</html>

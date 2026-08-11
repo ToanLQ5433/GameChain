@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Settings</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1c1410; font-family: 'Crimson Pro', serif; }
+.phone { width: 360px; height: 740px; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #4cb3ec 0%, #1c7dc4 100%); }
+.dim { position: absolute; inset: 0; background: rgba(4,7,13,.82); }
+
+.panel { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 320px; background: #fff8eb; border: 4px solid #0284c7; border-radius: 22px; padding: 60px 16px 18px; }
+.banner { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 260px; height: 40px; background: #0284c7; border: 3px solid #0369a1; box-shadow: 0 5px 0 #0369a1; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 900; font-size: 18px; color: #fff; }
+.close { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; border-radius: 50%; background: #e0605a; border: 3px solid #a82e2e; box-shadow: 0 3px 0 #a82e2e; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+
+.card { background: #f4e5cb; border: 2px solid #dfc49c; border-radius: 16px; padding: 12px 14px; }
+.row { display: flex; align-items: center; height: 46px; }
+.row .icon { font-size: 18px; width: 30px; }
+.row .label { flex: 1; font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #8b5a2b; }
+.toggle { width: 68px; height: 30px; border-radius: 15px; display: flex; align-items: center; padding: 2px; border: 2.5px solid #3d2b1f; }
+.toggle.on { background: #22c55e; justify-content: flex-end; }
+.toggle.off { background: #ef4444; justify-content: flex-start; }
+.toggle .knob { width: 24px; height: 24px; border-radius: 50%; background: #fff; border: 2px solid #4a2c11; }
+.toggle-label { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 900; color: #fff; margin: 0 6px; }
+
+.btn { display: block; width: 100%; border: none; border-radius: 23px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; padding: 12px 0; margin-top: 14px; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
+.btn.parchment { background: #dfc49c; color: #42281d; box-shadow: 0 4px 0 #9e7b4f; }
+.btn.blue { background: #0284c7; color: #fff; box-shadow: 0 4px 0 #0369a1; }
+.btn.gold { background: #f3c64f; color: #2b1e16; box-shadow: 0 4px 0 #8a6a10; }
+.btn.ruby { background: #dd2d2d; color: #fff; box-shadow: 0 4px 0 #991b1b; }
+.version { text-align: center; font-family: 'Cinzel', serif; font-size: 12px; font-weight: 700; color: #2b1e16; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="dim"></div>
+  <div class="panel">
+    <div class="banner">Settings</div>
+    <div class="close">✕</div>
+    <div class="card">
+      <div class="row"><span class="icon">🔊</span><span class="label">Sound</span>
+        <div class="toggle on"><span class="toggle-label" style="margin-right:auto;margin-left:6px;">On</span><div class="knob"></div></div>
+      </div>
+      <div class="row"><span class="icon">🎵</span><span class="label">Music</span>
+        <div class="toggle off"><div class="knob"></div><span class="toggle-label">Off</span></div>
+      </div>
+      <div class="row"><span class="icon">📳</span><span class="label">Haptic</span>
+        <div class="toggle on"><span class="toggle-label" style="margin-right:auto;margin-left:6px;">On</span><div class="knob"></div></div>
+      </div>
+    </div>
+    <button class="btn parchment">Privacy Policy</button>
+    <button class="btn blue">Restore Purchase</button>
+    <button class="btn gold">Restart Level</button>
+    <button class="btn ruby">Quit</button>
+    <div class="version">Version: 0.1.0</div>
+  </div>
+</div>
+</body>
+</html>

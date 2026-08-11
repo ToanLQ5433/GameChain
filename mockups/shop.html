@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Shop</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1c1410; font-family: 'Crimson Pro', serif; }
+.phone { width: 360px; height: 740px; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #4cb3ec 0%, #1c7dc4 100%); }
+
+.cluster { position: absolute; top: 8px; display: flex; align-items: center; height: 36px; }
+.cluster-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; border: 4px solid; z-index: 2; position: relative; }
+.cluster-pill { height: 32px; background: #fff1de; border: 4px solid #16a5ff; border-radius: 16px; display: flex; align-items: center; padding: 0 14px; margin-left: -18px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 13px; color: #996150; }
+.close-btn { position: absolute; top: 8px; right: 10px; width: 48px; height: 48px; border-radius: 50%; background: #e0605a; border: 3px solid #a82e2e; box-shadow: 0 4px 0 #a82e2e; display: flex; align-items: center; justify-content: center; font-size: 20px; color: #fff; }
+
+.scroll { position: absolute; top: 62px; bottom: 104px; left: 0; right: 0; overflow-y: auto; padding: 10px 14px 20px; }
+.section-label { height: 28px; background: #f4e8cf; border: 2px solid #3d2b1f; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; letter-spacing: 1px; color: #2b1e16; margin: 14px 0 10px; }
+
+.ads-banner { height: 92px; border-radius: 16px; border: 3px solid #3d2b1f; background: #7a1f1f; display: flex; align-items: center; padding: 0 14px; gap: 12px; }
+.ads-banner .icon { width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 3px solid #3d2b1f; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #e0605a; }
+.ads-banner .text h3 { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #fff; }
+.ads-banner .text p { font-size: 10px; color: #f4e8cf; margin-top: 4px; }
+.price-pill { margin-left: auto; background: #f3c64f; border: 2px solid #3d2b1f; border-radius: 17px; padding: 8px 14px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; color: #2b1e16; box-shadow: 0 3px 0 #8a6a10; }
+
+.pack-card { border-radius: 18px; border: 3px solid #3d2b1f; padding: 12px; margin-bottom: 14px; position: relative; }
+.pack-card .ribbon { position: absolute; top: -6px; left: 20px; background: #f43f5e; border: 2px solid #3d2b1f; border-radius: 6px; padding: 2px 10px; font-family: 'Cinzel', serif; font-size: 10px; font-weight: 900; color: #fff; transform: rotate(-7deg); }
+.pack-inner { background: #f4e8cf; border: 2px solid #3d2b1f; border-radius: 12px; display: flex; align-items: center; padding: 10px; gap: 10px; margin-top: 16px; }
+.pack-coin { text-align: center; width: 56px; }
+.pack-coin .n { font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; color: #2b1e16; }
+.buff-slot { flex: 1; background: #fff; border: 2px solid #3d2b1f; border-radius: 8px; height: 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 16px; position: relative; }
+.buff-slot .n { position: absolute; bottom: 2px; right: 4px; font-size: 8px; font-family: 'Cinzel', serif; font-weight: 900; }
+.pack-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.pack-footer .title { font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #fff; }
+
+.bundle-card { background: #fff8e7; border: 2.5px solid #f3c64f; border-radius: 14px; padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+.bundle-card .title { font-family: 'Cinzel', serif; font-weight: 900; font-size: 13px; color: #42281d; }
+.bundle-card .coins { font-size: 10px; color: #b45309; margin-top: 2px; }
+
+.coin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.coin-card { background: #fff8e7; border: 2.5px solid #f3c64f; border-radius: 14px; padding: 10px 6px; text-align: center; }
+.coin-card .n { font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; color: #42281d; margin: 6px 0; }
+.coin-card .price { background: #f3c64f; border: 2px solid #3d2b1f; border-radius: 13px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 10px; padding: 5px 0; }
+
+.dock { position: absolute; bottom: 0; left: 0; right: 0; height: 76px; }
+.dock-side { position: absolute; bottom: 0; width: 112px; height: 76px; background: #fee1b9; border: 5px solid #e7ccb1; border-bottom: none; }
+.dock-side.left { left: 0; border-radius: 28px 0 0 0; }
+.dock-side.right { right: 0; border-radius: 0 28px 0 0; }
+.dock-center { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 136px; height: 92px; background: #fff1de; border: 5px solid #e7ccb1; border-bottom: none; border-radius: 28px 28px 0 0; }
+.dock-btn { position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dock-icon { width: 46px; height: 46px; border-radius: 14px; background: #ffe9b0; border: 3px solid #f3c64f; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.dock-icon.active-center { width: 58px; height: 58px; background: #f3c64f; border-color:#3d2b1f; font-size: 26px; }
+.dock-label { font-family: 'Cinzel', serif; font-weight: 900; font-size: 9px; color: #36324c; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="cluster" style="left:6px;">
+    <div class="cluster-icon" style="background:#ffd94d;border-color:#c9971f;">🪙</div>
+    <div class="cluster-pill">1234</div>
+  </div>
+  <div class="cluster" style="left:130px;">
+    <div class="cluster-icon" style="background:#5eead4;border-color:#0f766e;">💎</div>
+    <div class="cluster-pill" style="color:#0f766e;">0</div>
+  </div>
+  <div class="close-btn">✕</div>
+
+  <div class="scroll">
+    <div class="ads-banner">
+      <div class="icon">🚫</div>
+      <div class="text"><h3>Remove Ads</h3><p>No interruptions. Ever.</p></div>
+      <div class="price-pill">$2.99</div>
+    </div>
+
+    <div class="section-label">HOT DEALS</div>
+
+    <div class="pack-card" style="background:#d98c3d;">
+      <div class="ribbon">POPULAR</div>
+      <div class="pack-inner">
+        <div class="pack-coin">🪙<div class="n">2,000</div></div>
+        <div class="buff-slot">💡<div class="n">×3</div></div>
+        <div class="buff-slot">❄️<div class="n">×3</div></div>
+        <div class="buff-slot">⏩<div class="n">×1</div></div>
+      </div>
+      <div class="pack-footer"><div class="title">Starter Pack</div><div class="price-pill">$2.99</div></div>
+    </div>
+
+    <div class="pack-card" style="background:#14b8a6;">
+      <div class="ribbon" style="background:#f43f5e;">BEST VALUE</div>
+      <div class="pack-inner">
+        <div class="pack-coin">🪙<div class="n">5,000</div></div>
+        <div class="buff-slot">💡<div class="n">×5</div></div>
+        <div class="buff-slot">❄️<div class="n">×5</div></div>
+        <div class="buff-slot">⏩<div class="n">×3</div></div>
+      </div>
+      <div class="pack-footer"><div class="title">Mega VIP Combo</div><div class="price-pill">$4.99</div></div>
+    </div>
+
+    <div class="section-label">ITEM BUNDLES</div>
+    <div class="bundle-card">
+      <div><div class="title">Small Bundle</div><div class="coins">1,200 Coins</div></div>
+      <div class="price-pill">$1.99</div>
+    </div>
+
+    <div class="section-label">GOLD SHOP</div>
+    <div class="coin-grid">
+      <div class="coin-card">🪙<div class="n">1,000</div><div class="price">$0.99</div></div>
+      <div class="coin-card">🪙<div class="n">3,000</div><div class="price">$2.99</div></div>
+      <div class="coin-card">🪙<div class="n">6,000</div><div class="price">$4.99</div></div>
+      <div class="coin-card">🪙<div class="n">14,000</div><div class="price">$9.99</div></div>
+      <div class="coin-card">🪙<div class="n">30,000</div><div class="price">$19.99</div></div>
+      <div class="coin-card">🪙<div class="n">100,000</div><div class="price">$49.99</div></div>
+    </div>
+  </div>
+
+  <div class="dock">
+    <div class="dock-side left"></div>
+    <div class="dock-side right"></div>
+    <div class="dock-center"></div>
+    <div class="dock-btn" style="left:56px; bottom:20px;"><div class="dock-icon active-center" style="width:46px;height:46px;font-size:20px;background:#ffe9b0;border-color:#f3c64f;">🏪</div><div class="dock-label">SHOP</div></div>
+    <div class="dock-btn" style="left:50%; transform:translateX(-50%); bottom:24px;"><div class="dock-icon active-center">🏠</div><div class="dock-label">HOME</div></div>
+    <div class="dock-btn" style="right:56px; bottom:20px; transform:translateX(50%);"><div class="dock-icon">🔒</div><div class="dock-label">SOON</div></div>
+  </div>
+</div>
+</body>
+</html>

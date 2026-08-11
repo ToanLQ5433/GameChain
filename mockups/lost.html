@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Level Failed</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #1c1410; font-family: 'Crimson Pro', serif; }
+.phone { width: 360px; height: 740px; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #fff3d6 0%, #f3e3b8 100%); }
+.dim { position: absolute; inset: 0; background: rgba(4,7,13,.82); }
+
+.panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 310px; background: #fff0ee; border: 3px solid #a82e2e; border-radius: 18px; padding: 24px 20px 22px; text-align: center; }
+.title { font-family: 'Cinzel', serif; font-size: 20px; font-weight: 900; color: #b91c1c; }
+.msg { font-size: 13px; color: #42281d; margin-top: 20px; line-height: 1.4; }
+
+.btn { display: block; width: 100%; border: none; border-radius: 24px; font-family: 'Cinzel', serif; font-weight: 900; padding: 14px 0; margin-top: 26px; box-shadow: 0 5px 0 #8a6a10; background: #f3c64f; color: #2b1e16; font-size: 15px; }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="dim"></div>
+  <div class="panel">
+    <div class="title">💥 LEVEL FAILED</div>
+    <div class="msg">💥 Touched a Bomb — push a Crate into it next time.</div>
+    <button class="btn">RETRY (-1 ❤️) 🔄</button>
+  </div>
+</div>
+</body>
+</html>
