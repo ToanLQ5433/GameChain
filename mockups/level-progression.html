@@ -13,13 +13,14 @@ body {
   padding: 28px 20px 60px;
 }
 h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; text-align: center; color: #42281d; }
-.subtitle { text-align: center; font-size: 13px; color: #6b5842; margin-top: 6px; max-width: 680px; margin-left: auto; margin-right: auto; }
+.subtitle { text-align: center; font-size: 13px; color: #6b5842; margin-top: 6px; max-width: 720px; margin-left: auto; margin-right: auto; }
 
 .mechanic-section {
   max-width: 1180px; margin: 34px auto 0; background: #fff8eb; border: 3px solid #3d2b1f;
   border-radius: 18px; padding: 18px 20px 22px; box-shadow: 0 6px 0 rgba(61,43,31,.25);
 }
 .mechanic-section.core { background: #eef8ff; border-color: #0284c7; }
+.mechanic-section.combo { background: #fdf0ff; border-color: #a21caf; }
 .mechanic-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .mechanic-head .icon { font-size: 30px; }
 .mechanic-head h2 { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900; color: #42281d; }
@@ -41,8 +42,8 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; text-align
 .board-wrap { background: #5c3a21; border: 2px solid #f3c64f; border-radius: 10px; padding: 6px; position: relative; }
 .board { display: grid; gap: 2px; }
 .cell {
-  width: 24px; height: 24px; background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 4px; position: relative;
-  display: flex; align-items: center; justify-content: center; font-size: 12px;
+  background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 4px; position: relative;
+  display: flex; align-items: center; justify-content: center;
 }
 .cell.void { background: transparent; border: none; }
 .cell.rock { background: #8a7259; }
@@ -51,13 +52,13 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; text-align
 .cell.gate-closed { background: #ffe0dc; border-color: #a82e2e; }
 .cell .anchor {
   width: 78%; height: 78%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  color: #fff; font-family: 'Cinzel', serif; font-weight: 900; font-size: 9px; border: 1.5px solid rgba(255,255,255,.8);
+  color: #fff; font-family: 'Cinzel', serif; font-weight: 900; border: 1.5px solid rgba(255,255,255,.8);
 }
 .cell .crate { width: 76%; height: 76%; background: #b9814a; border: 1.5px solid #6b4423; border-radius: 3px; position: relative; }
 .cell .crate .band { position: absolute; left: 0; right: 0; height: 20%; background: #b0b8bf; }
 .cell .wp {
   width: 74%; height: 74%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-family: 'Cinzel', serif; font-weight: 900; font-size: 10px; border: 2px solid; box-sizing: border-box;
+  font-family: 'Cinzel', serif; font-weight: 900; border: 2px solid; box-sizing: border-box;
 }
 .wall-edge { position: absolute; background: #3d2b1f; }
 .wall-edge.h { left: 4%; right: 4%; height: 3px; }
@@ -70,8 +71,8 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; text-align
 </style>
 </head>
 <body>
-<h1>Level Progression Design — 5 Levels per Mechanic</h1>
-<p class="subtitle">One design track per core mechanic (matches this project's own category/tier system in <code>utils/difficulty.js</code> and <code>utils/levelTimer.js</code>) — Level 1-2 Easy, 3-4 Normal, Level 5 always Super Hard. Revision 2: adds the missing CORE track, fixes the Number Code waypoint-ownership ambiguity and the Static Bombs solvability bug, adds Prism/Gate and Switch/Gate connector lines, and rebalances pacing per review.</p>
+<h1>Level Progression Design — Per-Mechanic Tracks</h1>
+<p class="subtitle">One design track per core mechanic (matches this project's own category/tier system in <code>utils/difficulty.js</code> and <code>utils/levelTimer.js</code>). Revision 3: every track's Super Hard level is pushed to genuinely maximal density (bigger board, a 5th chain, harder combos — not just "one more Hard level"), and a new <strong>Combined Mechanics</strong> track is added: 2 Easy → 2 Normal → 1 Hard → 1 Super Hard, layering multiple mechanics onto one board.</p>
 
 <div id="root"></div>
 
@@ -85,7 +86,7 @@ const DIFF_STYLE = {
 // Real values from utils/levelTimer.js — Easy never gets a timer (GDD 3.8 Pillar P1).
 const TIME_LIMIT = { easy: null, normal: 100, hard: 160, superhard: 230 };
 
-const ANCHOR_COLORS = { A: '#1b5e8a', B: '#a82e2e', C: '#2a7b4c', D: '#7c3aed' };
+const ANCHOR_COLORS = { A: '#1b5e8a', B: '#a82e2e', C: '#2a7b4c', D: '#7c3aed', E: '#d97706' };
 const LATCH_LINK = '#c9971f';   // gold — matches the real game's 🔑 latch icon
 const SWITCH_LINK = '#7d8791';  // steel — matches the real game's 🔘 switch icon
 
@@ -93,7 +94,7 @@ const MECHANICS = [
   {
     id: 'core', icon: '⛵', title: 'Core Drag & Coverage', tag: 'CORE', isCore: true,
     desc: 'Tap an anchor and drag to cover the whole board with several chains at once — the core rule before learning any other mechanic. No obstacles anywhere in this track, on purpose: the only thing being taught is the drag gesture and multi-chain coverage.',
-    fixNote: 'Added per review — this was missing even though it is literally the FIRST category a player ever sees (data/levels.js\'s "nhap-mon" / mechanic: "CORE"). Progression here is purely anchor count + board shape, never objects.',
+    fixNote: 'Added per review — this was missing even though it is literally the FIRST category a player ever sees (data/levels.js\'s "nhap-mon" / mechanic: "CORE"). L5 bumped to a 7×7 board with corners AND mid-edges cut, plus a 5th chain anchored dead-center, for a genuinely brutal pure-coverage puzzle.',
     levels: [
       { tier: 'easy', rows: 2, cols: 3, anchors: { A: [0,0] }, cells: [],
         note: 'A single chain, nothing else — learn that one drag must cover every cell.' },
@@ -103,15 +104,19 @@ const MECHANICS = [
         note: 'Same two chains, but a longer board leaves zero wasted moves.' },
       { tier: 'normal', rows: 4, cols: 5, anchors: { A: [0,0], B: [3,4], C: [0,4] }, cells: [],
         note: 'A third chain splits the board three ways — claim the wrong corner and you box yourself in.' },
-      { tier: 'superhard', rows: 5, cols: 5, anchors: { A: [0,1], B: [4,3], C: [1,4], D: [3,0] },
-        cells: [ {r:0,c:0,type:'void'}, {r:0,c:4,type:'void'}, {r:4,c:0,type:'void'}, {r:4,c:4,type:'void'} ],
-        note: 'No obstacles at all — just an irregular board (corners cut) and 4 chains that must tile every remaining cell perfectly.' }
+      { tier: 'superhard', rows: 7, cols: 7,
+        anchors: { A: [0,1], B: [6,5], C: [1,6], D: [5,0], E: [3,3] },
+        cells: [
+          {r:0,c:0,type:'void'}, {r:0,c:6,type:'void'}, {r:6,c:0,type:'void'}, {r:6,c:6,type:'void'},
+          {r:0,c:3,type:'void'}, {r:6,c:3,type:'void'}, {r:3,c:0,type:'void'}, {r:3,c:6,type:'void'}
+        ],
+        note: 'Corners AND mid-edges cut, plus a 5th chain anchored dead-center — the densest, least forgiving coverage puzzle in the game.' }
     ]
   },
   {
     id: 'obstacles', icon: '🪨', title: 'Obstacles', tag: 'MEC-01',
     desc: 'Rocks block hard, Walls block by edge, Push Rocks can be pushed to clear the way.',
-    fixNote: 'L2 now adds a 3rd chain + a Wall that forces a real detour (was just "one more blocker" on a barely-bigger board). L5 drops Bombs entirely — they belong to MEC-05, not here — and is now a focused Crate-ORDER puzzle instead of a kitchen sink of every object type.',
+    fixNote: 'L2 now adds a 3rd chain + a Wall that forces a real detour (was just "one more blocker" on a barely-bigger board). L5 bumped to a 7×7 board, 5 chains, and a five-Crate domino line — not just a bigger pile of the same three objects.',
     levels: [
       { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0], B: [2,3] },
         cells: [ {r:1,c:2,type:'rock'} ],
@@ -125,16 +130,19 @@ const MECHANICS = [
       { tier: 'normal', rows: 5, cols: 6, anchors: { A: [0,0], B: [4,5], C: [0,5] },
         cells: [ {r:1,c:1,type:'rock'}, {r:3,c:1,type:'rock'}, {r:2,c:3,type:'wallR'}, {r:1,c:4,type:'crate'}, {r:3,c:4,type:'crate'} ],
         note: 'Two Crates now — the first one you push determines whether the second path is even open.' },
-      { tier: 'superhard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
-        cells: [ {r:1,c:1,type:'rock'}, {r:4,c:4,type:'rock'}, {r:1,c:4,type:'wallB'}, {r:4,c:1,type:'wallR'},
-                 {r:2,c:2,type:'crate'}, {r:2,c:3,type:'crate'}, {r:3,c:3,type:'crate'} ],
-        note: 'Pure Obstacles at full density — a strict Crate-push ORDER (one blocks the next), not just more objects thrown on the board.' }
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,6] },
+        cells: [
+          {r:1,c:1,type:'rock'}, {r:5,c:5,type:'rock'}, {r:3,c:0,type:'rock'},
+          {r:1,c:4,type:'wallR'}, {r:4,c:1,type:'wallB'}, {r:5,c:3,type:'wallR'},
+          {r:2,c:2,type:'crate'}, {r:2,c:3,type:'crate'}, {r:3,c:3,type:'crate'}, {r:4,c:4,type:'crate'}, {r:4,c:5,type:'crate'}
+        ],
+        note: 'Five Crates in a domino line — push the wrong one first and you seal off the very lane you needed for the next push.' }
     ]
   },
   {
     id: 'direction', icon: '🎨', title: 'Direction & Color', tag: 'MEC-02',
     desc: 'Arrows force the direction of your next step; Prisms recolor the chain; Color Gates only let the matching color through.',
-    fixNote: 'Every Prism now has a dashed connector line straight to ITS Gate (same visual language as the Switch links below), so the color-matching relationship reads at a glance instead of relying on the player to notice matching colors across the board. L5 has one fewer Arrow to keep the focus on reading 3 Prism/Gate links, not extra clutter.',
+    fixNote: 'Every Prism now has a dashed connector line straight to ITS Gate, so the color-matching relationship reads at a glance. L5 bumped to a 7×7 board, 5 chains, 4 colours and 4 long-distance links crossing the whole board.',
     levels: [
       { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0], B: [2,3] },
         cells: [ {r:0,c:1,type:'arrow',dir:'⬇️'} ], connectors: [],
@@ -153,19 +161,27 @@ const MECHANICS = [
                  {r:3,c:1,type:'prism',color:'#1db99b'}, {r:4,c:1,type:'gate',color:'#1db99b'} ],
         connectors: [ {from:{r:1,c:3},to:{r:2,c:3},color:'#ee4343',style:'dashed'}, {from:{r:3,c:1},to:{r:4,c:1},color:'#1db99b',style:'dashed'} ],
         note: 'Two colours in play — each dashed line proves which Prism unlocks which Gate.' },
-      { tier: 'superhard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
-        cells: [ {r:0,c:1,type:'arrow',dir:'⬇️'}, {r:2,c:2,type:'arrow',dir:'➡️'}, {r:4,c:3,type:'arrow',dir:'⬆️'},
-                 {r:2,c:4,type:'prism',color:'#ee4343'}, {r:3,c:4,type:'gate',color:'#ee4343'},
-                 {r:2,c:1,type:'prism',color:'#2a8bf2'}, {r:3,c:1,type:'gate',color:'#2a8bf2'},
-                 {r:4,c:2,type:'prism',color:'#1db99b'}, {r:1,c:3,type:'gate',color:'#1db99b'} ],
-        connectors: [ {from:{r:2,c:4},to:{r:3,c:4},color:'#ee4343',style:'dashed'}, {from:{r:2,c:1},to:{r:3,c:1},color:'#2a8bf2',style:'dashed'}, {from:{r:4,c:2},to:{r:1,c:3},color:'#1db99b',style:'dashed'} ],
-        note: 'Three colours, three dashed links, one fewer Arrow than a maxed-out board — the challenge is reading three Prism/Gate pairs at once, not extra clutter.' }
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,3] },
+        cells: [
+          {r:0,c:2,type:'arrow',dir:'⬇️'}, {r:2,c:2,type:'arrow',dir:'➡️'}, {r:4,c:4,type:'arrow',dir:'⬆️'}, {r:5,c:2,type:'arrow',dir:'⬅️'},
+          {r:1,c:5,type:'prism',color:'#ee4343'}, {r:2,c:5,type:'gate',color:'#ee4343'},
+          {r:2,c:0,type:'prism',color:'#2a8bf2'}, {r:3,c:1,type:'gate',color:'#2a8bf2'},
+          {r:5,c:5,type:'prism',color:'#1db99b'}, {r:1,c:4,type:'gate',color:'#1db99b'},
+          {r:4,c:1,type:'prism',color:'#f97316'}, {r:6,c:3,type:'gate',color:'#f97316'}
+        ],
+        connectors: [
+          {from:{r:1,c:5},to:{r:2,c:5},color:'#ee4343',style:'dashed'},
+          {from:{r:2,c:0},to:{r:3,c:1},color:'#2a8bf2',style:'dashed'},
+          {from:{r:5,c:5},to:{r:1,c:4},color:'#1db99b',style:'dashed'},
+          {from:{r:4,c:1},to:{r:6,c:3},color:'#f97316',style:'dashed'}
+        ],
+        note: 'Four colours, four Arrows, links crossing the whole board — the connectors are the only thing keeping four independent Prism/Gate relationships readable at once.' }
     ]
   },
   {
     id: 'numbercode', icon: '🔢', title: 'Number Code', tag: 'MEC-03',
     desc: 'Touch the numbered waypoints in strictly increasing order, ending exactly on the last one.',
-    fixNote: 'Fixed a real bug from rev.1: numbering is now per-chain (each chain restarts at 1) and every waypoint is color-bordered to match its owning anchor, so two chains can both have a "1"/"2" without any ambiguity about which belongs to whom. L5 is now 4 clean independent sequences instead of one confusing 1-6 run across 4 anchors.',
+    fixNote: 'Fixed a real bug from rev.1: numbering is now per-chain (each chain restarts at 1) and every waypoint is color-bordered to match its owning anchor. L5 bumped to a 7×7 board with 5 chains carrying up to 4 stops each — the longest sequences in the game.',
     levels: [
       { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0] },
         cells: [ {r:1,c:1,type:'wp',n:1,color:ANCHOR_COLORS.A}, {r:2,c:3,type:'wp',n:2,color:ANCHOR_COLORS.A} ],
@@ -182,18 +198,21 @@ const MECHANICS = [
                  {r:3,c:3,type:'wp',n:1,color:ANCHOR_COLORS.B}, {r:2,c:3,type:'wp',n:2,color:ANCHOR_COLORS.B},
                  {r:1,c:3,type:'wp',n:1,color:ANCHOR_COLORS.C} ],
         note: 'A third numbered chain joins — three colours of waypoint sharing the same board.' },
-      { tier: 'superhard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
-        cells: [ {r:1,c:1,type:'wp',n:1,color:ANCHOR_COLORS.A}, {r:2,c:2,type:'wp',n:2,color:ANCHOR_COLORS.A}, {r:3,c:1,type:'wp',n:3,color:ANCHOR_COLORS.A},
-                 {r:4,c:4,type:'wp',n:1,color:ANCHOR_COLORS.B}, {r:3,c:3,type:'wp',n:2,color:ANCHOR_COLORS.B}, {r:4,c:2,type:'wp',n:3,color:ANCHOR_COLORS.B},
-                 {r:1,c:4,type:'wp',n:1,color:ANCHOR_COLORS.C}, {r:2,c:4,type:'wp',n:2,color:ANCHOR_COLORS.C},
-                 {r:4,c:1,type:'wp',n:1,color:ANCHOR_COLORS.D}, {r:3,c:0,type:'wp',n:2,color:ANCHOR_COLORS.D} ],
-        note: 'Four independent numbered sequences at once — a wrong-order tap on any single chain only locks that chain, not the others.' }
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,0] },
+        cells: [
+          {r:1,c:1,type:'wp',n:1,color:ANCHOR_COLORS.A}, {r:2,c:2,type:'wp',n:2,color:ANCHOR_COLORS.A}, {r:1,c:4,type:'wp',n:3,color:ANCHOR_COLORS.A}, {r:3,c:5,type:'wp',n:4,color:ANCHOR_COLORS.A},
+          {r:5,c:5,type:'wp',n:1,color:ANCHOR_COLORS.B}, {r:4,c:4,type:'wp',n:2,color:ANCHOR_COLORS.B}, {r:5,c:2,type:'wp',n:3,color:ANCHOR_COLORS.B}, {r:3,c:1,type:'wp',n:4,color:ANCHOR_COLORS.B},
+          {r:1,c:5,type:'wp',n:1,color:ANCHOR_COLORS.C}, {r:2,c:4,type:'wp',n:2,color:ANCHOR_COLORS.C}, {r:0,c:2,type:'wp',n:3,color:ANCHOR_COLORS.C},
+          {r:5,c:1,type:'wp',n:1,color:ANCHOR_COLORS.D}, {r:4,c:2,type:'wp',n:2,color:ANCHOR_COLORS.D}, {r:6,c:3,type:'wp',n:3,color:ANCHOR_COLORS.D},
+          {r:2,c:0,type:'wp',n:1,color:ANCHOR_COLORS.E}, {r:4,c:0,type:'wp',n:2,color:ANCHOR_COLORS.E}, {r:6,c:1,type:'wp',n:3,color:ANCHOR_COLORS.E}
+        ],
+        note: 'Five independent numbered sequences, up to four stops each — the longest sequences in the game, on the biggest board.' }
     ]
   },
   {
     id: 'switches', icon: '🔌', title: 'Switches', tag: 'MEC-04',
     desc: 'Hold one chain on a Switch to open a Gate for another chain; a Latch keeps the Gate open forever after one activation.',
-    fixNote: "Added a connector line from every Switch to its own Gate — gold+solid for a Latch (stays open), steel+dashed for a normal Switch (needs to stay held) — so the link is legible even with 2-3 pairs on one board. L4 is now an explicit 2-step DEPENDENCY (Switch 1's Gate blocks the path to Switch 2) instead of 3 parallel unrelated pairs. L5 trimmed to 3 pairs (was 4) per the overwhelm feedback.",
+    fixNote: "Added a connector line from every Switch to its own Gate — gold+solid for a Latch, steel+dashed for a normal Switch. L4 is now an explicit 2-step DEPENDENCY. L5 bumped to a 7×7 board, 5 chains, and a 4-pair chain where every Gate only reveals the next Switch.",
     levels: [
       { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0], B: [2,3] },
         cells: [ {r:1,c:1,type:'switch'}, {r:1,c:2,type:'gate-closed'} ],
@@ -211,18 +230,26 @@ const MECHANICS = [
         cells: [ {r:1,c:1,type:'switch'}, {r:1,c:2,type:'gate-closed'}, {r:3,c:3,type:'switch'}, {r:3,c:4,type:'gate-closed'} ],
         connectors: [ {from:{r:1,c:1},to:{r:1,c:2},color:SWITCH_LINK,style:'dashed'}, {from:{r:3,c:3},to:{r:3,c:4},color:SWITCH_LINK,style:'dashed'} ],
         note: "Switch 1's own Gate sits directly in the path to Switch 2 — open the first before you can even reach the second." },
-      { tier: 'superhard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
-        cells: [ {r:1,c:1,type:'latch'}, {r:1,c:2,type:'gate-closed'},
-                 {r:2,c:3,type:'switch'}, {r:2,c:4,type:'gate-closed'},
-                 {r:4,c:2,type:'latch'}, {r:4,c:3,type:'gate-closed'} ],
-        connectors: [ {from:{r:1,c:1},to:{r:1,c:2},color:LATCH_LINK,style:'solid'}, {from:{r:2,c:3},to:{r:2,c:4},color:SWITCH_LINK,style:'dashed'}, {from:{r:4,c:2},to:{r:4,c:3},color:LATCH_LINK,style:'solid'} ],
-        note: 'Three linked pairs (2 Latch, 1 normal), each still a single clean line — legible density instead of just more Switches.' }
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,6] },
+        cells: [
+          {r:1,c:1,type:'latch'}, {r:1,c:2,type:'gate-closed'},
+          {r:2,c:3,type:'switch'}, {r:2,c:4,type:'gate-closed'},
+          {r:4,c:4,type:'latch'}, {r:4,c:5,type:'gate-closed'},
+          {r:5,c:1,type:'switch'}, {r:5,c:2,type:'gate-closed'}
+        ],
+        connectors: [
+          {from:{r:1,c:1},to:{r:1,c:2},color:LATCH_LINK,style:'solid'},
+          {from:{r:2,c:3},to:{r:2,c:4},color:SWITCH_LINK,style:'dashed'},
+          {from:{r:4,c:4},to:{r:4,c:5},color:LATCH_LINK,style:'solid'},
+          {from:{r:5,c:1},to:{r:5,c:2},color:SWITCH_LINK,style:'dashed'}
+        ],
+        note: 'Four linked pairs (2 Latch, 2 normal) — the deepest dependency chain yet: each Gate you open only reveals the next Switch, not the finish line.' }
     ]
   },
   {
     id: 'bombs', icon: '💣', title: 'Static Bombs', tag: 'MEC-05',
     desc: 'Touching a Bomb directly is an instant loss. The only way to destroy a Bomb is to push a Push Rock into it.',
-    fixNote: 'Fixed a real solvability bug from rev.1: a Crate is CONSUMED destroying a Bomb (Sokoban-style, one-time use) — "not enough Crates for every Bomb" was an unsolvable dead-end, not a valid difficulty knob. Every Bomb that blocks a mandatory path now gets exactly one dedicated Crate (1:1); any "extra" Bomb beyond that is placed off-path in a dead-end, so it only needs to be avoided, never cleared.',
+    fixNote: 'Fixed a real solvability bug from rev.1: a Crate is CONSUMED destroying a Bomb (Sokoban-style, one-time use) — every mandatory Bomb now gets exactly one dedicated Crate (1:1). L5 bumped to a 7×7 board, 5 chains, 5 mandatory pairs, and 2 bypassable decoys.',
     levels: [
       { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0], B: [2,3] },
         cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'} ],
@@ -237,24 +264,89 @@ const MECHANICS = [
         cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
                  {r:3,c:3,type:'crate'}, {r:3,c:4,type:'bomb'}, {r:1,c:3,type:'rock'} ],
         note: 'Three Bombs, three Crates — exactly enough, so there is no slack for a wasted push.' },
-      { tier: 'superhard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
-        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
-                 {r:3,c:3,type:'crate'}, {r:3,c:4,type:'bomb'}, {r:4,c:1,type:'crate'}, {r:4,c:2,type:'bomb'},
-                 {r:5,c:0,type:'bomb'}, {r:1,c:4,type:'wallR'}, {r:5,c:2,type:'wallB'} ],
-        note: 'Four Crates clear exactly the four Bombs blocking your paths — a fifth Bomb sits harmlessly in a dead-end corner nobody needs to enter, so it never needs a Crate.' }
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,3] },
+        cells: [
+          {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'},
+          {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
+          {r:3,c:4,type:'crate'}, {r:3,c:5,type:'bomb'},
+          {r:4,c:1,type:'crate'}, {r:4,c:2,type:'bomb'},
+          {r:5,c:4,type:'crate'}, {r:5,c:5,type:'bomb'},
+          {r:6,c:1,type:'bomb'}, {r:1,c:5,type:'bomb'},
+          {r:1,c:1,type:'rock'}, {r:2,c:5,type:'wallR'}, {r:4,c:4,type:'wallB'}
+        ],
+        note: 'Five Crates clear exactly five mandatory Bombs — two more Bombs sit in dead-end corners nobody ever needs to enter, purely there to punish a careless drag.' }
+    ]
+  },
+  {
+    id: 'combined', icon: '🧩', title: 'Combined Mechanics', tag: 'COMBO', isCombo: true,
+    desc: 'Every level here layers two or more mechanics from the tracks above onto a single board — nothing new to learn, just everything you already know, at once.',
+    fixNote: "New track added per review — a dedicated combined category, structured 2 Easy → 2 Normal → 1 Hard → 1 Super Hard (six levels, not five) so there's a genuine mid-step before the final all-mechanics board.",
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4, anchors: { A: [0,0], B: [2,3] },
+        cells: [ {r:1,c:1,type:'rock'}, {r:0,c:2,type:'arrow',dir:'⬇️'} ],
+        note: 'First combo: a Rock to route around AND an Arrow forcing your next step — two simple mechanics, same board.' },
+      { tier: 'easy', rows: 4, cols: 4, anchors: { A: [0,0], B: [3,3] },
+        cells: [ {r:1,c:1,type:'wallR'}, {r:2,c:2,type:'prism',color:'#ee4343'}, {r:2,c:3,type:'gate',color:'#ee4343'} ],
+        connectors: [ {from:{r:2,c:2},to:{r:2,c:3},color:'#ee4343',style:'dashed'} ],
+        note: 'A Wall detour plus a Prism/Gate pair — routing AND colour-matching, together for the first time.' },
+      { tier: 'normal', rows: 4, cols: 5, anchors: { A: [0,0], B: [3,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'crate'}, {r:2,c:2,type:'switch'}, {r:2,c:3,type:'gate-closed'}, {r:0,c:2,type:'arrow',dir:'➡️'} ],
+        connectors: [ {from:{r:2,c:2},to:{r:2,c:3},color:SWITCH_LINK,style:'dashed'} ],
+        note: 'Push a Crate, hold a Switch, and follow an Arrow — three different mechanics stacked on one small board.' },
+      { tier: 'normal', rows: 5, cols: 5, anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'crate'}, {r:1,c:2,type:'bomb'}, {r:0,c:2,type:'wallB'},
+                 {r:2,c:0,type:'wp',n:1,color:ANCHOR_COLORS.A}, {r:3,c:2,type:'wp',n:2,color:ANCHOR_COLORS.A} ],
+        note: 'A Bomb/Crate pair, a two-stop Number Code sequence, and a Wall — Static Bombs, Number Code, and Obstacles sharing one board.' },
+      { tier: 'hard', rows: 6, cols: 6, anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [
+          {r:1,c:1,type:'rock'}, {r:2,c:2,type:'wallR'}, {r:3,c:3,type:'crate'},
+          {r:1,c:4,type:'prism',color:'#1db99b'}, {r:2,c:4,type:'gate',color:'#1db99b'},
+          {r:4,c:1,type:'switch'}, {r:4,c:2,type:'gate-closed'}
+        ],
+        connectors: [
+          {from:{r:1,c:4},to:{r:2,c:4},color:'#1db99b',style:'dashed'},
+          {from:{r:4,c:1},to:{r:4,c:2},color:SWITCH_LINK,style:'dashed'}
+        ],
+        note: 'Five mechanics on one board at once — Rocks, Walls, a Crate, colour-gating, AND a Switch. Nothing new individually, but juggling all five is the real test.' },
+      { tier: 'superhard', rows: 7, cols: 7, anchors: { A: [0,0], B: [6,6], C: [0,6], D: [6,0], E: [3,6] },
+        cells: [
+          {r:1,c:1,type:'rock'}, {r:5,c:5,type:'wallR'},
+          {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
+          {r:0,c:3,type:'arrow',dir:'⬇️'},
+          {r:4,c:2,type:'prism',color:'#1db99b'}, {r:5,c:2,type:'gate',color:'#1db99b'},
+          {r:1,c:5,type:'switch'}, {r:2,c:5,type:'gate-closed'},
+          {r:1,c:3,type:'wp',n:1,color:ANCHOR_COLORS.A}, {r:3,c:4,type:'wp',n:2,color:ANCHOR_COLORS.A}
+        ],
+        connectors: [
+          {from:{r:4,c:2},to:{r:5,c:2},color:'#1db99b',style:'dashed'},
+          {from:{r:1,c:5},to:{r:2,c:5},color:SWITCH_LINK,style:'dashed'}
+        ],
+        note: 'Every mechanic in the game on one board — Rocks, Walls, a Crate/Bomb pair, an Arrow, a Prism/Gate link, a Switch/Gate link, and a Number Code chain, across 5 simultaneous chains. This is the true final exam.' }
     ]
   }
 ];
 
-function renderCell(spec, r, c) {
+const CARD_INNER = 176; // level-card content width after its 10px side padding
+const GAP_PX = 2;
+
+function cellSizeFor(cols) {
+  const raw = Math.floor((CARD_INNER - (cols - 1) * GAP_PX) / cols);
+  return Math.max(14, Math.min(24, raw));
+}
+
+function renderCell(spec, r, c, cellPx) {
   const anchorEntry = Object.entries(spec.anchors).find(([, pos]) => pos[0] === r && pos[1] === c);
   const cellSpec = spec.cells.find(cc => cc.r === r && cc.c === c);
   const div = document.createElement('div');
   div.className = 'cell';
+  div.style.width = cellPx + 'px';
+  div.style.height = cellPx + 'px';
+  div.style.fontSize = Math.max(9, Math.round(cellPx * 0.55)) + 'px';
 
   if (anchorEntry) {
     const [id] = anchorEntry;
-    div.innerHTML = `<div class="anchor" style="background:${ANCHOR_COLORS[id]}">${id}</div>`;
+    const afs = Math.max(7, Math.round(cellPx * 0.38));
+    div.innerHTML = `<div class="anchor" style="background:${ANCHOR_COLORS[id]};font-size:${afs}px">${id}</div>`;
     return div;
   }
   if (!cellSpec) return div;
@@ -267,7 +359,11 @@ function renderCell(spec, r, c) {
     case 'arrow': div.textContent = cellSpec.dir; break;
     case 'prism': div.textContent = '🎨'; div.style.boxShadow = `inset 0 0 0 2px ${cellSpec.color}`; break;
     case 'gate': div.classList.add('gate-open'); div.style.borderColor = cellSpec.color; div.textContent = '🔓'; break;
-    case 'wp': div.innerHTML = `<div class="wp" style="border-color:${cellSpec.color};background:${cellSpec.color}22;color:${cellSpec.color}">${cellSpec.n}</div>`; break;
+    case 'wp': {
+      const wfs = Math.max(7, Math.round(cellPx * 0.42));
+      div.innerHTML = `<div class="wp" style="border-color:${cellSpec.color};background:${cellSpec.color}22;color:${cellSpec.color};font-size:${wfs}px">${cellSpec.n}</div>`;
+      break;
+    }
     case 'switch': div.textContent = '🔘'; break;
     case 'latch': div.textContent = '🔑'; break;
     case 'gate-open': div.classList.add('gate-open'); div.textContent = '🔓'; break;
@@ -278,23 +374,23 @@ function renderCell(spec, r, c) {
   return div;
 }
 
-const CELL_PX = 24, GAP_PX = 2, STEP = CELL_PX + GAP_PX;
-
 function renderBoard(spec) {
+  const cellPx = cellSizeFor(spec.cols);
+  const step = cellPx + GAP_PX;
   const wrap = document.createElement('div');
   wrap.className = 'board-wrap';
   const board = document.createElement('div');
   board.className = 'board';
-  board.style.gridTemplateColumns = `repeat(${spec.cols}, ${CELL_PX}px)`;
+  board.style.gridTemplateColumns = `repeat(${spec.cols}, ${cellPx}px)`;
   for (let r = 0; r < spec.rows; r++) {
     for (let c = 0; c < spec.cols; c++) {
-      board.appendChild(renderCell(spec, r, c));
+      board.appendChild(renderCell(spec, r, c, cellPx));
     }
   }
   wrap.appendChild(board);
 
   if (spec.connectors && spec.connectors.length) {
-    const w = spec.cols * STEP - GAP_PX, h = spec.rows * STEP - GAP_PX;
+    const w = spec.cols * step - GAP_PX, h = spec.rows * step - GAP_PX;
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('width', w);
     svg.setAttribute('height', h);
@@ -303,8 +399,8 @@ function renderBoard(spec) {
     svg.style.top = '6px';
     svg.style.pointerEvents = 'none';
     spec.connectors.forEach(conn => {
-      const x1 = conn.from.c * STEP + CELL_PX / 2, y1 = conn.from.r * STEP + CELL_PX / 2;
-      const x2 = conn.to.c * STEP + CELL_PX / 2, y2 = conn.to.r * STEP + CELL_PX / 2;
+      const x1 = conn.from.c * step + cellPx / 2, y1 = conn.from.r * step + cellPx / 2;
+      const x2 = conn.to.c * step + cellPx / 2, y2 = conn.to.r * step + cellPx / 2;
       const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
       line.setAttribute('x1', x1); line.setAttribute('y1', y1);
       line.setAttribute('x2', x2); line.setAttribute('y2', y2);
@@ -324,7 +420,7 @@ function renderBoard(spec) {
 const root = document.getElementById('root');
 MECHANICS.forEach(mech => {
   const section = document.createElement('div');
-  section.className = 'mechanic-section' + (mech.isCore ? ' core' : '');
+  section.className = 'mechanic-section' + (mech.isCore ? ' core' : '') + (mech.isCombo ? ' combo' : '');
   section.innerHTML = `
     <div class="mechanic-head">
       <span class="icon">${mech.icon}</span>
