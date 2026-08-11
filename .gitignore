@@ -1,4 +1,5 @@
 node_modules
 dist
+dist-offline
 .vercel
 .DS_Store
