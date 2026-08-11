@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Pirate Trails — Level Progression Design (5 per Mechanic)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;500;600&display=swap');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Crimson Pro', serif;
+  background: linear-gradient(180deg, #fff3d6 0%, #f3e3b8 100%);
+  color: #2b1e16;
+  padding: 28px 20px 60px;
+}
+h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 24px; text-align: center; color: #42281d; }
+.subtitle { text-align: center; font-size: 13px; color: #6b5842; margin-top: 6px; max-width: 640px; margin-left: auto; margin-right: auto; }
+
+.mechanic-section {
+  max-width: 1180px; margin: 34px auto 0; background: #fff8eb; border: 3px solid #3d2b1f;
+  border-radius: 18px; padding: 18px 20px 22px; box-shadow: 0 6px 0 rgba(61,43,31,.25);
+}
+.mechanic-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+.mechanic-head .icon { font-size: 30px; }
+.mechanic-head h2 { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900; color: #42281d; }
+.mechanic-head .tag { font-family: 'Cinzel', serif; font-size: 10px; font-weight: 900; color: #8a6a10; letter-spacing: 1px; }
+.mechanic-desc { font-size: 12.5px; color: #5c4a3e; margin: 6px 0 16px; line-height: 1.5; }
+
+.levels-row { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 6px; }
+.level-card {
+  flex: 0 0 auto; width: 190px; background: #fdf6e3; border: 2.5px solid #d9c49a;
+  border-radius: 14px; padding: 10px 10px 12px; display: flex; flex-direction: column; align-items: center;
+}
+.level-card .lvl-head { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 8px; }
+.level-card .lvl-num { font-family: 'Cinzel', serif; font-weight: 900; font-size: 13px; color: #42281d; }
+.diff-tag {
+  font-family: 'Cinzel', serif; font-size: 9px; font-weight: 900; color: #fff; padding: 3px 8px;
+  border-radius: 9px; letter-spacing: .5px; display: inline-flex; align-items: center; gap: 3px;
+}
+
+.board-wrap { background: #5c3a21; border: 2px solid #f3c64f; border-radius: 10px; padding: 6px; }
+.board { display: grid; gap: 2px; }
+.cell {
+  background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 4px; position: relative;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; aspect-ratio: 1;
+}
+.cell.rock { background: #8a7259; }
+.cell.bomb { background: #ffe0dc; border-color: #ee4343; }
+.cell.gate-open { background: #dcf7e3; border-color: #2a7b4c; }
+.cell.gate-closed { background: #ffe0dc; border-color: #a82e2e; }
+.cell .anchor {
+  width: 78%; height: 78%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: 'Cinzel', serif; font-weight: 900; font-size: 9px; border: 1.5px solid rgba(255,255,255,.8);
+}
+.cell .crate { width: 76%; height: 76%; background: #b9814a; border: 1.5px solid #6b4423; border-radius: 3px; position: relative; }
+.cell .crate .band { position: absolute; left: 0; right: 0; height: 20%; background: #b0b8bf; }
+.cell .wp { width: 74%; height: 74%; border-radius: 50%; background: #f3c64f; border: 1.5px solid #8a6a10; display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-weight:900; font-size:10px; color:#2b1e16; }
+.wall-edge { position: absolute; background: #3d2b1f; }
+.wall-edge.h { left: 4%; right: 4%; height: 3px; }
+.wall-edge.v { top: 4%; bottom: 4%; width: 3px; }
+
+.timer-note { font-size: 10px; color: #8a6a10; margin-top: 8px; text-align: center; }
+.design-note { font-size: 10.5px; color: #5c4a3e; margin-top: 6px; text-align: center; line-height: 1.35; min-height: 42px; }
+.spec-line { font-size: 9.5px; color: #8a7a68; margin-top: 4px; text-align: center; }
+</style>
+</head>
+<body>
+<h1>Level Progression Design — 5 Levels per Mechanic</h1>
+<p class="subtitle">One design track per core mechanic (matches this project's own category/tier system in <code>utils/difficulty.js</code> and <code>utils/levelTimer.js</code>) — Level 1-2 Easy, 3-4 Normal, Level 5 always Super Hard.</p>
+
+<div id="root"></div>
+
+<script>
+const DIFF_STYLE = {
+  easy:      { label: 'EASY',       color: '#22c55e', icon: '🌱' },
+  normal:    { label: 'NORMAL',     color: '#0284c7', icon: '⚙️' },
+  hard:      { label: 'HARD',       color: '#f97316', icon: '🔥' },
+  superhard: { label: 'SUPER HARD', color: '#7c3aed', icon: '💀' }
+};
+// Real values from utils/levelTimer.js — Easy never gets a timer (GDD 3.8 Pillar P1).
+const TIME_LIMIT = { easy: null, normal: 100, hard: 160, superhard: 230 };
+
+const ANCHOR_COLORS = { A: '#1b5e8a', B: '#a82e2e', C: '#2a7b4c', D: '#7c3aed' };
+
+const MECHANICS = [
+  {
+    id: 'obstacles', icon: '🪨', title: 'Obstacles', tag: 'MEC-01',
+    desc: 'Rocks block hard, Walls block by edge, Push Rocks can be pushed to clear the way.',
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4,
+        anchors: { A: [0,0], B: [2,3] },
+        cells: [ {r:1,c:2,type:'rock'} ],
+        note: 'First taste of a Rock — a simple, unmissable block to route around.' },
+      { tier: 'easy', rows: 3, cols: 5,
+        anchors: { A: [0,0], B: [2,4] },
+        cells: [ {r:1,c:2,type:'rock'}, {r:1,c:3,type:'wallR'} ],
+        note: "Adds a Wall — same \"can't pass\" idea, but edge-based instead of a tile." },
+      { tier: 'normal', rows: 4, cols: 5,
+        anchors: { A: [0,0], B: [3,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'rock'}, {r:2,c:2,type:'wallB'}, {r:2,c:3,type:'crate'} ],
+        note: 'Introduces the Push Crate on its own, away from Bombs, to isolate the new skill.' },
+      { tier: 'normal', rows: 5, cols: 5,
+        anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'rock'}, {r:3,c:1,type:'rock'}, {r:2,c:2,type:'wallR'}, {r:1,c:3,type:'crate'}, {r:3,c:3,type:'crate'} ],
+        note: 'Two Crates must be pushed in the right order to clear both paths.' },
+      { tier: 'superhard', rows: 6, cols: 6,
+        anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [ {r:1,c:1,type:'rock'}, {r:4,c:4,type:'rock'}, {r:2,c:2,type:'rock'},
+                 {r:1,c:4,type:'wallB'}, {r:3,c:1,type:'wallR'},
+                 {r:2,c:4,type:'crate'}, {r:3,c:4,type:'bomb'},
+                 {r:4,c:1,type:'crate'}, {r:4,c:2,type:'bomb'}, {r:1,c:2,type:'crate'} ],
+        note: 'Every obstacle type at once — Crates must be pushed into Bombs for two different chains while routing around Rocks/Walls.' }
+    ]
+  },
+  {
+    id: 'direction', icon: '🎨', title: 'Direction & Color', tag: 'MEC-02',
+    desc: 'Arrows force the direction of your next step; Prisms recolor the chain; Color Gates only let the matching color through.',
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4,
+        anchors: { A: [0,0], B: [2,3] },
+        cells: [ {r:0,c:1,type:'arrow',dir:'⬇️'} ],
+        note: "One Arrow — the chain's next step is chosen for it, for the first time." },
+      { tier: 'easy', rows: 4, cols: 4,
+        anchors: { A: [0,0], B: [3,3] },
+        cells: [ {r:1,c:1,type:'prism',color:'#ee4343'}, {r:2,c:2,type:'gate',color:'#ee4343'} ],
+        note: 'A Prism paints the chain; only its matching Gate lets it through.' },
+      { tier: 'normal', rows: 4, cols: 5,
+        anchors: { A: [0,0], B: [3,4], C: [0,4] },
+        cells: [ {r:0,c:1,type:'arrow',dir:'➡️'}, {r:2,c:1,type:'arrow',dir:'⬇️'}, {r:1,c:3,type:'prism',color:'#2a8bf2'}, {r:2,c:3,type:'gate',color:'#2a8bf2'} ],
+        note: 'Arrows and colour-gating now share the same board.' },
+      { tier: 'normal', rows: 5, cols: 5,
+        anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:0,c:1,type:'arrow',dir:'⬇️'}, {r:2,c:0,type:'arrow',dir:'➡️'}, {r:3,c:2,type:'arrow',dir:'⬆️'},
+                 {r:1,c:3,type:'prism',color:'#ee4343'}, {r:2,c:3,type:'gate',color:'#ee4343'},
+                 {r:3,c:1,type:'prism',color:'#1db99b'}, {r:4,c:1,type:'gate',color:'#1db99b'} ],
+        note: "Two colours in play — the wrong Prism locks a chain out of its own Gate." },
+      { tier: 'superhard', rows: 6, cols: 6,
+        anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [ {r:0,c:1,type:'arrow',dir:'⬇️'}, {r:1,c:1,type:'arrow',dir:'➡️'}, {r:1,c:2,type:'arrow',dir:'⬇️'}, {r:4,c:4,type:'arrow',dir:'⬅️'},
+                 {r:2,c:4,type:'prism',color:'#ee4343'}, {r:3,c:4,type:'gate',color:'#ee4343'},
+                 {r:2,c:1,type:'prism',color:'#2a8bf2'}, {r:3,c:1,type:'gate',color:'#2a8bf2'},
+                 {r:4,c:2,type:'prism',color:'#1db99b'}, {r:5,c:2,type:'gate',color:'#1db99b'} ],
+        note: 'Long arrow-forced corridors plus a 3-colour Prism/Gate puzzle — misreading one colour locks the whole board.' }
+    ]
+  },
+  {
+    id: 'numbercode', icon: '🔢', title: 'Number Code', tag: 'MEC-03',
+    desc: 'Touch the numbered waypoints in strictly increasing order, ending exactly on the last one.',
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4,
+        anchors: { A: [0,0] },
+        cells: [ {r:1,c:1,type:'wp',n:1}, {r:2,c:3,type:'wp',n:2} ],
+        note: 'Two numbered stops — order matters, nothing else does yet.' },
+      { tier: 'easy', rows: 4, cols: 4,
+        anchors: { A: [0,0], B: [3,3] },
+        cells: [ {r:1,c:1,type:'wp',n:1}, {r:2,c:1,type:'wp',n:2}, {r:3,c:0,type:'wp',n:3} ],
+        note: 'One more stop, still a single ordered chain.' },
+      { tier: 'normal', rows: 4, cols: 5,
+        anchors: { A: [0,0], B: [3,4] },
+        cells: [ {r:0,c:2,type:'wp',n:1}, {r:1,c:3,type:'wp',n:2}, {r:2,c:1,type:'wp',n:3}, {r:3,c:0,type:'wp',n:4}, {r:1,c:1,type:'wp',n:1}, {r:2,c:2,type:'wp',n:2} ],
+        note: "Two chains, each keeping their own numbered order." },
+      { tier: 'normal', rows: 5, cols: 5,
+        anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'wp',n:1}, {r:1,c:3,type:'wp',n:2}, {r:3,c:3,type:'wp',n:3}, {r:3,c:1,type:'wp',n:4}, {r:2,c:0,type:'wp',n:5} ],
+        note: 'Longer numbered routes sharing a board with a third, unordered chain.' },
+      { tier: 'superhard', rows: 6, cols: 6,
+        anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [ {r:1,c:1,type:'wp',n:1}, {r:1,c:3,type:'wp',n:2}, {r:2,c:4,type:'wp',n:3}, {r:4,c:4,type:'wp',n:4}, {r:4,c:2,type:'wp',n:5}, {r:3,c:0,type:'wp',n:6} ],
+        note: 'Three simultaneous numbered sequences — a wrong-order tap on any one blocks that chain instantly.' }
+    ]
+  },
+  {
+    id: 'switches', icon: '🔌', title: 'Switches', tag: 'MEC-04',
+    desc: 'Hold one chain on a Switch to open a Gate for another chain; a Latch keeps the Gate open forever after one activation.',
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4,
+        anchors: { A: [0,0], B: [2,3] },
+        cells: [ {r:1,c:1,type:'switch'}, {r:1,c:2,type:'gate-closed'} ],
+        note: 'One Switch, one Gate — hold A on the Switch to let B through.' },
+      { tier: 'easy', rows: 4, cols: 4,
+        anchors: { A: [0,0], B: [3,3] },
+        cells: [ {r:1,c:1,type:'latch'}, {r:2,c:2,type:'gate-closed'} ],
+        note: 'A Latch Switch — touch once, the Gate stays open even after you leave.' },
+      { tier: 'normal', rows: 4, cols: 5,
+        anchors: { A: [0,0], B: [3,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'latch'}, {r:2,c:1,type:'gate-open'}, {r:1,c:3,type:'switch'}, {r:2,c:3,type:'gate-closed'} ],
+        note: "Mixing a Latch and a normal Switch — one needs to stay held, one doesn't." },
+      { tier: 'normal', rows: 5, cols: 5,
+        anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:1,c:1,type:'latch'}, {r:2,c:1,type:'gate-open'}, {r:1,c:3,type:'switch'}, {r:2,c:3,type:'gate-closed'}, {r:3,c:2,type:'latch'}, {r:4,c:1,type:'gate-closed'} ],
+        note: "A chain's own route now depends on another chain's Switch." },
+      { tier: 'superhard', rows: 6, cols: 6,
+        anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [ {r:1,c:1,type:'latch'}, {r:1,c:2,type:'gate-closed'}, {r:2,c:3,type:'switch'}, {r:2,c:4,type:'gate-closed'},
+                 {r:3,c:1,type:'latch'}, {r:3,c:2,type:'gate-closed'}, {r:4,c:3,type:'switch'}, {r:4,c:4,type:'gate-closed'} ],
+        note: "A dependency chain — Switch 1's Gate blocks the only path to Switch 2, and so on down the line." }
+    ]
+  },
+  {
+    id: 'bombs', icon: '💣', title: 'Static Bombs', tag: 'MEC-05',
+    desc: 'Touching a Bomb directly is an instant loss. The only way to destroy a Bomb is to push a Push Rock into it.',
+    levels: [
+      { tier: 'easy', rows: 3, cols: 4,
+        anchors: { A: [0,0], B: [2,3] },
+        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'} ],
+        note: 'The only lesson: push the Crate into the Bomb before any chain gets near it.' },
+      { tier: 'easy', rows: 4, cols: 4,
+        anchors: { A: [0,0], B: [3,3] },
+        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:3,c:1,type:'crate'}, {r:3,c:2,type:'bomb'} ],
+        note: 'Two Bombs now — each needs its own Crate cleared first.' },
+      { tier: 'normal', rows: 4, cols: 5,
+        anchors: { A: [0,0], B: [3,4], C: [0,4] },
+        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'}, {r:3,c:3,type:'bomb'} ],
+        note: 'Not quite enough Crates for every Bomb — one push has to do double duty.' },
+      { tier: 'normal', rows: 5, cols: 5,
+        anchors: { A: [0,0], B: [4,4], C: [0,4] },
+        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
+                 {r:3,c:3,type:'crate'}, {r:3,c:4,type:'bomb'}, {r:4,c:1,type:'bomb'}, {r:1,c:3,type:'rock'} ],
+        note: 'Bombs, Crates, and a Rock in the same cramped space — order of operations matters.' },
+      { tier: 'superhard', rows: 6, cols: 6,
+        anchors: { A: [0,0], B: [5,5], C: [0,5], D: [5,0] },
+        cells: [ {r:0,c:1,type:'crate'}, {r:0,c:2,type:'bomb'}, {r:2,c:1,type:'crate'}, {r:2,c:2,type:'bomb'},
+                 {r:3,c:3,type:'crate'}, {r:3,c:4,type:'bomb'}, {r:4,c:1,type:'bomb'}, {r:1,c:4,type:'bomb'},
+                 {r:5,c:2,type:'bomb'}, {r:1,c:2,type:'wallR'}, {r:3,c:1,type:'wallB'} ],
+        note: 'More live Bombs than Crates, on the smallest safe margin yet — one wrong step ends the run.' }
+    ]
+  }
+];
+
+function renderCell(spec, r, c) {
+  const anchorEntry = Object.entries(spec.anchors).find(([, pos]) => pos[0] === r && pos[1] === c);
+  const cellSpec = spec.cells.find(cc => cc.r === r && cc.c === c);
+  const div = document.createElement('div');
+  div.className = 'cell';
+
+  if (anchorEntry) {
+    const [id, ] = anchorEntry;
+    div.innerHTML = `<div class="anchor" style="background:${ANCHOR_COLORS[id]}">${id}</div>`;
+    return div;
+  }
+  if (!cellSpec) return div;
+
+  switch (cellSpec.type) {
+    case 'rock': div.classList.add('rock'); div.textContent = '🪨'; break;
+    case 'crate': div.innerHTML = '<div class="crate"><div class="band" style="top:22%"></div><div class="band" style="top:60%"></div></div>'; break;
+    case 'bomb': div.classList.add('bomb'); div.textContent = '💣'; break;
+    case 'arrow': div.textContent = cellSpec.dir; break;
+    case 'prism': div.textContent = '🎨'; div.style.boxShadow = `inset 0 0 0 2px ${cellSpec.color}`; break;
+    case 'gate': div.classList.add('gate-open'); div.style.borderColor = cellSpec.color; div.textContent = '🔓'; break;
+    case 'wp': div.innerHTML = `<div class="wp">${cellSpec.n}</div>`; break;
+    case 'switch': div.textContent = '🔘'; break;
+    case 'latch': div.textContent = '🔑'; break;
+    case 'gate-open': div.classList.add('gate-open'); div.textContent = '🔓'; break;
+    case 'gate-closed': div.classList.add('gate-closed'); div.textContent = '🔒'; break;
+    case 'wallR': div.innerHTML = '<div class="wall-edge v" style="right:-2px"></div>'; break;
+    case 'wallB': div.innerHTML = '<div class="wall-edge h" style="bottom:-2px"></div>'; break;
+  }
+  return div;
+}
+
+function renderBoard(spec) {
+  const wrap = document.createElement('div');
+  wrap.className = 'board-wrap';
+  const board = document.createElement('div');
+  board.className = 'board';
+  board.style.gridTemplateColumns = `repeat(${spec.cols}, 1fr)`;
+  board.style.width = (spec.cols * 24) + 'px';
+  for (let r = 0; r < spec.rows; r++) {
+    for (let c = 0; c < spec.cols; c++) {
+      board.appendChild(renderCell(spec, r, c));
+    }
+  }
+  wrap.appendChild(board);
+  return wrap;
+}
+
+const root = document.getElementById('root');
+MECHANICS.forEach(mech => {
+  const section = document.createElement('div');
+  section.className = 'mechanic-section';
+  section.innerHTML = `
+    <div class="mechanic-head">
+      <span class="icon">${mech.icon}</span>
+      <div><h2>${mech.title}</h2><div class="tag">${mech.tag}</div></div>
+    </div>
+    <p class="mechanic-desc">${mech.desc}</p>
+  `;
+  const row = document.createElement('div');
+  row.className = 'levels-row';
+  mech.levels.forEach((lvl, i) => {
+    const style = DIFF_STYLE[lvl.tier];
+    const timer = TIME_LIMIT[lvl.tier];
+    const card = document.createElement('div');
+    card.className = 'level-card';
+    card.innerHTML = `
+      <div class="lvl-head">
+        <span class="lvl-num">Level ${i + 1}</span>
+        <span class="diff-tag" style="background:${style.color}">${style.icon} ${style.label}</span>
+      </div>
+    `;
+    card.appendChild(renderBoard(lvl));
+    const spec = document.createElement('div');
+    spec.className = 'spec-line';
+    spec.textContent = `${lvl.rows}×${lvl.cols} board · ${Object.keys(lvl.anchors).length} chains`;
+    card.appendChild(spec);
+    const timerNote = document.createElement('div');
+    timerNote.className = 'timer-note';
+    timerNote.textContent = timer ? `⏱️ ${timer}s time limit` : '⏱️ Unlimited (no timer)';
+    card.appendChild(timerNote);
+    const note = document.createElement('div');
+    note.className = 'design-note';
+    note.textContent = lvl.note;
+    card.appendChild(note);
+    row.appendChild(card);
+  });
+  section.appendChild(row);
+  root.appendChild(section);
+});
+</script>
+</body>
+</html>
