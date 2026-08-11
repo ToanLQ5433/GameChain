@@ -129,13 +129,13 @@ export default class GameScene extends Phaser.Scene {
   // Settings modal (see openSettings()), both behind a Life-cost confirm.
 
   buildTopBar(width) {
-    const topY = 10, rowH = 52;
+    const topY = 16, rowH = 52;
     const cy = topY + rowH / 2;  // vertical center of the bar
 
     // ── LEFT: gold coin pill (icon + number) ────────────────────────────────
     // Pill shape: white bg, gold circle icon on left, number bold on right
     const pillH = 38, pillW = 110;
-    const pillX = 10;
+    const pillX = 14;
     const pillBg = this.add.graphics();
     pillBg.fillStyle(0xffffff, 1).fillRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
     pillBg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
@@ -161,7 +161,7 @@ export default class GameScene extends Phaser.Scene {
 
     // ── RIGHT: Settings gear (blue rounded square, ref image 2 style) ───────
     const gearSize = 50;
-    const gearX = width - 10 - gearSize / 2;
+    const gearX = width - 14 - gearSize / 2;
     const gearBg = this.add.graphics();
     gearBg.fillStyle(0x0284c7, 1).fillRoundedRect(gearX - gearSize / 2, cy - gearSize / 2, gearSize, gearSize, 14);
     gearBg.lineStyle(3, 0x0369a1, 1).strokeRoundedRect(gearX - gearSize / 2, cy - gearSize / 2, gearSize, gearSize, 14);

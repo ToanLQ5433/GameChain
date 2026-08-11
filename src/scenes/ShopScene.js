@@ -91,15 +91,15 @@ export default class ShopScene extends Phaser.Scene {
   // makeStatChip pills + a plain text title), which is exactly why
   // switching between them felt like leaving one app for another.
   buildTopBar(width) {
-    this.coinChip = buildStatCluster(this, 6, 8, {
+    this.coinChip = buildStatCluster(this, 6, 16, {
       icon: '🪙', iconBg: 0xffd94d, iconBorder: 0xc9971f, value: this.save.coins
     });
-    this.gemChip = buildStatCluster(this, this.coinChip.rightEdge + 18, 8, {
+    this.gemChip = buildStatCluster(this, this.coinChip.rightEdge + 18, 16, {
       icon: '💎', iconBg: 0x5eead4, iconBorder: 0x0f766e, valueColor: '#0f766e', value: this.save.gems
     });
 
     const closeSize = 48;
-    const closeX = width - 10 - closeSize / 2, closeY = 8 + closeSize / 2;
+    const closeX = width - 14 - closeSize / 2, closeY = 16 + closeSize / 2;
     makeIconButton(this, closeX, closeY, '✕', {
       size: closeSize, variant: 'ruby', iconSize: '20px',
       onClick: () => { playSound('switch', this.save.soundMuted); this.scene.start('Home'); }
@@ -112,7 +112,7 @@ export default class ShopScene extends Phaser.Scene {
   // of a price button can never trigger an accidental purchase.
 
   buildScrollArea(width, height) {
-    this.viewTop = 62;
+    this.viewTop = 70;
     this.viewBottom = height - DOCK_HOME_H - 12;
 
     this.maskShape = this.make.graphics({ x: 0, y: 0 }, false);

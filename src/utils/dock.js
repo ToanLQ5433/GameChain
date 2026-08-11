@@ -4,10 +4,18 @@
 // reads as leaving one app and landing in a different one.
 import { COLORS } from './theme.js';
 
-export const DOCK_HOME_H = 92;
+// Panel heights: the icon+label content is ~62-66px tall. The old
+// sideH=76/homeH=92 combined with a `topY+size/2+4` icon offset put the
+// label only ~8px from the panel's own bottom edge (the phone's bottom
+// corner) and, on the side buttons, the icon's top edge slightly ABOVE the
+// panel's own top edge — poking out over the rounded corner instead of
+// sitting inside it. Grew both panels and moved to a plain `topY + margin`
+// offset so icon+label always have clear, even margin on every side.
+const SIDE_H = 84;
+export const DOCK_HOME_H = 104;
 
 export function buildBottomDock(scene, width, height, { active, onShop, onHome, onLock }) {
-  const sideH = 76, homeH = DOCK_HOME_H, bleed = 30, R = 28;
+  const sideH = SIDE_H, homeH = DOCK_HOME_H, bleed = 30, R = 28;
   const homeW = Math.min(width * 0.38, 150);
   const homeX = width / 2 - homeW / 2;
   const sideW = (width - homeW) / 2;
@@ -30,25 +38,25 @@ export function buildBottomDock(scene, width, height, { active, onShop, onHome, 
   // as if it were the tall center button while ShopScene's own dock still
   // drew it inside the short side panel: an oversized 58px icon + 90px
   // hit-rect crammed into a 76px panel, overflowing its own slot.
-  buildDockButton(scene, sideW / 2, sideY + 6, '🏪', 'SHOP', onShop, false, active === 'shop');
-  buildDockButton(scene, homeX + homeW / 2, homeY + 2, '🏠', 'HOME', onHome, true, active === 'home');
-  buildDockButton(scene, width - sideW / 2, sideY + 6, '🔒', 'SOON', onLock, false, active === 'lock');
+  buildDockButton(scene, sideW / 2, sideY + 10, '🏪', 'SHOP', onShop, false, active === 'shop');
+  buildDockButton(scene, homeX + homeW / 2, homeY + 10, '🏠', 'HOME', onHome, true, active === 'home');
+  buildDockButton(scene, width - sideW / 2, sideY + 10, '🔒', 'SOON', onLock, false, active === 'lock');
 }
 
 function buildDockButton(scene, cx, topY, icon, label, onClick, isCenter, isActiveTab) {
   const size = isCenter ? 58 : 46;
-  const iconY = topY + size / 2 + 4;
+  const iconY = topY + size / 2;
   const iconBg = scene.add.graphics();
   const bgColor = isCenter ? COLORS.gold : (isActiveTab ? 0xffe9b0 : 0xffffff);
   const borderColor = !isCenter && isActiveTab ? COLORS.gold : COLORS.woodDark;
   iconBg.fillStyle(bgColor, 1).fillRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
   iconBg.lineStyle(3, borderColor, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
   scene.add.text(cx, iconY, icon, { fontSize: (isCenter ? 26 : 20) + 'px' }).setOrigin(0.5);
-  scene.add.text(cx, iconY + size / 2 + 12, label, {
+  scene.add.text(cx, iconY + size / 2 + 10, label, {
     fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#36324c'
   }).setOrigin(0.5);
 
-  const hit = scene.add.rectangle(cx, topY + 40, size + 22, 90, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+  const hit = scene.add.rectangle(cx, topY + 34, size + 22, 84, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
   hit.on('pointerdown', () => {
     scene.tweens.add({ targets: iconBg, scale: 0.9, duration: 60, yoyo: true });
     if (onClick) onClick();

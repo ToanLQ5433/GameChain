@@ -110,7 +110,9 @@ export default class HomeScene extends Phaser.Scene {
     // fixed but positions chain off each other's rightEdge, so the whole
     // cluster self-adjusts across the 320-480px width range without ever
     // needing per-breakpoint tuning.
-    this.coinChip = buildStatCluster(this, 6, 8, {
+    // y=16 (not 8) — 8px sat right at the phone's rounded top corner, with
+    // the icon-in-circle bleeding past that into the corner curve itself.
+    this.coinChip = buildStatCluster(this, 6, 16, {
       icon: '🪙', iconBg: 0xffd94d, iconBorder: 0xc9971f,
       value: this.save.coins, onBuy: () => this.watchAdForCoins()
     });
@@ -119,7 +121,7 @@ export default class HomeScene extends Phaser.Scene {
     // small red badge ON the heart icon itself, and the pill next to it
     // shows the regen countdown ("19:19") instead of repeating the count.
     const remaining = msUntilNextLife(this.save);
-    this.livesCluster = buildStatCluster(this, this.coinChip.rightEdge + 18, 8, {
+    this.livesCluster = buildStatCluster(this, this.coinChip.rightEdge + 18, 16, {
       icon: '❤️', iconBg: 0xff8a8a, iconBorder: 0xc23b3b, valueColor: '#0369a1',
       value: remaining > 0 ? formatMs(remaining) : 'FULL', measureText: '20:00',
       badge: this.save.lives.count, badgeColor: 0xef4444,
@@ -130,7 +132,7 @@ export default class HomeScene extends Phaser.Scene {
     // Settings — the shared chunky 3D icon button (blue, matches the
     // reference's blue rounded-square gear button).
     const gearSize = 48;
-    const gearX = width - 10 - gearSize / 2, gearY = 8 + gearSize / 2;
+    const gearX = width - 14 - gearSize / 2, gearY = 16 + gearSize / 2;
     makeIconButton(this, gearX, gearY, '⚙️', {
       size: gearSize, variant: 'blue', iconSize: '22px',
       onClick: () => { playSound('switch', this.save.soundMuted); this.settingsOverlay.setVisible(true); }
@@ -166,7 +168,7 @@ export default class HomeScene extends Phaser.Scene {
   // ---------------- Daily Quest event bar ----------------
 
   buildEventBar(width) {
-    const x = 14, y = 58, w = width - 28, h = 26;
+    const x = 14, y = 66, w = width - 28, h = 26;
     const g = this.add.graphics();
     g.fillStyle(COLORS.parchment, 1).fillRoundedRect(x, y, w, h, 13);
     g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, 13);
@@ -227,7 +229,7 @@ export default class HomeScene extends Phaser.Scene {
     // Ngay dưới Quest Bar, và ngay trên đỉnh nút Play CTA — mask cắt gọn
     // đường đi/level node để khi vuốt cuộn, chúng KHÔNG BAO GIỜ trượt lòi ra
     // che Top HUD hay chèn xuống dưới CTA/Nav Bar.
-    this.mapViewTop = 90;
+    this.mapViewTop = 98;
     this.mapViewBottom = height - DOCK_HOME_H - CTA_DOCK_GAP - CTA_H - MAP_CTA_GAP;
     this.mapCenterX = width / 2;
 
