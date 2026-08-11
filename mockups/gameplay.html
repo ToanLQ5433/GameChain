@@ -10,22 +10,22 @@ body { height: 100vh; width: 100vw; margin: 0; display: flex; align-items: cente
 .phone { width: min(360px, 94vw); height: min(740px, 94vh); aspect-ratio: 360 / 740; position: relative; overflow: hidden; border-radius: 36px; border: 10px solid #1c1410; box-shadow: 0 30px 70px rgba(0,0,0,.7); background: linear-gradient(180deg, #fff3d6 0%, #f3e3b8 100%); }
 
 /* top bar */
-.coin-pill { position: absolute; top: 10px; left: 10px; height: 38px; width: 110px; background: #fff; border: 3px solid #3d2b1f; border-radius: 19px; display: flex; align-items: center; padding: 0 10px; gap: 6px; }
+.coin-pill { position: absolute; top: 16px; left: 14px; height: 38px; width: 110px; background: #fff; border: 3px solid #3d2b1f; border-radius: 19px; display: flex; align-items: center; padding: 0 10px; gap: 6px; }
 .coin-pill .dot { width: 26px; height: 26px; border-radius: 50%; background: #f3c64f; border: 2px solid #3d2b1f; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 .coin-pill .val { font-family: 'Cinzel', serif; font-weight: 900; font-size: 16px; color: #2b1e16; }
 
-.level-banner { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 120px; height: 38px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 19px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.level-banner { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); width: 120px; height: 38px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 19px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .level-banner .lbl { font-family: 'Cinzel', serif; font-size: 9px; font-weight: 900; color: #f3c64f; letter-spacing: 2px; }
 .level-banner .num { font-family: 'Cinzel', serif; font-size: 15px; font-weight: 900; color: #fff; }
 
-.gear { position: absolute; top: 10px; right: 10px; width: 50px; height: 50px; border-radius: 14px; background: #0284c7; border: 3px solid #0369a1; box-shadow: 0 4px 0 #0369a1; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+.gear { position: absolute; top: 16px; right: 14px; width: 50px; height: 50px; border-radius: 14px; background: #0284c7; border: 3px solid #0369a1; box-shadow: 0 4px 0 #0369a1; display: flex; align-items: center; justify-content: center; font-size: 26px; }
 
-.diff-chip { position: absolute; top: 56px; left: 50%; transform: translateX(-50%); background: #7c3aed; border: 2px solid #2b1e16; border-radius: 10px; padding: 3px 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; color: #fff; }
+.diff-chip { position: absolute; top: 64px; left: 50%; transform: translateX(-50%); background: #7c3aed; border: 2px solid #2b1e16; border-radius: 10px; padding: 3px 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 11px; color: #fff; }
 
-.timer-pill { position: absolute; top: 56px; left: 10px; width: 100px; height: 28px; background: #fff; border: 2.5px solid #3d2b1f; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #ee4343; }
+.timer-pill { position: absolute; top: 64px; left: 14px; width: 100px; height: 28px; background: #fff; border: 2.5px solid #3d2b1f; border-radius: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #ee4343; }
 
 /* board */
-.board-frame { position: absolute; top: 92px; left: 12px; right: 12px; bottom: 116px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 16px; padding: 12px; }
+.board-frame { position: absolute; top: 100px; left: 12px; right: 12px; bottom: 116px; background: #5c3a21; border: 3px solid #f3c64f; border-radius: 16px; padding: 12px; }
 .grid { width: 100%; height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; }
 .tile { background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center; font-size: 22px; }
 .tile.rock { background: #8a7259; }
