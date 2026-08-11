@@ -1530,13 +1530,11 @@ export default class GameScene extends Phaser.Scene {
     const rewardTextY = y;
     y += 8;
 
-    let claimY = null, skipTxtY = null;
+    let claimY = null;
     if (!isSkip) {
       y += 16 + 20;
       claimY = y;
-      y += 20 + 8 + 7;
-      skipTxtY = y;
-      y += 7;
+      y += 20 + 14;
     }
 
     y += 14 + 24;
@@ -1608,12 +1606,9 @@ export default class GameScene extends Phaser.Scene {
       const x2Btn = makeButton(this, width / 2, panelY + claimY, '📺 CLAIM x2 REWARD', {
         variant: 'gold', fontSize: '13px', minHeight: 40, width: panelW - 48, shadow: true
       });
-      const skipTxt = this.add.text(width / 2, panelY + skipTxtY, 'No thanks, keep x1', {
-        fontFamily: 'Crimson Pro', fontSize: '11px', color: '#6b7280', fontStyle: 'italic'
-      }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
       const claimPulse = this.tweens.add({ targets: x2Btn, scale: { from: 1, to: 1.05 }, yoyo: true, repeat: -1, duration: 500 });
-      const hideClaimUI = () => { claimPulse.stop(); x2Btn.destroy(); skipTxt.destroy(); };
+      const hideClaimUI = () => { claimPulse.stop(); x2Btn.destroy(); };
 
       x2Btn.on('pointerdown', () => {
         showMockedAdOverlay(this, {
@@ -1627,9 +1622,8 @@ export default class GameScene extends Phaser.Scene {
           }
         });
       });
-      skipTxt.on('pointerdown', () => { playSound('switch', this.save.soundMuted); hideClaimUI(); });
 
-      winItems.push(x2Btn, skipTxt);
+      winItems.push(x2Btn);
     }
 
     this.overlayContainer.add(winItems);
