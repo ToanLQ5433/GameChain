@@ -76,8 +76,11 @@ export class ChainEngine {
   }
 
   isSwitchLive(sw) {
-    return this.getAllChains().some(c => c.path.some(p => p.r === sw.r && p.c === sw.c));
+    const chainOn = this.getAllChains().some(c => c.path.some(p => p.r === sw.r && p.c === sw.c));
+    const crateOn = (this.pushRocks || []).some(pr => pr.r === sw.r && pr.c === sw.c);
+    return chainOn || crateOn;
   }
+
 
   updateLatches() {
     this.switches.forEach(sw => {

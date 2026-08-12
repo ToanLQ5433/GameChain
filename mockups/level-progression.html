@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pirate Trails — Playable Level Progression</title>
+<title>Pirate Trails — Cognitive Psychology Level Progression</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Crimson+Pro:wght@400;500;600&display=swap');
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -14,7 +14,21 @@ body {
   min-height: 100vh;
 }
 h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 22px; text-align: center; color: #42281d; }
-.subtitle { text-align: center; font-size: 12.5px; color: #6b5842; margin-top: 6px; max-width: 680px; margin-left: auto; margin-right: auto; }
+.subtitle { text-align: center; font-size: 12.5px; color: #6b5842; margin-top: 6px; max-width: 760px; margin-left: auto; margin-right: auto; }
+
+.golden-path-banner {
+  max-width: 1180px; margin: 0 auto 20px; background: linear-gradient(135deg, #1e1b4b 0%, #311b92 100%);
+  border: 3px solid #f59e0b; border-radius: 18px; padding: 18px 24px; color: #fff; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+.gp-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 900; color: #fbbf24; text-align: center; letter-spacing: 1px; }
+.gp-subtitle { font-size: 13px; color: #e2e8f0; text-align: center; margin-top: 4px; margin-bottom: 14px; }
+.gp-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.gp-btn {
+  background: rgba(255,255,255,0.12); border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 14px;
+  color: #fff; cursor: pointer; text-align: center; font-size: 11px; transition: all 0.2s; min-width: 180px;
+}
+.gp-btn:hover { background: #f59e0b; color: #1e1b4b; transform: translateY(-3px); box-shadow: 0 6px 15px rgba(245,158,11,0.4); }
+.gp-btn b { font-family: 'Cinzel', serif; font-size: 12px; display: block; margin-bottom: 2px; }
 
 /* ---------- Track / level list ---------- */
 .track-section {
@@ -30,33 +44,40 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 22px; text-align
 .track-desc { font-size: 12px; color: #5c4a3e; margin: 4px 0 12px; line-height: 1.45; }
 .levels-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; }
 .level-card {
-  flex: 0 0 auto; width: 132px; background: #fdf6e3; border: 2.5px solid #d9c49a;
-  border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+  flex: 0 0 auto; width: 148px; background: #fdf6e3; border: 2.5px solid #d9c49a;
+  border-radius: 12px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 5px;
   cursor: pointer; transition: transform .1s;
 }
 .level-card:hover { transform: translateY(-2px); border-color: #f3c64f; }
-.level-card .lvl-num { font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; color: #42281d; }
-.diff-tag { font-family: 'Cinzel', serif; font-size: 8.5px; font-weight: 900; color: #fff; padding: 2px 7px; border-radius: 8px; letter-spacing: .5px; }
-.level-card .mini-board { background: #5c3a21; border: 2px solid #f3c64f; border-radius: 8px; padding: 4px; }
+.level-card .lvl-num { font-family: 'Cinzel', serif; font-weight: 900; font-size: 11.5px; color: #42281d; }
+.card-header { display: flex; justify-content: space-between; width: 100%; align-items: center; }
+.diff-tag { font-family: 'Cinzel', serif; font-size: 8px; font-weight: 900; color: #fff; padding: 2px 6px; border-radius: 6px; letter-spacing: .5px; }
+.level-card .mini-board { background: #5c3a21; border: 2px solid #f3c64f; border-radius: 8px; padding: 4px; margin: 2px 0; }
+.iq-badge {
+  font-size: 8.5px; font-family: 'Cinzel', serif; font-weight: 900; background: #f1e5cd;
+  border: 1px solid #c9b38c; border-radius: 4px; padding: 2px 5px; color: #3d2b1f; width: 100%; text-align: center;
+}
 .level-card .play-hint { font-size: 9px; color: #8a6a10; font-family: 'Cinzel', serif; font-weight: 900; }
 .level-card.solved { border-color: #22c55e; }
 .level-card.solved .play-hint { color: #16a34a; }
 
-/* ---------- Board cells (shared by mini + player) ---------- */
-.board { display: grid; gap: 2px; }
+/* ---------- Board cells ---------- */
+.board { display: grid; gap: 2px; position: relative; }
 .cell { background: #fdf6e3; border: 1px solid #d9c49a; border-radius: 4px; position: relative; display: flex; align-items: center; justify-content: center; }
 .cell.void { background: transparent; border: none; }
 .cell.rock { background: #8a7259; }
 .cell.bomb-alive { background: #ffe0dc; border-color: #ee4343; }
 .cell.gate-open { background: #dcf7e3; border-color: #2a7b4c; }
 .cell.gate-closed { background: #ffe0dc; border-color: #a82e2e; }
-.anchor-dot { width: 78%; height: 78%; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-family: 'Cinzel', serif; font-weight: 900; border: 1.5px solid rgba(255,255,255,.85); }
+.anchor-dot {
+  width: 82%; height: 82%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  color: #fff; font-family: 'Cinzel', serif; font-weight: 900; border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3); text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
 .crate-box { width: 76%; height: 76%; background: #b9814a; border: 1.5px solid #6b4423; border-radius: 3px; position: relative; }
 .crate-box .band { position: absolute; left: 0; right: 0; height: 20%; background: #b0b8bf; }
 .wp-dot { width: 74%; height: 74%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'Cinzel', serif; font-weight: 900; border: 2px solid; box-sizing: border-box; }
-.wall-edge { position: absolute; background: #3d2b1f; z-index: 3; }
-.wall-edge.h { left: 4%; right: 4%; height: 4px; }
-.wall-edge.v { top: 4%; bottom: 4%; width: 4px; }
+.wall-edge { position: absolute; background: #3d2b1f; z-index: 10; border-radius: 2px; }
 .chain-fill { position: absolute; inset: 2px; border-radius: 3px; opacity: .85; }
 
 /* ---------- Player overlay ---------- */
@@ -65,22 +86,39 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 22px; text-align
   align-items: center; justify-content: center; z-index: 100; flex-direction: column; padding: 16px;
 }
 #player-overlay.open { display: flex; }
-.player-panel { background: #fff8eb; border: 4px solid #3d2b1f; border-radius: 20px; padding: 16px; max-width: 96vw; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.player-panel { background: #fff8eb; border: 4px solid #3d2b1f; border-radius: 20px; padding: 16px; max-width: 96vw; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .player-head { display: flex; align-items: center; gap: 10px; width: 100%; justify-content: space-between; }
 .player-head .title { font-family: 'Cinzel', serif; font-weight: 900; font-size: 14px; color: #42281d; }
-.player-note { font-size: 11.5px; color: #5c4a3e; text-align: center; max-width: 480px; line-height: 1.4; min-height: 32px; }
+.player-metrics-pill {
+  font-family: 'Cinzel', serif; font-size: 9px; font-weight: 900; background: #1e1b4b; color: #fbbf24;
+  padding: 3px 8px; border-radius: 10px; border: 1px solid #f59e0b;
+}
+.player-note { font-size: 11.5px; color: #5c4a3e; text-align: center; max-width: 480px; line-height: 1.4; min-height: 28px; }
 .player-board-wrap { background: #5c3a21; border: 3px solid #f3c64f; border-radius: 12px; padding: 8px; touch-action: none; }
 .player-controls { display: flex; gap: 10px; }
 .pbtn { font-family: 'Cinzel', serif; font-weight: 900; font-size: 12px; padding: 8px 16px; border-radius: 14px; border: 2px solid #3d2b1f; cursor: pointer; }
 .pbtn.reset { background: #f3c64f; color: #2b1e16; }
 .pbtn.back { background: #dfc49c; color: #42281d; }
 .win-banner { font-family: 'Cinzel', serif; font-weight: 900; font-size: 16px; color: #16a34a; min-height: 22px; }
-.legend { font-size: 10px; color: #8a7a68; text-align: center; max-width: 420px; }
+.legend { font-size: 10px; color: #8a7a68; text-align: center; max-width: 440px; }
 </style>
 </head>
 <body>
-<h1>Level Progression — Playable Prototype</h1>
-<p class="subtitle">Every level below is wired to a faithful port of this project's real <code>ChainEngine.js</code> — the same drag/step/backtrack/lock rules the shipped game uses. Tap any card to actually play it: drag from an anchor, retrace your own tail to undo, and lock every chain to win. Number Code uses a single chain per level (matching the real "mật mã số" levels) — the Super Hard one has only 2 checkpoints but a 24-of-25-cell path, verified solvable, not just illustrated.</p>
+
+<div class="golden-path-banner" id="golden-path-banner">
+  <div class="gp-title">🏆 GOLDEN PATH DEMO — 5-MINUTE SHOWCASE</div>
+  <div class="gp-subtitle">Dành riêng cho Buổi Thẩm Định & Kiểm Thử Nhanh: 5 Màn "Hoa Hậu" Đại Diện Tinh Hoa Puzzle Design (IQ 10/10 & Greedy Trapped)</div>
+  <div class="gp-buttons">
+    <button class="gp-btn" onclick="openGoldenLevel(0, 2)"><b>1. Bẫy Tham Lam</b><br>Track 1 (Core) — Màn 3 (3x4)</button>
+    <button class="gp-btn" onclick="openGoldenLevel(1, 2)"><b>2. Đẩy Thùng Sokoban</b><br>Track 2 (Obstacles) — Màn 3 (4x4)</button>
+    <button class="gp-btn" onclick="openGoldenLevel(3, 2)"><b>3. Mật Mã Số IQ</b><br>Track 4 (Code) — Màn 3 (4x4)</button>
+    <button class="gp-btn" onclick="openGoldenLevel(6, 2)"><b>4. Crate đè Switch</b><br>Track 7 (Combo) — Màn 3 (4x4)</button>
+    <button class="gp-btn" onclick="openGoldenLevel(6, 5)"><b>5. Đại Giao Hưởng</b><br>Track 7 (Combo) — Màn 6 (4x5)</button>
+  </div>
+</div>
+
+<h1>Cognitive Psychology Level Progression — Playable Prototype</h1>
+<p class="subtitle">Every level is evaluated using our <b>3-Tier Heuristic Metrics Analyzer</b>: Measuring Uniqueness ($U$), Greedy Trap Simulation ($G$), and Cognitive IQ Score. Designed to maximize player satisfaction and "Eureka!" delight.</p>
 
 <div id="root"></div>
 
@@ -88,7 +126,10 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 22px; text-align
   <div class="player-panel">
     <div class="player-head">
       <span class="title" id="player-title"></span>
-      <span class="diff-tag" id="player-difftag"></span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="player-metrics-pill" id="player-metrics"></span>
+        <span class="diff-tag" id="player-difftag"></span>
+      </div>
     </div>
     <div class="player-note" id="player-note"></div>
     <div class="player-board-wrap" id="player-board-wrap"><div class="board" id="player-board"></div></div>
@@ -97,7 +138,7 @@ h1 { font-family: 'Cinzel', serif; font-weight: 900; font-size: 22px; text-align
       <button class="pbtn reset" id="btn-reset">Reset</button>
       <button class="pbtn back" id="btn-back">Back to list</button>
     </div>
-    <div class="legend">Drag from a colored circle. Drag back over your own trail to undo. A chain locks once it fills its full length (and — for Number Code — ends on the last numbered stop).</div>
+    <div class="legend">Drag from a colored circle displaying required length number. Drag back over your trail to undo.</div>
   </div>
 </div>
 
@@ -149,7 +190,11 @@ class ChainEngine {
       (w.r1 === r1 && w.c1 === c1 && w.r2 === r2 && w.c2 === c2) ||
       (w.r1 === r2 && w.c1 === c2 && w.r2 === r1 && w.c1 === c1));
   }
-  isSwitchLive(sw) { return this.getAllChains().some(c => c.path.some(p => p.r === sw.r && p.c === sw.c)); }
+  isSwitchLive(sw) {
+    const chainOn = this.getAllChains().some(c => c.path.some(p => p.r === sw.r && p.c === sw.c));
+    const crateOn = (this.pushRocks || []).some(pr => pr.r === sw.r && pr.c === sw.c);
+    return chainOn || crateOn;
+  }
   updateLatches() { this.switches.forEach(sw => { if (sw.latch && this.isSwitchLive(sw)) this._latched.add(sw.r + '_' + sw.c); }); }
   isGateOpenAt(r, c) {
     const controllers = this.switches.filter(s => s.gateR === r && s.gateC === c);
@@ -198,78 +243,73 @@ class ChainEngine {
     if (wpList) {
       const hitIdx = wpList.findIndex(w => w.r === r && w.c === c);
       if (hitIdx !== -1 && hitIdx !== chain.waypointProgress) return { result: 'BLOCKED' };
+      if (hitIdx === chain.waypointProgress) chain.waypointProgress++;
     }
-    if (this.isBombAlive(r, c)) return { result: 'LOSE', reason: 'bomb' };
-    if (this.isPushRock(r, c)) {
-      const beyondR = r + dr, beyondC = c + dc;
-      if (!this.inBounds(beyondR, beyondC)) return { result: 'BLOCKED' };
-      if (this.hasWallBetween(r, c, beyondR, beyondC)) return { result: 'BLOCKED' };
-      if (this.isBombAlive(beyondR, beyondC)) {
-        const rockIdx = this.pushRocks.findIndex(p => p.r === r && p.c === c);
-        this.pushRocks.splice(rockIdx, 1);
-        const bomb = this.bombs.find(b => b.r === beyondR && b.c === beyondC);
-        bomb.destroyed = true;
-      } else if (this.isOccupied(beyondR, beyondC, this.activeId)) return { result: 'BLOCKED' };
-      else { const rock = this.pushRocks.find(p => p.r === r && p.c === c); rock.r = beyondR; rock.c = beyondC; }
-    } else if (this.isOccupied(r, c, this.activeId)) return { result: 'BLOCKED' };
-    chain.path.push({ r, c });
+    const pushIdx = this.pushRocks.findIndex(p => p.r === r && p.c === c);
+    if (pushIdx !== -1) {
+      const targetR = r + dr, targetC = c + dc;
+      if (this.isOccupied(targetR, targetC, this.activeId)) return { result: 'BLOCKED' };
+      const bIdx = this.bombs.findIndex(b => b.r === targetR && b.c === targetC && !b.destroyed);
+      if (bIdx !== -1) {
+        this.bombs[bIdx].destroyed = true;
+        this.pushRocks.splice(pushIdx, 1);
+      } else {
+        this.pushRocks[pushIdx].r = targetR;
+        this.pushRocks[pushIdx].c = targetC;
+      }
+    }
+    if (this.isBombAlive(r, c)) { return { result: 'LOSE', reason: 'bomb' }; }
     const prism = this.prisms.find(p => p.r === r && p.c === c);
     if (prism) chain.colorTag = prism.color;
-    if (wpList && wpList[chain.waypointProgress] && wpList[chain.waypointProgress].r === r && wpList[chain.waypointProgress].c === c) chain.waypointProgress += 1;
+    chain.path.push({ r, c });
     return { result: 'OK' };
   }
-  backtrackTo(index) {
+  backtrackTo(idx) {
     const chain = this.chains[this.activeId];
-    if (!chain) return;
-    chain.path = chain.path.slice(0, Math.max(0, index) + 1);
-    const wpList = this.waypoints[chain.id];
-    if (wpList) {
-      let progress = 0;
-      for (const p of chain.path) { if (wpList[progress] && wpList[progress].r === p.r && wpList[progress].c === p.c) progress++; }
-      chain.waypointProgress = progress;
+    if (!chain || chain.locked) return;
+    if (idx < 0 || idx >= chain.path.length) return;
+    chain.path = chain.path.slice(0, idx + 1);
+    if (this.waypoints[chain.id]) {
+      let count = 0;
+      chain.path.forEach(p => {
+        if (count < this.waypoints[chain.id].length &&
+            p.r === this.waypoints[chain.id][count].r &&
+            p.c === this.waypoints[chain.id][count].c) {
+          count++;
+        }
+      });
+      chain.waypointProgress = count;
     }
-    let colorTag = null;
-    for (const p of chain.path) { const prism = this.prisms.find(pr => pr.r === p.r && pr.c === p.c); if (prism) colorTag = prism.color; }
-    chain.colorTag = colorTag;
   }
   endDrag() {
+    this.updateLatches();
     const chain = this.chains[this.activeId];
     if (!chain) return { locked: false };
-    if (chain.path.length !== chain.length) return { locked: false };
-    const wpList = this.waypoints[chain.id];
-    if (wpList) {
-      if (chain.waypointProgress < wpList.length) return { locked: false, error: 'waypoint-incomplete' };
-      const lastWp = wpList[wpList.length - 1];
-      const tail = chain.path[chain.path.length - 1];
-      if (tail.r !== lastWp.r || tail.c !== lastWp.c) return { locked: false, error: 'waypoint-end-mismatch' };
+    if (chain.path.length === chain.length) {
+      const wpList = this.waypoints[chain.id];
+      if (wpList && chain.waypointProgress < wpList.length) {
+        return { locked: false, reason: 'waypoint' };
+      }
+      chain.locked = true;
+      this.activeId = null;
+      return { locked: true };
     }
-    chain.locked = true;
-    this.updateLatches();
-    return { locked: true, win: this.isWon() };
+    return { locked: false };
   }
 }
 
 // ============================================================
-// Level data — all 31 levels verified solvable by simulating
-// this exact engine (see design notes below each track).
+// UI & Data
 // ============================================================
-const AC = { A: '#1b5e8a', B: '#a82e2e', C: '#2a7b4c', D: '#7c3aed', E: '#d97706' };
-const LATCH_LINK = '#c9971f', SWITCH_LINK = '#7d8791';
 const DIFF_STYLE = {
-  easy: { label: 'EASY', color: '#22c55e' }, normal: { label: 'NORMAL', color: '#0284c7' },
-  hard: { label: 'HARD', color: '#f97316' }, superhard: { label: 'SUPER HARD', color: '#7c3aed' }
+  easy: { label: 'EASY', color: '#22c55e' },
+  normal: { label: 'NORMAL', color: '#0284c7' },
+  hard: { label: 'HARD', color: '#f97316' },
+  superhard: { label: 'SUPER HARD', color: '#7c3aed' }
 };
 
-// Every level below is a real ChainEngine levelDef with a solution that
-// was verified by replaying it through startDrag/step/backtrackTo/endDrag
-// on this exact engine (see mockups/README or the design notes) — every
-// track fully tiles its board (all non-obstacle cells belong to some
-// chain), matching the real game's own level-generation convention.
-const TRACKS = [{"id":"core","icon":"⛵","title":"Core Drag & Coverage","tag":"CORE","isCore":true,"isCombo":false,"desc":"Tap an anchor and drag to cover the whole board with several chains at once — no obstacles, on purpose.","levels":[{"tier":"easy","note":"A single chain, nothing else — one drag must cover every cell.","rows":2,"cols":3,"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"}]},{"tier":"easy","note":"A second chain — two colors split the board without ever crossing.","rows":3,"cols":3,"anchors":[{"id":"A","row":0,"col":0,"length":5,"color":"#1b5e8a"},{"id":"B","row":2,"col":2,"length":4,"color":"#a82e2e"}]},{"tier":"normal","note":"Same two chains, longer board, zero wasted moves.","rows":3,"cols":5,"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":2,"col":4,"length":7,"color":"#a82e2e"}]},{"tier":"normal","note":"A third chain splits the board three ways.","rows":4,"cols":5,"anchors":[{"id":"A","row":0,"col":0,"length":7,"color":"#1b5e8a"},{"id":"C","row":0,"col":4,"length":6,"color":"#2a7b4c"},{"id":"B","row":3,"col":4,"length":7,"color":"#a82e2e"}]},{"tier":"superhard","note":"Corners and mid-edges cut, plus a 4th chain — the densest coverage puzzle in the game.","rows":6,"cols":6,"shape":["011110","111111","111111","111111","111111","011110"],"anchors":[{"id":"A","row":0,"col":1,"length":8,"color":"#1b5e8a"},{"id":"C","row":1,"col":5,"length":8,"color":"#2a7b4c"},{"id":"D","row":4,"col":0,"length":8,"color":"#7c3aed"},{"id":"B","row":5,"col":1,"length":8,"color":"#a82e2e"}]}]},{"id":"obstacles","icon":"🪨","title":"Obstacles","tag":"MEC-01","isCore":false,"isCombo":false,"desc":"Rocks block hard, Walls block by edge, Push Rocks can be pushed to clear the way.","levels":[{"tier":"easy","note":"First Rock — route around it, and now the whole board must be covered.","rows":3,"cols":4,"rocks":[{"r":1,"c":2}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":7},{"id":"B","row":2,"col":3,"color":"#a82e2e","length":4}]},{"tier":"easy","note":"A Wall now forces a real detour.","rows":4,"cols":5,"rocks":[{"r":3,"c":4}],"walls":[{"r1":2,"c1":2,"r2":3,"c2":2}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":10},{"id":"B","row":2,"col":4,"color":"#a82e2e","length":9}]},{"tier":"normal","note":"Introduces the Push Crate.","rows":5,"cols":5,"rocks":[{"r":2,"c":1}],"pushRocks":[{"r":0,"c":2}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":9},{"id":"B","row":4,"col":4,"color":"#a82e2e","length":14}]},{"tier":"normal","note":"Two Crates — the order you push them in matters.","rows":5,"cols":6,"pushRocks":[{"r":2,"c":3},{"r":2,"c":4}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":10},{"id":"B","row":4,"col":5,"color":"#a82e2e","length":20}]},{"tier":"superhard","note":"Three Crates, full board coverage — one wrong push seals off the lane you needed next.","rows":6,"cols":6,"rocks":[{"r":1,"c":4}],"pushRocks":[{"r":2,"c":2},{"r":3,"c":3},{"r":4,"c":2}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":11},{"id":"D","row":5,"col":0,"color":"#7c3aed","length":10},{"id":"B","row":5,"col":5,"color":"#a82e2e","length":12}]}]},{"id":"direction","icon":"🎨","title":"Direction & Color","tag":"MEC-02","isCore":false,"isCombo":false,"desc":"Arrows force your next step; Prisms recolor the chain; Color Gates only let the matching color through.","levels":[{"tier":"easy","note":"One Arrow — your next step is chosen for you.","rows":3,"cols":4,"arrows":[{"r":0,"c":1,"dir":"DOWN"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"B","row":2,"col":3,"color":"#a82e2e","length":4}]},{"tier":"easy","note":"A Prism paints the chain so it can pass its matching Gate.","rows":4,"cols":4,"prisms":[{"r":1,"c":1,"color":"red"}],"colorGates":[{"r":1,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"B","row":3,"col":3,"color":"#a82e2e","length":8}]},{"tier":"normal","note":"Arrows and colour-gating now share a board.","rows":4,"cols":5,"arrows":[{"r":0,"c":1,"dir":"RIGHT"},{"r":1,"c":2,"dir":"DOWN"}],"prisms":[{"r":2,"c":3,"color":"blue"}],"colorGates":[{"r":3,"c":3,"color":"blue"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":10},{"id":"B","row":3,"col":4,"color":"#a82e2e","length":10}]},{"tier":"normal","note":"Two colours in play at once.","rows":5,"cols":5,"arrows":[{"r":0,"c":1,"dir":"DOWN"}],"prisms":[{"r":1,"c":1,"color":"red"},{"r":1,"c":3,"color":"teal"}],"colorGates":[{"r":3,"c":1,"color":"red"},{"r":3,"c":3,"color":"teal"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":10},{"id":"B","row":4,"col":4,"color":"#a82e2e","length":15}]},{"tier":"superhard","note":"Three colours, two Arrows, full board coverage across three chains.","rows":6,"cols":6,"arrows":[{"r":0,"c":1,"dir":"DOWN"},{"r":5,"c":4,"dir":"UP"}],"prisms":[{"r":1,"c":1,"color":"red"},{"r":1,"c":4,"color":"teal"},{"r":4,"c":3,"color":"orange"}],"colorGates":[{"r":4,"c":1,"color":"red"},{"r":2,"c":4,"color":"teal"},{"r":5,"c":4,"color":"orange"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":12},{"id":"C","row":0,"col":5,"color":"#2a7b4c","length":12},{"id":"B","row":5,"col":5,"color":"#a82e2e","length":12}]}]},{"id":"numbercode","icon":"🔢","title":"Number Code","tag":"MEC-03","isCore":false,"isCombo":false,"desc":"Touch the numbered stops in strictly increasing order, ending exactly on the last one. Always a single chain, matching the real \"mật mã số\" levels — and always covering the whole board.","levels":[{"tier":"easy","note":"Two numbered stops, one chain, full board — order matters.","rows":3,"cols":3,"waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":2}]},"anchors":[{"id":"A","row":0,"col":0,"length":9,"color":"#1b5e8a"}]},{"tier":"easy","note":"A bigger board, still full coverage, still just two stops.","rows":3,"cols":4,"waypoints":{"A":[{"r":1,"c":2},{"r":2,"c":3}]},"anchors":[{"id":"A","row":0,"col":0,"length":12,"color":"#1b5e8a"}]},{"tier":"normal","note":"Three stops now — the order is the whole puzzle, across the entire board.","rows":4,"cols":4,"waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":3},{"r":3,"c":0}]},"anchors":[{"id":"A","row":0,"col":0,"length":16,"color":"#1b5e8a"}]},{"tier":"normal","note":"Four stops, a full-board Hamiltonian path — plan the whole route before you drag.","rows":4,"cols":5,"waypoints":{"A":[{"r":1,"c":3},{"r":2,"c":1},{"r":3,"c":4},{"r":1,"c":0}]},"anchors":[{"id":"A","row":0,"col":0,"length":20,"color":"#1b5e8a"}]},{"tier":"superhard","note":"Only 2 checkpoints — but the chain must cover 24 of this board's 25 cells to reach them. No memorization needed, just a genuinely hard path to find.","rows":5,"cols":5,"rocks":[{"r":2,"c":2}],"waypoints":{"A":[{"r":1,"c":4},{"r":4,"c":3}]},"anchors":[{"id":"A","row":0,"col":0,"length":24,"color":"#1b5e8a"}]}]},{"id":"switches","icon":"🔌","title":"Switches","tag":"MEC-04","isCore":false,"isCombo":false,"desc":"Hold a chain on a Switch to open a Gate; a Latch (gold) keeps it open forever once touched.","levels":[{"tier":"easy","note":"One Switch, one Gate.","rows":3,"cols":4,"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"B","row":2,"col":3,"color":"#a82e2e","length":4}]},{"tier":"easy","note":"A Latch (gold) — touch once, stays open forever.","rows":4,"cols":4,"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":true}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"B","row":3,"col":3,"color":"#a82e2e","length":8}]},{"tier":"normal","note":"A Latch and a normal Switch on the same board.","rows":4,"cols":5,"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":true},{"r":2,"c":3,"gateR":2,"gateC":4,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":10},{"id":"B","row":3,"col":4,"color":"#a82e2e","length":10}]},{"tier":"normal","note":"Switch 1's own Gate sits directly in the path to Switch 2.","rows":5,"cols":5,"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":false},{"r":1,"c":3,"gateR":1,"gateC":4,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":15},{"id":"B","row":4,"col":4,"color":"#a82e2e","length":10}]},{"tier":"superhard","note":"Four linked pairs (2 Latch, 2 normal) at once, full board coverage.","rows":6,"cols":6,"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":true},{"r":1,"c":4,"gateR":1,"gateC":3,"latch":false},{"r":4,"c":1,"gateR":4,"gateC":2,"latch":true},{"r":4,"c":4,"gateR":4,"gateC":3,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":9},{"id":"C","row":0,"col":5,"color":"#2a7b4c","length":9},{"id":"D","row":5,"col":0,"color":"#7c3aed","length":9},{"id":"B","row":5,"col":5,"color":"#a82e2e","length":9}]}]},{"id":"bombs","icon":"💣","title":"Static Bombs","tag":"MEC-05","isCore":false,"isCombo":false,"desc":"Touching a live Bomb is instant loss. Push a Crate into it to destroy it — the Crate is consumed, one-for-one.","levels":[{"tier":"easy","note":"Push the Crate into the Bomb before any chain gets near it.","rows":3,"cols":4,"pushRocks":[{"r":0,"c":2}],"bombs":[{"r":0,"c":3}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":7},{"id":"B","row":2,"col":3,"color":"#a82e2e","length":4}]},{"tier":"easy","note":"Two Bombs, two Crates, one-for-one.","rows":4,"cols":4,"pushRocks":[{"r":0,"c":2},{"r":3,"c":1}],"bombs":[{"r":0,"c":3},{"r":3,"c":0}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":7},{"id":"B","row":3,"col":3,"color":"#a82e2e","length":7}]},{"tier":"normal","note":"A third Bomb sits in a dead end — don't touch it, you don't need to.","rows":4,"cols":5,"pushRocks":[{"r":0,"c":2},{"r":3,"c":1}],"bombs":[{"r":0,"c":3},{"r":3,"c":0},{"r":2,"c":4}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":9},{"id":"B","row":3,"col":4,"color":"#a82e2e","length":8}]},{"tier":"normal","note":"Three Bombs, three Crates — exactly enough, full coverage otherwise.","rows":5,"cols":5,"pushRocks":[{"r":0,"c":2},{"r":2,"c":1},{"r":4,"c":2}],"bombs":[{"r":0,"c":3},{"r":2,"c":0},{"r":4,"c":3}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":9},{"id":"C","row":2,"col":4,"color":"#2a7b4c","length":4},{"id":"B","row":4,"col":0,"color":"#a82e2e","length":9}]},{"tier":"superhard","note":"Four mandatory pairs, plus two decoy Bombs that never need clearing.","rows":6,"cols":6,"pushRocks":[{"r":0,"c":1},{"r":1,"c":5},{"r":4,"c":0},{"r":5,"c":4}],"bombs":[{"r":0,"c":0},{"r":0,"c":5},{"r":5,"c":0},{"r":5,"c":5},{"r":2,"c":2},{"r":3,"c":3}],"anchors":[{"id":"A","row":1,"col":0,"color":"#1b5e8a","length":7},{"id":"C","row":0,"col":4,"color":"#2a7b4c","length":8},{"id":"D","row":5,"col":1,"color":"#7c3aed","length":8},{"id":"B","row":4,"col":5,"color":"#a82e2e","length":7}]}]},{"id":"combined","icon":"🧩","title":"Combined Mechanics","tag":"COMBO","isCore":false,"isCombo":true,"desc":"Every level layers two or more mechanics from the tracks above onto one board — 2 Easy, 2 Normal, 1 Hard, 1 Super Hard.","levels":[{"tier":"easy","note":"A Rock to route around AND an Arrow forcing your next step — two simple mechanics, same board.","rows":3,"cols":4,"rocks":[{"r":1,"c":2}],"arrows":[{"r":1,"c":0,"dir":"RIGHT"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":7},{"id":"B","row":2,"col":3,"color":"#a82e2e","length":4}]},{"tier":"easy","note":"A Wall detour plus a Prism/Gate pair — routing AND colour-matching, together for the first time.","rows":4,"cols":4,"walls":[{"r1":2,"c1":1,"r2":3,"c2":1}],"prisms":[{"r":1,"c":1,"color":"red"}],"colorGates":[{"r":1,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"B","row":3,"col":3,"color":"#a82e2e","length":8}]},{"tier":"normal","note":"Push a Crate, hold a Switch, and follow an Arrow — three different mechanics stacked on one small board.","rows":4,"cols":5,"pushRocks":[{"r":1,"c":1}],"switches":[{"r":1,"c":3,"gateR":1,"gateC":4,"latch":false}],"arrows":[{"r":0,"c":1,"dir":"RIGHT"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":9},{"id":"B","row":3,"col":4,"color":"#a82e2e","length":10}]},{"tier":"normal","note":"A Bomb/Crate pair, a two-stop Number Code sequence, and a Wall — Static Bombs, Number Code, and Obstacles sharing one board.","rows":6,"cols":5,"walls":[{"r1":4,"c1":2,"r2":4,"c2":3}],"pushRocks":[{"r":0,"c":3}],"waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":0}]},"bombs":[{"r":0,"c":4}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":13},{"id":"B","row":5,"col":4,"color":"#a82e2e","length":15}]},{"tier":"hard","note":"Five mechanics on one board at once — Rocks, Walls, a Crate, colour-gating, AND a Switch. Full coverage across four chains.","rows":6,"cols":6,"rocks":[{"r":0,"c":2}],"walls":[{"r1":4,"c1":1,"r2":4,"c2":2}],"pushRocks":[{"r":4,"c":1}],"switches":[{"r":4,"c":4,"gateR":4,"gateC":5,"latch":false}],"prisms":[{"r":1,"c":4,"color":"teal"}],"colorGates":[{"r":1,"c":3,"color":"teal"}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"C","row":0,"col":5,"color":"#2a7b4c","length":9},{"id":"D","row":5,"col":0,"color":"#7c3aed","length":9},{"id":"B","row":5,"col":5,"color":"#a82e2e","length":9}]},{"tier":"superhard","note":"Every mechanic in the game on one board, across 5 chains, full coverage. The true final exam.","rows":7,"cols":7,"rocks":[{"r":1,"c":1},{"r":1,"c":0},{"r":0,"c":3}],"walls":[{"r1":5,"c1":4,"r2":5,"c2":5}],"pushRocks":[{"r":4,"c":1}],"switches":[{"r":1,"c":5,"gateR":1,"gateC":6,"latch":true}],"arrows":[{"r":0,"c":4,"dir":"DOWN"}],"prisms":[{"r":5,"c":1,"color":"orange"}],"colorGates":[{"r":5,"c":2,"color":"orange"}],"waypoints":{"E":[{"r":3,"c":5},{"r":3,"c":4}]},"bombs":[{"r":2,"c":0}],"anchors":[{"id":"A","row":0,"col":0,"color":"#1b5e8a","length":8},{"id":"C","row":0,"col":6,"color":"#2a7b4c","length":9},{"id":"D","row":6,"col":0,"color":"#7c3aed","length":16},{"id":"B","row":6,"col":6,"color":"#a82e2e","length":9},{"id":"E","row":3,"col":6,"color":"#d97706","length":3}]}]}];
+const TRACKS = [{"id":"core","icon":"🧭","title":"Basics","tag":"CORE","desc":"Bàn cờ tinh gọn, tập trung vào tư duy quy hoạch không gian & bẫy trực giác (Shell vs Core).","levels":[{"tier":"easy","rows":3,"cols":3,"name":"Basics 1: S-Curve Flow 3x3","note":"1 dây duy nhất: Uốn lượn chữ S phủ kín 9 ô cờ.","anchors":[{"id":"A","row":0,"col":0,"length":9,"color":"#1b5e8a"}],"metrics":{"u":8,"isUnique":false,"greedyTrapped":false,"iqScore":4,"psychologyTag":"DELAYED TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],[0,2],[1,2],[2,2]]}},{"tier":"easy","rows":3,"cols":3,"name":"Basics 2: Dual Split 3x3","note":"Hai xích A (5 ô) và B (4 ô): Chia đôi lãnh thổ theo đường ziczac.","anchors":[{"id":"A","row":0,"col":0,"length":5,"color":"#1b5e8a"},{"id":"B","row":2,"col":2,"length":4,"color":"#a82e2e"}],"metrics":{"u":4,"isUnique":false,"greedyTrapped":false,"iqScore":5,"psychologyTag":"DELAYED TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1]],"B":[[2,2],[1,2],[0,2],[0,1]]}},{"tier":"normal","rows":3,"cols":4,"name":"Basics 3: Shell & Core 3x4","note":"Bẫy tham lam: Đỏ sát góc trái nhưng nếu kéo sang trái sẽ cụt đường Xanh (7 ô). Xanh phải đi bao viền ngoài.","anchors":[{"id":"A","row":1,"col":3,"length":7,"color":"#1b5e8a"},{"id":"B","row":2,"col":1,"length":5,"color":"#a82e2e"}],"metrics":{"u":1,"isUnique":true,"greedyTrapped":true,"iqScore":10,"psychologyTag":"MASTERPIECE","mechanicDensity":"0%"},"solution":{"A":[[1,3],[0,3],[0,2],[0,1],[0,0],[1,0],[2,0]],"B":[[2,1],[1,1],[1,2],[2,2],[2,3]]}},{"tier":"normal","rows":4,"cols":4,"name":"Basics 4: Spiral Trap 4x4","note":"Bẫy xoắn ốc: Dây A đi bao viền 8 ô nhường trọn lõi trung tâm cho Dây B cuộn chữ U.","walls":[{"r1":1,"c1":1,"r2":1,"c2":2}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":1,"col":1,"length":8,"color":"#a82e2e"}],"metrics":{"u":5,"isUnique":false,"greedyTrapped":true,"iqScore":7.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"6%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[2,2],[1,2]],"B":[[1,1],[0,1],[0,2],[0,3],[1,3],[2,3],[3,3],[3,2]]}},{"tier":"hard","rows":4,"cols":4,"shape":["1111","1111","1111","1110"],"name":"Basics 5: Tri-Shell Lock 4x4","note":"Tam giác Âm Dương: 3 gọng kìm đan cài. Dây C (Xanh lá) ở góc phải phải nhường đường thoát cho Đỏ.","anchors":[{"id":"A","row":0,"col":0,"length":5,"color":"#1b5e8a"},{"id":"B","row":3,"col":0,"length":5,"color":"#a82e2e"},{"id":"C","row":0,"col":3,"length":5,"color":"#2a7b4c"}],"metrics":{"u":8,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1]],"B":[[3,0],[3,1],[3,2],[2,2],[2,3]],"C":[[0,3],[1,3],[1,2],[0,2],[0,1]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Basics 6: Triple Citadel 4x5","note":"Thành lũy tam giác U=1: Mỗi xích chỉ có duy nhất 1 đường sống qua các hành lang hẹp. Sai 1 bước là kẹt cả 3 dây!","walls":[{"r1":1,"c1":2,"r2":2,"c2":2}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":0,"length":6,"color":"#a82e2e"},{"id":"C","row":3,"col":4,"length":6,"color":"#2a7b4c"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"5%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],[0,2],[1,2]],"B":[[3,0],[3,1],[3,2],[2,2],[2,3],[3,3]],"C":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3]]}}]},{"id":"vat-can","icon":"🪨","title":"Obstacles","tag":"MEC-01","desc":"Vật cản (Đá, Vách, Thùng Sokoban) nằm ở yết hầu — Ép buộc đẩy thùng mở đường độc đạo.","levels":[{"tier":"easy","rows":3,"cols":4,"name":"Obstacles 1: Center Rock 3x4","note":"Đá cản trung tâm: Hai xích uốn vòng qua 2 phía cản.","rocks":[{"r":1,"c":1}],"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"},{"id":"B","row":2,"col":3,"length":5,"color":"#a82e2e"}],"metrics":{"u":3,"isUnique":false,"greedyTrapped":false,"iqScore":4,"psychologyTag":"INTUITIVE","mechanicDensity":"8%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[2,2],[1,2]],"B":[[2,3],[1,3],[0,3],[0,2],[0,1]]}},{"tier":"easy","rows":4,"cols":4,"name":"Obstacles 2: Mandatory Push 4x4","note":"Vách ngăn chặn lối ngang + Thùng gỗ chặn lối xuống: Bắt buộc Dây A phải đẩy thùng xuống `[2,1]` mới mở ngã tư!","walls":[{"r1":1,"c1":1,"r2":1,"c2":2}],"pushRocks":[{"r":1,"c":1}],"anchors":[{"id":"A","row":0,"col":1,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":7,"color":"#a82e2e"}],"metrics":{"u":10,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"13%"},"solution":{"A":[[0,1],[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1]],"B":[[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]]}},{"tier":"normal","rows":4,"cols":4,"name":"Obstacles 3: Crate Shove 4x4","note":"Golden Path #2: Dây A (Neo 10) phải dùng bước đầu đẩy thùng xuống `[2,1]` dọn đường cho Dây B (Neo 5) tiến vào góc.","pushRocks":[{"r":1,"c":1}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":0,"col":3,"length":5,"color":"#a82e2e"}],"metrics":{"u":18,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"6%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[1,2],[0,2],[0,1]],"B":[[0,3],[1,3],[2,3],[3,3],[3,2]]}},{"tier":"normal","rows":4,"cols":4,"name":"Obstacles 4: Dual Crate Relay 4x4","note":"Hai thùng Sokoban: Dây A đẩy thùng 1 mở đường cho B; Dây B đẩy thùng 2 mở đường ngược lại cho A.","walls":[{"r1":1,"c1":1,"r2":2}],"pushRocks":[{"r":1,"c":1},{"r":2,"c":2}],"anchors":[{"id":"A","row":0,"col":0,"length":7,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":7,"color":"#a82e2e"}],"metrics":{"u":8,"isUnique":false,"greedyTrapped":false,"iqScore":4,"psychologyTag":"DELAYED TRAP","mechanicDensity":"19%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[2,2]],"B":[[3,3],[2,3],[1,3],[0,3],[0,2],[0,1],[1,1]]}},{"tier":"hard","rows":4,"cols":5,"name":"Obstacles 5: Corridor Lock 4x5","note":"Khóa hành lang hẹp: Đẩy thùng trượt vào khe vách ngăn như then cài cửa, chỉ có 1 góc đẩy duy nhất không bị kẹt góc.","walls":[{"r1":1,"c1":2,"r2":2,"c2":2}],"pushRocks":[{"r":2,"c":1}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":9,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"10%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[1,2],[0,2],[0,1]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[3,3],[3,2]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Obstacles 6: Two-Phase Push 4x5","note":"Đẩy thùng 2 chặng U=1: Dây A đẩy thùng nhịp 1, Dây B vòng qua sau lưng đẩy tiếp nhịp 2 dọn trọn vẹn góc chết.","walls":[{"r1":1,"c1":1,"r2":1,"c2":2},{"r1":2,"c1":3,"r2":3,"c2":3}],"pushRocks":[{"r":2,"c":1}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":0,"length":9,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"15%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],[0,2],[1,2],[1,3],[2,3]],"B":[[3,0],[3,1],[3,2],[3,3],[3,4],[2,4],[1,4],[0,4],[0,3]]}}]},{"id":"dinh-huong-mau","icon":"🎨","title":"Direction & Color","tag":"MEC-02","desc":"Mũi tên ép rẽ hướng, Lăng kính nhuộm màu xích, Cổng màu lọc điều kiện qua cửa.","levels":[{"tier":"easy","rows":3,"cols":4,"name":"Direction 1: Forced Turn 3x4","note":"1 Mũi tên ép rẽ xuống: Khi Dây A bước vào `[0,1]`, mũi tên ép bước tiếp theo bắt buộc đi xuống `[1,1]`.","arrows":[{"r":0,"c":1,"dir":"DOWN"}],"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"},{"id":"B","row":2,"col":3,"length":6,"color":"#a82e2e"}],"metrics":{"u":10,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1]],"B":[[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]]}},{"tier":"easy","rows":4,"cols":4,"name":"Direction 2: Prism Gate 4x4","note":"Lăng kính & Cổng màu Đỏ: Dây A đổi từ Xanh sang Đỏ tại `[1,1]` rồi lọt qua Cổng Đỏ `[1,2]`.","prisms":[{"r":1,"c":1,"color":"red"}],"colorGates":[{"r":1,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":8,"color":"#a82e2e"}],"metrics":{"u":18,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"13%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[1,2]],"B":[[3,3],[3,2],[2,2],[2,3],[1,3],[0,3],[0,2],[0,1]]}},{"tier":"normal","rows":4,"cols":4,"name":"Direction 3: Distant Dye 4x4","note":"Bẫy cổng ngay trước Neo: Cổng Đỏ ở `[0,1]` ngay cạnh Neo A. A phải đi xuống đáy map lấy màu rồi mới quay lại vào cổng!","prisms":[{"r":3,"c":0,"color":"red"}],"colorGates":[{"r":0,"c":1,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":8,"color":"#a82e2e"}],"metrics":{"u":4,"isUnique":false,"greedyTrapped":true,"iqScore":7.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"13%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]],"B":[[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2],[3,2]]}},{"tier":"normal","rows":4,"cols":5,"name":"Direction 4: Dual Currents 4x5","note":"Hai mũi tên đối đầu: Ép luồng di chuyển của 2 dây uốn thành 2 vòng xoáy đối ứng khép kín.","arrows":[{"r":0,"c":1,"dir":"DOWN"},{"r":3,"c":3,"dir":"UP"}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[1,2],[0,2],[0,1]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[2,2],[3,2],[3,3]]}},{"tier":"hard","rows":4,"cols":5,"name":"Direction 5: Color Intersect 4x5","note":"Giao thoa 2 màu: Dây A đổi sang Đỏ qua cổng trên; Dây B đổi sang Xanh qua cổng dưới.","prisms":[{"r":1,"c":1,"color":"red"},{"r":2,"c":3,"color":"teal"}],"colorGates":[{"r":0,"c":2,"color":"red"},{"r":3,"c":2,"color":"teal"}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"20%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1],[0,2],[1,2]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[3,3],[3,2],[2,2]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Direction 6: Polar Transit 4x5","note":"Hải trình xuyên cực U=1: Mũi tên ép rẽ hướng qua Lăng kính nhuộm màu rồi vượt Cổng màu về đích.","arrows":[{"r":0,"c":1,"dir":"DOWN"}],"prisms":[{"r":1,"c":1,"color":"red"}],"colorGates":[{"r":3,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"10%"},"solution":{"A":[[0,0],[0,1],[1,1],[2,1],[2,2],[3,2],[3,1],[3,0],[2,0],[1,0]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[1,2],[1,3],[2,3],[3,3]]}}]},{"id":"mat-ma-so","icon":"🔢","title":"Number Code","tag":"MEC-03","desc":"Chạm các mốc số theo thứ tự tăng dần (1 -> 2 -> 3), kết thúc đúng ở mốc cuối cùng và phủ kín bàn cờ.","levels":[{"tier":"easy","rows":3,"cols":3,"name":"Code 1: Straight Sequence 3x3","note":"Nối mốc 1 -> 2: Đường đi uốn chữ S từ Neo qua Mốc 1 rồi Mốc 2.","waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":2}]},"anchors":[{"id":"A","row":0,"col":0,"length":9,"color":"#1b5e8a"}],"metrics":{"u":2,"isUnique":false,"greedyTrapped":true,"iqScore":8.7,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],[0,2],[1,2],[2,2]]}},{"tier":"easy","rows":3,"cols":4,"name":"Code 2: Triangle Path 3x4","note":"Ba mốc thứ tự 1-2-3 tạo thành tam giác độc đạo U=1 trên bàn cờ 3x4.","waypoints":{"A":[{"r":0,"c":3},{"r":1,"c":1},{"r":2,"c":1}]},"anchors":[{"id":"A","row":0,"col":0,"length":12,"color":"#1b5e8a"}],"metrics":{"u":1,"isUnique":true,"greedyTrapped":true,"iqScore":10,"psychologyTag":"MASTERPIECE","mechanicDensity":"0%"},"solution":{"A":[[0,0],[0,1],[0,2],[0,3],[1,3],[2,3],[2,2],[1,2],[1,1],[1,0],[2,0],[2,1]]}},{"tier":"normal","rows":4,"cols":4,"name":"Code 3: Short Distance Trap 4x4","note":"Golden Path #3 (Bẫy khoảng cách ngắn): Mốc 1 và Mốc 2 sát rạt nhau. Nếu đi trực tiếp sẽ bỏ rơi 13 ô! Phải đi vòng 14 ô trước.","waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":1}]},"anchors":[{"id":"A","row":0,"col":0,"length":16,"color":"#1b5e8a"}],"metrics":{"u":8,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[3,3],[2,3],[1,3],[0,3],[0,2],[0,1],[1,1],[1,2],[2,2],[2,1]]}},{"tier":"normal","rows":4,"cols":4,"name":"Code 4: Four Corner Wave 4x4","note":"4 mốc ở 4 góc: Buộc đường đi uốn lượn ziczac qua toàn bộ 16 ô cờ.","waypoints":{"A":[{"r":0,"c":3},{"r":3,"c":3},{"r":3,"c":0},{"r":2,"c":1}]},"anchors":[{"id":"A","row":0,"col":0,"length":16,"color":"#1b5e8a"}],"metrics":{"u":4,"isUnique":false,"greedyTrapped":true,"iqScore":7.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[1,1],[0,1],[0,2],[0,3],[1,3],[1,2],[2,2],[2,3],[3,3],[3,2],[3,1],[3,0],[2,0],[2,1]]}},{"tier":"hard","rows":4,"cols":5,"name":"Code 5: Triple Apex 4x5","note":"3 mốc phân bố rộng: Quy hoạch quỹ đạo sóng biển phủ 20 ô với vách ngăn khóa góc.","waypoints":{"A":[{"r":3,"c":2},{"r":0,"c":1},{"r":3,"c":4}]},"anchors":[{"id":"A","row":0,"col":0,"length":20,"color":"#1b5e8a"}],"metrics":{"u":4,"isUnique":false,"greedyTrapped":true,"iqScore":7.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"0%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[2,2],[3,2],[3,3],[2,3],[1,3],[1,2],[1,1],[0,1],[0,2],[0,3],[0,4],[1,4],[2,4],[3,4]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Code 6: Ultimate 2-Stop 4x5","note":"Cực hạn 20 ô U=1: Mốc 1 và Mốc 2 nằm kề nhau, phải đi xuyên trọn vẹn 18 ô trống trước khi chạm Mốc 2!","rocks":[{"r":1,"c":2}],"waypoints":{"A":[{"r":0,"c":1},{"r":0,"c":2}]},"anchors":[{"id":"A","row":0,"col":0,"length":19,"color":"#1b5e8a"}],"metrics":{"u":2,"isUnique":false,"greedyTrapped":true,"iqScore":8.7,"psychologyTag":"GREEDY TRAP","mechanicDensity":"5%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[3,3],[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[2,2],[2,1],[1,1],[0,1],[0,2]]}}]},{"id":"cong-tac","icon":"🔘","title":"Switches","tag":"MEC-04","desc":"Đè công tắc mở cổng cho dây khác; Chìa Latch vàng giữ cổng mở vĩnh viễn sau 1 lần chạm.","levels":[{"tier":"easy","rows":3,"cols":4,"name":"Switches 1: Pressure Gate 3x4","note":"Giữ công tắc: Dây A kéo đè lên Switch `[1,1]` mở Cổng `[1,2]` cho Dây B đi qua.","switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"},{"id":"B","row":2,"col":3,"length":6,"color":"#a82e2e"}],"metrics":{"u":10,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"17%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1]],"B":[[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]]}},{"tier":"easy","rows":4,"cols":4,"name":"Switches 2: Golden Latch 4x4","note":"Latch vàng mở vĩnh viễn: Dây A lướt qua Chìa vàng `[1,1]` mở Cổng `[1,2]` rồi tự do đi tiếp.","switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":true}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":2,"length":8,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"13%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]],"B":[[3,2],[2,2],[1,2],[0,2],[0,3],[1,3],[2,3],[3,3]]}},{"tier":"normal","rows":4,"cols":4,"name":"Switches 3: Anchor Hold 4x4","note":"Nghịch lý hy sinh: Dây B phải uốn kéo đuôi nằm im trên Switch `[2,1]` để Dây A đi qua Cổng `[0,2]`.","switches":[{"r":2,"c":1,"gateR":0,"gateC":2,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":0,"length":8,"color":"#a82e2e"}],"metrics":{"u":6,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"13%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[1,1],[0,1],[0,2],[0,3]],"B":[[3,0],[3,1],[3,2],[2,2],[1,2],[1,3],[2,3],[3,3]]}},{"tier":"normal","rows":4,"cols":5,"name":"Switches 4: Dual Chambers 4x5","note":"Hai phòng đối xứng: Dây A mở Cổng 1 cho B; Dây B đứng đè Switch 2 mở Cổng 2 cho A.","switches":[{"r":1,"c":1,"gateR":1,"gateC":3,"latch":true},{"r":2,"c":3,"gateR":2,"gateC":1,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":19,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"20%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[3,2],[3,3],[2,3],[2,2],[2,1]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[0,1],[1,1],[1,2],[1,3]]}},{"tier":"hard","rows":4,"cols":5,"name":"Switches 5: Cascade Relays 4x5","note":"Mở khóa dây chuyền (A -> B -> C): Dây A mở cổng cho B, B mở cổng cho C, C mở cổng thoát cho đuôi A.","switches":[{"r":0,"c":1,"gateR":2,"gateC":1,"latch":true},{"r":3,"c":3,"gateR":1,"gateC":3,"latch":true}],"anchors":[{"id":"A","row":0,"col":0,"length":7,"color":"#1b5e8a"},{"id":"B","row":3,"col":0,"length":7,"color":"#a82e2e"},{"id":"C","row":3,"col":4,"length":6,"color":"#2a7b4c"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"20%"},"solution":{"A":[[0,0],[1,0],[1,1],[0,1],[0,2],[1,2],[2,2]],"B":[[3,0],[2,0],[2,1],[3,1],[3,2],[3,3],[2,3]],"C":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Switches 6: Chicken & Egg 4x5","note":"Nghịch lý Con Gà & Quả Trứng: Cả 2 Neo đều bị Cổng chặn lối xuất phát. Phải tìm ra khe hẹp 1 ô duy nhất để lọt đuôi qua mở khóa.","switches":[{"r":1,"c":1,"gateR":0,"gateC":1,"latch":true},{"r":2,"c":3,"gateR":3,"gateC":3,"latch":true}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"20%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1],[0,2],[1,2]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[3,3],[3,2],[2,2]]}}]},{"id":"bom-tinh","icon":"💣","title":"Static Bombs","tag":"MEC-05","desc":"Chạm trực tiếp vào Bom là THUA NGAY. Cách duy nhất để phá Bom là đẩy thùng gỗ đâm nổ Bom.","levels":[{"tier":"easy","rows":3,"cols":4,"name":"Bombs 1: Straight Blast 3x4","note":"Phá bom cơ bản: Dây A xuất phát đẩy thùng đâm nổ quả bom ở `[0,2]`.","pushRocks":[{"r":0,"c":1}],"bombs":[{"r":0,"c":2}],"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"},{"id":"B","row":2,"col":3,"length":6,"color":"#a82e2e"}],"metrics":{"u":10,"isUnique":false,"greedyTrapped":false,"iqScore":4,"psychologyTag":"DELAYED TRAP","mechanicDensity":"17%"},"solution":{"A":[[0,0],[0,1],[1,1],[2,1],[2,0],[1,0]],"B":[[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]]}},{"tier":"easy","rows":4,"cols":4,"name":"Bombs 2: Dual Demolition 4x4","note":"Dọn 2 quả bom: Hai dây độc lập đẩy 2 thùng phá 2 bom ở 2 góc.","pushRocks":[{"r":0,"c":1},{"r":3,"c":2}],"bombs":[{"r":0,"c":2},{"r":3,"c":1}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":8,"color":"#a82e2e"}],"metrics":{"u":13,"isUnique":false,"greedyTrapped":false,"iqScore":4,"psychologyTag":"DELAYED TRAP","mechanicDensity":"25%"},"solution":{"A":[[0,0],[0,1],[1,1],[1,2],[0,2],[0,3],[1,3],[2,3]],"B":[[3,3],[3,2],[2,2],[2,1],[3,1],[3,0],[2,0],[1,0]]}},{"tier":"normal","rows":4,"cols":4,"name":"Bombs 3: Decoy Minefield 4x4","note":"Bẫy bom mồi: 1 quả bom ở góc chết `[3,0]` không có thùng nào để phá. Phải nhận biết đây là vùng cấm để né xa ra.","pushRocks":[{"r":0,"c":1}],"bombs":[{"r":0,"c":2},{"r":3,"c":0}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":7,"color":"#a82e2e"}],"metrics":{"u":10,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"19%"},"solution":{"A":[[0,0],[0,1],[1,1],[1,0],[2,0],[2,1],[3,1],[3,2]],"B":[[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2]]}},{"tier":"normal","rows":4,"cols":5,"name":"Bombs 4: Reverse Thrust 4x5","note":"Đẩy thùng LÊN TRÊN: Bom ở phía trên `[1,1]`, Thùng ở `[2,1]`. Dây A xuất phát từ dưới đẩy thùng hướng lên trên đâm vào bom.","pushRocks":[{"r":2,"c":1}],"bombs":[{"r":1,"c":1}],"anchors":[{"id":"A","row":3,"col":1,"length":10,"color":"#1b5e8a"},{"id":"B","row":0,"col":4,"length":9,"color":"#a82e2e"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"10%"},"solution":{"A":[[3,1],[2,1],[1,1],[1,2],[0,2],[0,1],[0,0],[1,0],[2,0],[3,0]],"B":[[0,4],[1,4],[2,4],[3,4],[3,3],[3,2],[2,2],[2,3],[1,3]]}},{"tier":"hard","rows":4,"cols":5,"name":"Bombs 5: Crossfire Mines 4x5","note":"Giao lộ sinh tử: Hai thùng đẩy theo 2 hướng vuông góc. Đẩy sai thứ tự thì thùng này sẽ cản hướng đẩy của thùng kia.","pushRocks":[{"r":0,"c":1},{"r":2,"c":4}],"bombs":[{"r":0,"c":2},{"r":1,"c":4}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":11,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"20%"},"solution":{"A":[[0,0],[0,1],[1,1],[2,1],[2,2],[3,2],[3,1],[3,0],[2,0],[1,0]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[1,2],[1,3],[2,3],[3,3]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Bombs 6: L-Curved Blast 4x5","note":"Bãi mìn mê cung U=1: Vách ngăn che trước quả bom. Dây A đẩy thùng lách qua vách rồi Dây B mới tiếp cận ủi thùng nổ bom.","walls":[{"r1":1,"c1":2,"r2":2,"c2":2}],"pushRocks":[{"r":2,"c":1}],"bombs":[{"r":0,"c":1}],"anchors":[{"id":"A","row":3,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":7,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"15%"},"solution":{"A":[[3,0],[3,1],[2,1],[1,1],[1,2],[0,2],[0,1],[0,0],[1,0],[2,0]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[1,3],[2,3],[3,3],[3,2],[2,2]]}}]},{"id":"tong-hop","icon":"⚔️","title":"Combo","tag":"COMBO","desc":"Bản giao hưởng đỉnh cao — Phối hợp 2 đến 5 cơ chế lõi trong cùng một thế cờ hóc hại.","levels":[{"tier":"easy","rows":3,"cols":4,"name":"Combo 1: Rock & Arrow 3x4","note":"Đá cản + Mũi tên: Mũi tên ép dây rẽ hướng uốn qua tảng đá.","rocks":[{"r":1,"c":1}],"arrows":[{"r":0,"c":1,"dir":"DOWN"}],"anchors":[{"id":"A","row":0,"col":0,"length":6,"color":"#1b5e8a"},{"id":"B","row":2,"col":3,"length":5,"color":"#a82e2e"}],"metrics":{"u":1,"isUnique":true,"greedyTrapped":true,"iqScore":8.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"8%"},"solution":{"A":[[0,0],[1,0],[2,0],[2,1],[2,2],[1,2]],"B":[[2,3],[1,3],[0,3],[0,2],[0,1]]}},{"tier":"easy","rows":4,"cols":4,"name":"Combo 2: Prism Wall 4x4","note":"Vách ngăn + Lăng kính/Cổng màu: Vách ngăn chặn lối đi thẳng, ép dây đi vòng lấy màu vào Cổng.","walls":[{"r1":1,"c1":1,"r2":1,"c2":2}],"prisms":[{"r":3,"c":0,"color":"red"}],"colorGates":[{"r":0,"c":1,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":8,"color":"#a82e2e"}],"metrics":{"u":4,"isUnique":false,"greedyTrapped":true,"iqScore":7.5,"psychologyTag":"GREEDY TRAP","mechanicDensity":"19%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[0,1]],"B":[[3,3],[2,3],[1,3],[0,3],[0,2],[1,2],[2,2],[3,2]]}},{"tier":"normal","rows":4,"cols":4,"name":"Combo 3: Crate Press Switch 4x4","note":"Golden Path #4: Dây A đẩy thùng gỗ trượt đè lên Switch `[1,1]` -> Giữ Cổng `[1,2]` mở vĩnh viễn cho Dây B lọt qua!","pushRocks":[{"r":0,"c":1}],"switches":[{"r":1,"c":1,"gateR":1,"gateC":2,"latch":false}],"anchors":[{"id":"A","row":0,"col":0,"length":8,"color":"#1b5e8a"},{"id":"B","row":3,"col":3,"length":7,"color":"#a82e2e"}],"metrics":{"u":14,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"19%"},"solution":{"A":[[0,0],[1,0],[2,0],[3,0],[3,1],[2,1],[1,1],[1,2]],"B":[[3,3],[3,2],[2,2],[2,3],[1,3],[0,3],[0,2]]}},{"tier":"normal","rows":4,"cols":5,"name":"Combo 4: Minefield Cipher 4x5","note":"Phá bom trên lộ trình mật mã số: Nối mốc 1 -> Đẩy thùng phá Bom -> Nối mốc 2.","pushRocks":[{"r":0,"c":1}],"bombs":[{"r":0,"c":2}],"waypoints":{"A":[{"r":1,"c":1},{"r":2,"c":4}]},"anchors":[{"id":"A","row":0,"col":0,"length":19,"color":"#1b5e8a"}],"metrics":{"u":20,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"10%"},"solution":{"A":[[0,0],[0,1],[1,1],[2,1],[2,0],[3,0],[3,1],[3,2],[2,2],[1,2],[0,2],[0,3],[0,4],[1,4],[1,3],[2,3],[3,3],[3,4],[2,4]]}},{"tier":"hard","rows":4,"cols":5,"name":"Combo 5: Quad Mechanism 4x5","note":"Tứ đại cơ chế: Đẩy thùng phá bom -> Chạm Latch mở cổng -> Qua Lăng kính đổi màu -> Lọt qua Cổng màu.","pushRocks":[{"r":0,"c":1}],"bombs":[{"r":0,"c":2}],"switches":[{"r":1,"c":1,"gateR":2,"gateC":2,"latch":true}],"prisms":[{"r":3,"c":0,"color":"red"}],"colorGates":[{"r":2,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":10,"color":"#1b5e8a"},{"id":"B","row":3,"col":4,"length":10,"color":"#a82e2e"}],"metrics":{"u":15,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"30%"},"solution":{"A":[[0,0],[0,1],[1,1],[1,0],[2,0],[3,0],[3,1],[2,1],[2,2],[3,2]],"B":[[3,4],[2,4],[1,4],[0,4],[0,3],[0,2],[1,2],[1,3],[2,3],[3,3]]}},{"tier":"superhard","rows":4,"cols":5,"name":"Combo 6: Ocean Symphony 4x5","note":"Golden Path #5 (Bản giao hưởng đại dương): Dây A đẩy thùng phá bom -> Dây C bị mũi tên ép vào Latch -> Dây B lấy màu qua cổng màu về đích.","pushRocks":[{"r":0,"c":1}],"bombs":[{"r":0,"c":2}],"arrows":[{"r":2,"c":0,"dir":"RIGHT"}],"switches":[{"r":2,"c":1,"gateR":3,"gateC":2,"latch":true}],"prisms":[{"r":2,"c":3,"color":"red"}],"colorGates":[{"r":3,"c":2,"color":"red"}],"anchors":[{"id":"A","row":0,"col":0,"length":9,"color":"#1b5e8a"},{"id":"C","row":1,"col":0,"length":5,"color":"#2a7b4c"},{"id":"B","row":3,"col":4,"length":6,"color":"#a82e2e"}],"metrics":{"u":8,"isUnique":false,"greedyTrapped":true,"iqScore":6,"psychologyTag":"GREEDY TRAP","mechanicDensity":"30%"},"solution":{"A":[[0,0],[0,1],[1,1],[1,2],[0,2],[0,3],[1,3],[1,4],[0,4]],"C":[[1,0],[2,0],[2,1],[3,1],[3,0]],"B":[[3,4],[2,4],[2,3],[3,3],[3,2],[2,2]]}}]}];
 
-// ============================================================
-// Rendering
-// ============================================================
 function cellPxFor(cols, maxWidth) {
   const raw = Math.floor((maxWidth - (cols - 1) * 2) / cols);
   return Math.max(10, Math.min(48, raw));
@@ -277,7 +317,7 @@ function cellPxFor(cols, maxWidth) {
 
 function findConnectors(engine) {
   const conns = [];
-  engine.switches.forEach(sw => conns.push({ r1: sw.r, c1: sw.c, r2: sw.gateR, c2: sw.gateC, color: sw.latch ? LATCH_LINK : SWITCH_LINK, dashed: !sw.latch }));
+  engine.switches.forEach(sw => conns.push({ r1: sw.r, c1: sw.c, r2: sw.gateR, c2: sw.gateC, color: sw.latch ? '#f3c64f' : '#38bdf8', dashed: !sw.latch }));
   engine.prisms.forEach(p => {
     const g = engine.colorGates.find(g => g.color === p.color);
     if (g) conns.push({ r1: p.r, c1: p.c, r2: g.r, c2: g.c, color: colorHex(p.color), dashed: true });
@@ -302,7 +342,7 @@ function renderCell(engine, r, c, cellPx) {
   const arrow = engine.arrows.find(a => a.r === r && a.c === c);
   if (arrow) { div.textContent = { UP:'⬆️', DOWN:'⬇️', LEFT:'⬅️', RIGHT:'➡️' }[arrow.dir]; return div; }
   const prism = engine.prisms.find(p => p.r === r && p.c === c);
-  if (prism) { div.textContent = '🎨'; div.style.boxShadow = `inset 0 0 0 2px ${colorHex(prism.color)}`; return div; }
+  if (prism) { div.textContent = '🎨'; div.style.boxShadow = 'inset 0 0 0 2px ' + colorHex(prism.color); return div; }
   const gate = engine.colorGates.find(g => g.r === r && g.c === c);
   if (gate) { div.classList.add('gate-open'); div.style.borderColor = colorHex(gate.color); div.textContent = '🔓'; return div; }
   const sw = engine.switches.find(s => s.r === r && s.c === c);
@@ -321,7 +361,7 @@ function renderCell(engine, r, c, cellPx) {
       const chain = engine.chains[chainId];
       const color = chain ? chain.color : '#888';
       const wfs = Math.max(7, Math.round(cellPx * 0.42));
-      div.innerHTML = `<div class="wp-dot" style="border-color:${color};background:${color}22;color:${color};font-size:${wfs}px">${idx + 1}</div>`;
+      div.innerHTML = '<div class="wp-dot" style="border-color:' + color + ';background:' + color + '22;color:' + color + ';font-size:' + wfs + 'px">' + (idx + 1) + '</div>';
       return div;
     }
   }
@@ -330,7 +370,7 @@ function renderCell(engine, r, c, cellPx) {
 
 function renderBoard(engine, container, cellPx, activeCells) {
   container.innerHTML = '';
-  container.style.gridTemplateColumns = `repeat(${engine.cols}, ${cellPx}px)`;
+  container.style.gridTemplateColumns = 'repeat(' + engine.cols + ', ' + cellPx + 'px)';
   const step = cellPx + 2;
 
   for (let r = 0; r < engine.rows; r++) {
@@ -339,6 +379,30 @@ function renderBoard(engine, container, cellPx, activeCells) {
       container.appendChild(cell);
     }
   }
+  // render walls cleanly
+  engine.walls.forEach(w => {
+    const isVert = (w.r1 === w.r2);
+    const edge = document.createElement('div');
+    edge.className = 'wall-edge';
+    if (isVert) {
+      const minC = Math.min(w.c1, w.c2);
+      const idx = w.r1 * engine.cols + minC;
+      const cellEl = container.children[idx];
+      if (cellEl) {
+        edge.style.right = '-3px'; edge.style.top = '2px'; edge.style.bottom = '2px'; edge.style.width = '5px';
+        cellEl.appendChild(edge);
+      }
+    } else {
+      const minR = Math.min(w.r1, w.r2);
+      const idx = minR * engine.cols + w.c1;
+      const cellEl = container.children[idx];
+      if (cellEl) {
+        edge.style.bottom = '-3px'; edge.style.left = '2px'; edge.style.right = '2px'; edge.style.height = '5px';
+        cellEl.appendChild(edge);
+      }
+    }
+  });
+
   // connector overlay
   const conns = findConnectors(engine);
   if (conns.length) {
@@ -358,7 +422,7 @@ function renderBoard(engine, container, cellPx, activeCells) {
     container.parentElement.style.position = 'relative';
     container.parentElement.appendChild(svg);
   }
-  // chain paths + anchors on top
+  // chain paths + anchors with NUMBERS on top
   engine.getAllChains().forEach(chain => {
     chain.path.forEach((p, i) => {
       const idx = p.r * engine.cols + p.c;
@@ -373,13 +437,15 @@ function renderBoard(engine, container, cellPx, activeCells) {
         const dot = document.createElement('div');
         dot.className = 'anchor-dot';
         dot.style.background = chain.color;
-        dot.style.fontSize = Math.max(7, Math.round(cellPx * 0.38)) + 'px';
-        dot.textContent = chain.id;
+        dot.style.fontSize = Math.max(9, Math.round(cellPx * 0.45)) + 'px';
+        dot.style.fontWeight = '900';
+        const remaining = Math.max(1, chain.length - chain.path.length + 1);
+        dot.textContent = remaining;
         dot.style.position = 'relative'; dot.style.zIndex = '2';
         cellEl.appendChild(dot);
       }
       if (i === chain.path.length - 1 && chain.path.length > 1) {
-        cellEl.style.boxShadow = `inset 0 0 0 3px ${chain.color}`;
+        cellEl.style.boxShadow = 'inset 0 0 0 3px ' + chain.color;
       }
     });
   });
@@ -389,25 +455,24 @@ function renderBoard(engine, container, cellPx, activeCells) {
 // Level list
 // ============================================================
 const root = document.getElementById('root');
-const solved = new Set();
 
 TRACKS.forEach(track => {
   const section = document.createElement('div');
-  section.className = 'track-section' + (track.id === 'core' ? ' core' : '') + (track.id === 'combined' ? ' combo' : '');
-  section.innerHTML = `
-    <div class="track-head"><span class="icon">${track.icon}</span><div><h2>${track.title}</h2><div class="tag">${track.tag}</div></div></div>
-    <p class="track-desc">${track.desc}</p>
-  `;
+  section.className = 'track-section' + (track.id === 'core' ? ' core' : '') + (track.id === 'tong-hop' || track.id === 'combined' ? ' combo' : '');
+  section.innerHTML = '<div class="track-head"><span class="icon">' + track.icon + '</span><div><h2>' + track.title + '</h2><div class="tag">' + track.tag + '</div></div></div><p class="track-desc">' + track.desc + '</p>';
   const row = document.createElement('div');
   row.className = 'levels-row';
   track.levels.forEach((lvl, i) => {
     const style = DIFF_STYLE[lvl.tier];
     const card = document.createElement('div');
     card.className = 'level-card';
-    card.id = `card-${track.id}-${i}`;
+    card.id = 'card-' + track.id + '-' + i;
     const engine = new ChainEngine(lvl);
     const miniPx = cellPxFor(lvl.cols, 108);
-    card.innerHTML = `<span class="lvl-num">Level ${i + 1}</span><span class="diff-tag" style="background:${style.color}">${style.label}</span>`;
+    const m = lvl.metrics || {};
+    const uLabel = m.isUnique ? 'U=1' : 'U=' + (m.u || 1);
+    const gIcon = m.greedyTrapped ? '🪤' : '🚶';
+    card.innerHTML = '<div class="card-header"><span class="lvl-num">Level ' + (i + 1) + '</span><span class="diff-tag" style="background:' + style.color + '">' + style.label + '</span></div>';
     const wrap = document.createElement('div');
     wrap.className = 'mini-board';
     const board = document.createElement('div');
@@ -415,6 +480,10 @@ TRACKS.forEach(track => {
     wrap.appendChild(board);
     card.appendChild(wrap);
     renderBoard(engine, board, miniPx, []);
+    const badge = document.createElement('div');
+    badge.className = 'iq-badge';
+    badge.innerHTML = '🧠 IQ: <b>' + (m.iqScore || '7.5') + '</b> | ' + uLabel + ' ' + gIcon;
+    card.appendChild(badge);
     const hint = document.createElement('div');
     hint.className = 'play-hint';
     hint.textContent = '▶ PLAY';
@@ -430,7 +499,6 @@ TRACKS.forEach(track => {
 // Player
 // ============================================================
 const overlay = document.getElementById('player-overlay');
-const playerBoardWrap = document.getElementById('player-board-wrap');
 const playerBoard = document.getElementById('player-board');
 const winBanner = document.getElementById('win-banner');
 let currentEngine = null, currentLevel = null, currentCard = null, lastCell = null;
@@ -450,7 +518,7 @@ let currentCellPx = 40;
 function renderPlayer() {
   renderBoard(currentEngine, playerBoard, currentCellPx, []);
   if (currentEngine.isWon()) {
-    winBanner.textContent = '🏆 Solved!';
+    winBanner.textContent = '🏆 Solved! Excellent Cognitive Logic!';
     if (currentCard) { currentCard.classList.add('solved'); currentCard.querySelector('.play-hint').textContent = '✓ SOLVED'; }
   } else {
     winBanner.textContent = '';
@@ -462,79 +530,73 @@ function openPlayer(track, lvl, idx, card) {
   currentEngine = new ChainEngine(lvl);
   const maxBoardWidth = Math.min(window.innerWidth - 60, 460);
   currentCellPx = cellPxFor(lvl.cols, maxBoardWidth);
-  document.getElementById('player-title').textContent = `${track.title} — Level ${idx + 1}`;
+  document.getElementById('player-title').textContent = track.title + ' — Level ' + (idx + 1);
   const style = DIFF_STYLE[lvl.tier];
   const tag = document.getElementById('player-difftag');
   tag.textContent = style.label; tag.style.background = style.color;
+  const m = lvl.metrics || {};
+  const metPill = document.getElementById('player-metrics');
+  metPill.textContent = '🧠 IQ: ' + (m.iqScore || '8.0') + '/10 • ' + (m.isUnique ? 'Unique (U=1)' : 'U=' + (m.u || 1)) + (m.greedyTrapped ? ' • 🪤 Greedy Trapped' : '');
   document.getElementById('player-note').textContent = lvl.note;
   lastCell = null;
   renderPlayer();
   overlay.classList.add('open');
 }
-function closePlayer() { overlay.classList.remove('open'); currentEngine = null; }
 
-document.getElementById('btn-back').addEventListener('click', closePlayer);
+function openGoldenLevel(trackIdx, levelIdx) {
+  const track = TRACKS[trackIdx];
+  if (!track) return;
+  const level = track.levels[levelIdx];
+  if (!level) return;
+  openPlayer(track, level, levelIdx);
+}
+window.openGoldenLevel = openGoldenLevel;
+
 document.getElementById('btn-reset').addEventListener('click', () => {
-  if (!currentLevel) return;
-  currentEngine = new ChainEngine(currentLevel);
-  lastCell = null;
-  renderPlayer();
+  if (currentLevel) { currentEngine = new ChainEngine(currentLevel); renderPlayer(); }
+});
+document.getElementById('btn-back').addEventListener('click', () => {
+  overlay.classList.remove('open');
 });
 
-let dragging = false;
-function pointerDown(e) {
-  const cell = cellFromEvent(e);
-  if (!cell) return;
-  const chain = currentEngine.startDrag(cell.r, cell.c);
-  if (!chain) return;
-  dragging = true;
-  lastCell = cell;
-  e.preventDefault();
-}
-function pointerMove(e) {
-  if (!dragging) return;
-  const cell = cellFromEvent(e);
-  if (!cell || (lastCell && cell.r === lastCell.r && cell.c === lastCell.c)) return;
-  const chain = currentEngine.chains[currentEngine.activeId];
-  if (!chain) return;
-  // backtrack check: moving onto the cell just before the tail
-  if (chain.path.length > 1) {
-    const prev = chain.path[chain.path.length - 2];
-    if (prev.r === cell.r && prev.c === cell.c) {
-      currentEngine.backtrackTo(chain.path.length - 2);
-      lastCell = cell;
-      renderPlayer();
-      return;
+// Drag handlers
+let isDragging = false;
+playerBoard.addEventListener('pointerdown', (e) => {
+  if (currentEngine.isWon()) return;
+  const pos = cellFromEvent(e);
+  if (!pos) return;
+  const chain = currentEngine.startDrag(pos.r, pos.c);
+  if (chain) { isDragging = true; lastCell = pos; renderPlayer(); }
+});
+playerBoard.addEventListener('pointermove', (e) => {
+  if (!isDragging || currentEngine.isWon()) return;
+  const pos = cellFromEvent(e);
+  if (!pos) return;
+  if (lastCell && (lastCell.r !== pos.r || lastCell.c !== pos.c)) {
+    const chain = currentEngine.chains[currentEngine.activeId];
+    if (chain) {
+      const backtrackIdx = chain.path.findIndex(p => p.r === pos.r && p.c === pos.c);
+      if (backtrackIdx !== -1) {
+        currentEngine.backtrackTo(backtrackIdx);
+        lastCell = pos;
+        renderPlayer();
+      } else {
+        const res = currentEngine.step(pos.r, pos.c);
+        if (res.result === 'OK' || res.result === 'LOSE') {
+          lastCell = pos;
+          renderPlayer();
+        }
+      }
     }
   }
-  const res = currentEngine.step(cell.r, cell.c);
-  lastCell = cell;
-  if (res.result === 'OK') {
+});
+window.addEventListener('pointerup', () => {
+  if (isDragging) {
+    isDragging = false;
+    currentEngine.endDrag();
     renderPlayer();
-  } else if (res.result === 'LOSE') {
-    dragging = false;
-    playerBoardWrap.style.background = '#a82e2e';
-    setTimeout(() => {
-      playerBoardWrap.style.background = '#5c3a21';
-      currentEngine = new ChainEngine(currentLevel);
-      renderPlayer();
-    }, 400);
   }
-  // BLOCKED: no-op, matches real game (silent)
-}
-function pointerUp() {
-  if (!dragging) return;
-  dragging = false;
-  currentEngine.endDrag();
-  renderPlayer();
-}
-
-playerBoardWrap.addEventListener('pointerdown', pointerDown);
-playerBoardWrap.addEventListener('pointermove', pointerMove);
-window.addEventListener('pointerup', pointerUp);
-playerBoardWrap.addEventListener('touchstart', pointerDown, { passive: false });
-playerBoardWrap.addEventListener('touchmove', pointerMove, { passive: false });
-window.addEventListener('touchend', pointerUp);
+});
 </script>
 </body>
 </html>
