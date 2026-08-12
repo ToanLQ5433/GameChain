@@ -10,11 +10,29 @@
 // Building as a classic IIFE script (no `type="module"`) sidesteps that
 // entirely, and inlining the JS/CSS via vite-plugin-singlefile means the
 // browser makes zero extra file:// requests after loading index.html.
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
+// Redirect the game's level data import to the 18-level demo set
+// (src/data/levels.demo.js, converted from Levels/*.json) for this build
+// only — GameScene.js/progression.js keep importing '../data/levels.js'
+// unmodified, so `npm run dev`/`npm run build` still ship the full 42-level
+// game; only build:offline swaps in the demo-only category via this alias.
 export default defineConfig({
   base: './',
+  resolve: {
+    // Vite/Rollup alias matches the import specifier TEXT as written in
+    // source (both GameScene.js and progression.js import the exact
+    // relative string '../data/levels.js'), not the resolved absolute
+    // path — an absolute-path key here silently never matches.
+    alias: [
+      {
+        find: '../data/levels.js',
+        replacement: fileURLToPath(new URL('./src/data/levels.demo.js', import.meta.url))
+      }
+    ]
+  },
   plugins: [viteSingleFile()],
   build: {
     outDir: 'dist-offline',

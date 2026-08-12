@@ -535,11 +535,12 @@ export default class GameScene extends Phaser.Scene {
     this.completeLevel(true);
   }
 
-  // Re-opens the most recently locked chain (not touching ChainEngine — the
-  // chain is a plain data object already read directly elsewhere in this
-  // file, e.g. redrawChains(); undo just resets it back to its anchor so
-  // the player can redraw it differently) — cheap (10 Coins default) since
-  // it only ever affects the single most recent lock, never a full retry.
+  // Re-opens the most recently locked chain and asks ChainEngine to reset it
+  // back to its anchor — resetChain() also unwinds any Crate the chain
+  // pushed or destroyed along the way, so a Crate shoved during the undone
+  // draw slides back to the spot it stood in before that chain was drawn,
+  // not wherever it ended up. Cheap (10 Coins default) since it only ever
+  // affects the single most recent lock, never a full retry.
   useUndo(cost) {
     const chain = this.lastLockedChainId ? this.engine.getChain(this.lastLockedChainId) : null;
     if (!chain || !chain.locked) {
@@ -548,14 +549,12 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
     if (!this.spendBuff('undo', cost, '🟡 Not enough Coins for Undo!', () => this.useUndo(cost))) return;
-    chain.locked = false;
-    chain.path = [{ r: chain.row, c: chain.col }];
-    chain.colorTag = null;
-    chain.waypointProgress = 0;
+    this.engine.resetChain(chain.id);
     this.chainLengths[chain.id] = chain.path.length;
     this.lastLockedChainId = null;
     playSound('switch', this.save.soundMuted);
     haptics.tap();
+    this.redrawDynamic();
     this.redrawChains();
     this.showToast(`↩️ Chain ${chain.id} unlocked — redraw it!`);
   }

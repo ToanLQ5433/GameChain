@@ -27,6 +27,11 @@ export class ChainEngine {
     this.waypoints = levelDef.waypoints || {};
     this.bombs = (levelDef.bombs || []).map(b => ({ ...b, destroyed: false }));
 
+    // Nhật ký các lần Thùng Hàng bị đẩy/phá, để backtrackTo()/resetChain()
+    // có thể hoàn tác đúng — nếu không, lùi dây qua một ô đã đẩy thùng chỉ
+    // cắt path mà thùng vẫn kẹt ở vị trí mới, không quay về chỗ ban đầu.
+    this.pushLog = [];
+
     this._latched = new Set();
 
     this.chains = {};
@@ -132,15 +137,41 @@ export class ChainEngine {
     let chain = this.findChainByTail(r, c);
     if (!chain) {
       chain = this.findChainByAnchor(r, c);
-      if (chain) {
-        chain.path = [{ r: chain.row, c: chain.col }];
-        chain.colorTag = null;
-        chain.waypointProgress = 0;
-      }
+      if (chain) this.resetChain(chain.id);
     }
     if (!chain) return null;
     this.activeId = chain.id;
     return chain;
+  }
+
+  // Hoàn tác đúng 1 mục nhật ký đẩy/phá Thùng Hàng — dùng bởi backtrackTo()
+  // (lùi từng bước) và resetChain() (lùi hẳn về điểm neo, vd. nút Undo).
+  _revertPushLogEntry(entry) {
+    if (entry.type === 'move') {
+      const rock = this.pushRocks.find(p => p.r === entry.to.r && p.c === entry.to.c);
+      if (rock) { rock.r = entry.from.r; rock.c = entry.from.c; }
+    } else if (entry.type === 'destroy') {
+      const bomb = this.bombs.find(b => b.r === entry.bombAt.r && b.c === entry.bombAt.c);
+      if (bomb) bomb.destroyed = false;
+      this.pushRocks.push({ r: entry.at.r, c: entry.at.c });
+    }
+  }
+
+  // Đưa một dây về hẳn điểm neo (chưa đi bước nào) — hoàn tác MỌI lần đẩy/phá
+  // Thùng Hàng mà dây này gây ra, theo đúng thứ tự ngược, để thùng trở lại
+  // đúng vị trí đứng đầu tiên trước khi dây được kéo.
+  resetChain(chainId) {
+    const chain = this.chains[chainId];
+    if (!chain) return;
+    for (let i = this.pushLog.length - 1; i >= 0; i--) {
+      if (this.pushLog[i].chainId !== chainId) continue;
+      this._revertPushLogEntry(this.pushLog[i]);
+      this.pushLog.splice(i, 1);
+    }
+    chain.path = [{ r: chain.row, c: chain.col }];
+    chain.colorTag = null;
+    chain.waypointProgress = 0;
+    chain.locked = false;
   }
 
   // Thử bước 1 ô từ đầu dây hiện tại sang (r,c).
@@ -187,11 +218,19 @@ export class ChainEngine {
         this.pushRocks.splice(rockIdx, 1);
         const bomb = this.bombs.find(b => b.r === beyondR && b.c === beyondC);
         bomb.destroyed = true;
+        this.pushLog.push({
+          chainId: this.activeId, atLen: chain.path.length + 1,
+          type: 'destroy', at: { r, c }, bombAt: { r: beyondR, c: beyondC }
+        });
       } else if (this.isOccupied(beyondR, beyondC, this.activeId)) {
         return { result: 'BLOCKED' };
       } else {
         const rock = this.pushRocks.find(p => p.r === r && p.c === c);
         rock.r = beyondR; rock.c = beyondC;
+        this.pushLog.push({
+          chainId: this.activeId, atLen: chain.path.length + 1,
+          type: 'move', from: { r, c }, to: { r: beyondR, c: beyondC }
+        });
       }
     } else if (this.isOccupied(r, c, this.activeId)) {
       return { result: 'BLOCKED' };
@@ -216,7 +255,19 @@ export class ChainEngine {
   backtrackTo(index) {
     const chain = this.chains[this.activeId];
     if (!chain) return;
-    chain.path = chain.path.slice(0, Math.max(0, index) + 1);
+    const newLen = Math.max(0, index) + 1;
+
+    // Hoàn tác mọi lần đẩy/phá Thùng Hàng xảy ra ở các bước đang bị lùi qua
+    // (atLen > newLen), theo đúng thứ tự ngược thời gian — nếu không, thùng
+    // vẫn kẹt ở vị trí mới dù dây đã lùi lại trước ô đẩy nó.
+    for (let i = this.pushLog.length - 1; i >= 0; i--) {
+      const entry = this.pushLog[i];
+      if (entry.chainId !== this.activeId || entry.atLen <= newLen) continue;
+      this._revertPushLogEntry(entry);
+      this.pushLog.splice(i, 1);
+    }
+
+    chain.path = chain.path.slice(0, newLen);
 
     // QUAN TRỌNG: phải tính lại waypointProgress/colorTag theo ĐÚNG path mới
     // sau khi cắt — nếu không, 2 cờ này vẫn giữ giá trị ứng với path DÀI HƠN

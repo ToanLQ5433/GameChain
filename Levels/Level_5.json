@@ -1,0 +1,85 @@
+{
+    "levelName": "",
+    "description": "",
+    "levelTime": 120.0,
+    "levelIndex": 5,
+    "sizeX": 5,
+    "sizeY": 4,
+    "shapeRows": [
+        "11111",
+        "11111",
+        "11111",
+        "11111"
+    ],
+    "anchors": [
+        {
+            "id": 0,
+            "row": 0,
+            "col": 0,
+            "length": 6,
+            "useCustomColor": false,
+            "color": {
+                "r": 0.18970274925231934,
+                "g": 0.24759764969348908,
+                "b": 0.8207547068595886,
+                "a": 1.0
+            },
+            "loop": false,
+            "mustEnclose": []
+        },
+        {
+            "id": 1,
+            "row": 3,
+            "col": 0,
+            "length": 7,
+            "useCustomColor": false,
+            "color": {
+                "r": 0.7924528121948242,
+                "g": 0.1383054405450821,
+                "b": 0.14992421865463258,
+                "a": 1.0
+            },
+            "loop": false,
+            "mustEnclose": []
+        },
+        {
+            "id": 2,
+            "row": 3,
+            "col": 4,
+            "length": 4,
+            "useCustomColor": false,
+            "color": {
+                "r": 0.949999988079071,
+                "g": 0.9025000333786011,
+                "b": 0.33250001072883608,
+                "a": 1.0
+            },
+            "loop": false,
+            "mustEnclose": []
+        }
+    ],
+    "walls": [
+        {
+            "r1": 0,
+            "c1": 1,
+            "r2": 0,
+            "c2": 2
+        }
+    ],
+    "bridges": [],
+    "rocks": [],
+    "pushRocks": [],
+    "switches": [],
+    "modifiers": [],
+    "arrows": [],
+    "mirrors": [],
+    "rotors": [],
+    "oneWays": [],
+    "bombs": [],
+    "blades": [],
+    "keys": [],
+    "keyGates": [],
+    "prisms": [],
+    "colorGates": [],
+    "waypointGroups": []
+}

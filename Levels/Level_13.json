@@ -1,0 +1,57 @@
+{
+    "levelName": "",
+    "description": "",
+    "levelTime": 120.0,
+    "levelIndex": 13,
+    "sizeX": 4,
+    "sizeY": 4,
+    "shapeRows": [],
+    "anchors": [
+        {
+            "id": 0,
+            "row": 0,
+            "col": 0,
+            "length": 15,
+            "useCustomColor": false,
+            "color": {
+                "r": 0.18970274925231934,
+                "g": 0.24759764969348908,
+                "b": 0.8207547068595886,
+                "a": 1.0
+            },
+            "loop": false,
+            "mustEnclose": []
+        }
+    ],
+    "walls": [],
+    "bridges": [],
+    "rocks": [],
+    "pushRocks": [],
+    "switches": [],
+    "modifiers": [],
+    "arrows": [],
+    "mirrors": [],
+    "rotors": [],
+    "oneWays": [],
+    "bombs": [],
+    "blades": [],
+    "keys": [],
+    "keyGates": [],
+    "prisms": [],
+    "colorGates": [],
+    "waypointGroups": [
+        {
+            "chainId": 0,
+            "points": [
+                {
+                    "r": 1,
+                    "c": 1
+                },
+                {
+                    "r": 2,
+                    "c": 1
+                }
+            ]
+        }
+    ]
+}
