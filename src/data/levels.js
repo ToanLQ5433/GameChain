@@ -349,13 +349,21 @@ export const CATEGORIES = [
           "1110"
         ],
         "name": "Basics 5: Tri-Shell Lock 4x4",
-        "note": "Tam giác Âm Dương: 3 gọng kìm đan cài. Dây C (Xanh lá) ở góc phải phải nhường đường thoát cho Đỏ.",
+        "note": "Tam giác lệch trục U=2: 1 vách ngăn duy nhất chẻ đôi ngã ba trung tâm — độ dài 3 dây lệch nhau (6-5-4) buộc mỗi dây nhường đúng phần lãnh thổ của mình, chỉ còn 2 cách chia.",
+        "walls": [
+          {
+            "r1": 0,
+            "c1": 1,
+            "r2": 1,
+            "c2": 1
+          }
+        ],
         "anchors": [
           {
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 5,
+            "length": 6,
             "color": "#1b5e8a"
           },
           {
@@ -369,17 +377,17 @@ export const CATEGORIES = [
             "id": "C",
             "row": 0,
             "col": 3,
-            "length": 5,
+            "length": 4,
             "color": "#2a7b4c"
           }
         ],
         "metrics": {
-          "u": 8,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
-          "mechanicDensity": "0%"
+          "mechanicDensity": "6%"
         },
         "solution": {
           "A": [
@@ -392,15 +400,19 @@ export const CATEGORIES = [
               0
             ],
             [
-              2,
-              0
-            ],
-            [
-              2,
+              1,
               1
             ],
             [
               1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
               1
             ]
           ],
@@ -410,20 +422,20 @@ export const CATEGORIES = [
               0
             ],
             [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
               3,
               1
             ],
             [
               3,
               2
-            ],
-            [
-              2,
-              2
-            ],
-            [
-              2,
-              3
             ]
           ],
           "C": [
@@ -436,16 +448,12 @@ export const CATEGORIES = [
               3
             ],
             [
-              1,
-              2
+              2,
+              3
             ],
             [
-              0,
+              2,
               2
-            ],
-            [
-              0,
-              1
             ]
           ]
         }
@@ -455,12 +463,12 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Basics 6: Triple Citadel 4x5",
-        "note": "Thành lũy tam giác U=1: Mỗi xích chỉ có duy nhất 1 đường sống qua các hành lang hẹp. Sai 1 bước là kẹt cả 3 dây!",
+        "note": "Thành lũy tam giác U=1: 1 vách ngăn mỏng ở hàng trên cùng khóa chết mọi lối vòng phụ — cả 3 dây (7-8-5) chỉ còn đúng 1 cách khớp nối vừa khít toàn bộ 20 ô.",
         "walls": [
           {
-            "r1": 1,
-            "c1": 2,
-            "r2": 2,
+            "r1": 0,
+            "c1": 1,
+            "r2": 0,
             "c2": 2
           }
         ],
@@ -469,30 +477,30 @@ export const CATEGORIES = [
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 8,
+            "length": 7,
             "color": "#1b5e8a"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
-            "length": 6,
+            "length": 8,
             "color": "#a82e2e"
           },
           {
             "id": "C",
             "row": 3,
             "col": 4,
-            "length": 6,
+            "length": 5,
             "color": "#2a7b4c"
           }
         ],
         "metrics": {
-          "u": 20,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "5%"
         },
         "solution": {
@@ -502,6 +510,14 @@ export const CATEGORIES = [
               0
             ],
             [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
               1,
               0
             ],
@@ -514,19 +530,7 @@ export const CATEGORIES = [
               1
             ],
             [
-              1,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
-              2
-            ],
-            [
-              1,
+              2,
               2
             ]
           ],
@@ -544,16 +548,24 @@ export const CATEGORIES = [
               2
             ],
             [
+              3,
+              3
+            ],
+            [
               2,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
               2
             ],
             [
-              2,
-              3
-            ],
-            [
-              3,
-              3
+              0,
+              2
             ]
           ],
           "C": [
@@ -575,10 +587,6 @@ export const CATEGORIES = [
             ],
             [
               0,
-              3
-            ],
-            [
-              1,
               3
             ]
           ]
@@ -1009,19 +1017,19 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Obstacles 5: Corridor Lock 4x5",
-        "note": "Khóa hành lang hẹp: Đẩy thùng trượt vào khe vách ngăn như then cài cửa, chỉ có 1 góc đẩy duy nhất không bị kẹt góc.",
+        "note": "Khóa hành lang U=2: Vách ngăn dọc cột phải buộc Dây B phải đẩy thùng lên trên trước khi vòng lại — chỉ còn 2 cách so găng phần lãnh thổ còn lại với Dây A.",
         "walls": [
           {
             "r1": 1,
-            "c1": 2,
+            "c1": 3,
             "r2": 2,
-            "c2": 2
+            "c2": 3
           }
         ],
         "pushRocks": [
           {
             "r": 2,
-            "c": 1
+            "c": 4
           }
         ],
         "anchors": [
@@ -1029,22 +1037,22 @@ export const CATEGORIES = [
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 10,
+            "length": 13,
             "color": "#1b5e8a"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
-            "length": 9,
+            "length": 6,
             "color": "#a82e2e"
           }
         ],
         "metrics": {
-          "u": 20,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "10%"
         },
@@ -1079,16 +1087,28 @@ export const CATEGORIES = [
               1
             ],
             [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
               1,
               2
             ],
             [
-              0,
-              2
+              1,
+              3
             ],
             [
               0,
-              1
+              3
+            ],
+            [
+              0,
+              4
             ]
           ],
           "B": [
@@ -1101,22 +1121,6 @@ export const CATEGORIES = [
               4
             ],
             [
-              1,
-              4
-            ],
-            [
-              0,
-              4
-            ],
-            [
-              0,
-              3
-            ],
-            [
-              1,
-              3
-            ],
-            [
               2,
               3
             ],
@@ -1127,6 +1131,10 @@ export const CATEGORIES = [
             [
               3,
               2
+            ],
+            [
+              2,
+              2
             ]
           ]
         }
@@ -1136,7 +1144,7 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Obstacles 6: Two-Phase Push 4x5",
-        "note": "Đẩy thùng 2 chặng U=1: Dây A đẩy thùng nhịp 1, Dây B vòng qua sau lưng đẩy tiếp nhịp 2 dọn trọn vẹn góc chết.",
+        "note": "Đẩy thùng 2 nhịp U=1: Hai vách ngăn xếp chồng ở góc trên trái tạo 1 khe hẹp duy nhất — Dây A phải luồn qua khe rồi Dây B đẩy thùng dọn nốt góc chết, khớp vừa khít toàn bàn.",
         "walls": [
           {
             "r1": 1,
@@ -1145,16 +1153,16 @@ export const CATEGORIES = [
             "c2": 2
           },
           {
-            "r1": 2,
-            "c1": 3,
-            "r2": 3,
-            "c2": 3
+            "r1": 0,
+            "c1": 1,
+            "r2": 0,
+            "c2": 2
           }
         ],
         "pushRocks": [
           {
             "r": 2,
-            "c": 1
+            "c": 4
           }
         ],
         "anchors": [
@@ -1174,11 +1182,11 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 20,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "15%"
         },
         "solution": {
@@ -1188,6 +1196,14 @@ export const CATEGORIES = [
               0
             ],
             [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
               1,
               0
             ],
@@ -1200,27 +1216,19 @@ export const CATEGORIES = [
               1
             ],
             [
-              1,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
-              2
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              1,
-              3
-            ],
-            [
               2,
+              2
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
               3
             ]
           ],
@@ -1254,11 +1262,11 @@ export const CATEGORIES = [
               4
             ],
             [
-              0,
-              4
+              1,
+              3
             ],
             [
-              0,
+              2,
               3
             ]
           ]
@@ -1729,15 +1737,15 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Direction 5: Color Intersect 4x5",
-        "note": "Giao thoa 2 màu: Dây A đổi sang Đỏ qua cổng trên; Dây B đổi sang Xanh qua cổng dưới.",
+        "note": "Giao thoa 2 màu U=2: Lăng kính & Cổng đổi vị trí chéo góc — Dây A phải vòng xuống góc trái lấy màu Đỏ trước khi tới Cổng trên; Dây B tương tự với Lăng kính Lục ở đáy. Chỉ còn 2 cách bắt cặp.",
         "prisms": [
           {
-            "r": 1,
-            "c": 1,
+            "r": 2,
+            "c": 0,
             "color": "red"
           },
           {
-            "r": 2,
+            "r": 3,
             "c": 3,
             "color": "teal"
           }
@@ -1745,7 +1753,7 @@ export const CATEGORIES = [
         "colorGates": [
           {
             "r": 0,
-            "c": 2,
+            "c": 3,
             "color": "red"
           },
           {
@@ -1771,10 +1779,10 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 20,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "20%"
         },
@@ -1817,8 +1825,8 @@ export const CATEGORIES = [
               2
             ],
             [
-              1,
-              2
+              0,
+              3
             ]
           ],
           "B": [
@@ -1831,22 +1839,6 @@ export const CATEGORIES = [
               4
             ],
             [
-              1,
-              4
-            ],
-            [
-              0,
-              4
-            ],
-            [
-              0,
-              3
-            ],
-            [
-              1,
-              3
-            ],
-            [
               2,
               3
             ],
@@ -1861,6 +1853,22 @@ export const CATEGORIES = [
             [
               2,
               2
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              0,
+              4
             ]
           ]
         }
@@ -1870,25 +1878,25 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Direction 6: Polar Transit 4x5",
-        "note": "Hải trình xuyên cực U=1: Mũi tên ép rẽ hướng qua Lăng kính nhuộm màu rồi vượt Cổng màu về đích.",
+        "note": "Hải trình xuyên cực U=1: Mũi tên ép hướng đặt ngay ô đích cuối cùng — chạm sớm là kẹt cứng, phải nhuộm màu qua Lăng kính rồi vượt Cổng ở giữa bàn mới an toàn. Chỉ đúng 1 lộ trình sống sót.",
         "arrows": [
           {
             "r": 0,
-            "c": 1,
-            "dir": "DOWN"
+            "c": 2,
+            "dir": "UP"
           }
         ],
         "prisms": [
           {
-            "r": 1,
-            "c": 1,
+            "r": 2,
+            "c": 3,
             "color": "red"
           }
         ],
         "colorGates": [
           {
-            "r": 3,
-            "c": 2,
+            "r": 2,
+            "c": 1,
             "color": "red"
           }
         ],
@@ -1909,11 +1917,11 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 20,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "10%"
         },
         "solution": {
@@ -1923,40 +1931,40 @@ export const CATEGORIES = [
               0
             ],
             [
-              0,
-              1
-            ],
-            [
               1,
-              1
+              0
             ],
             [
               2,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              3,
               1
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              2,
+              3
             ],
             [
               2,
               2
             ],
             [
-              3,
-              2
-            ],
-            [
-              3,
-              1
-            ],
-            [
-              3,
-              0
-            ],
-            [
               2,
-              0
-            ],
-            [
-              1,
-              0
+              1
             ]
           ],
           "B": [
@@ -1981,24 +1989,24 @@ export const CATEGORIES = [
               3
             ],
             [
+              1,
+              3
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
               0,
               2
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              1,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              3,
-              3
             ]
           ]
         }
@@ -2401,11 +2409,11 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Code 5: Triple Apex 4x5",
-        "note": "3 mốc phân bố rộng: Quy hoạch quỹ đạo sóng biển phủ 20 ô với vách ngăn khóa góc.",
+        "note": "3 mốc lệch tâm U=2: Mốc 1 nằm sâu trong lõi buộc phải quét trọn nửa trên bàn cờ trước khi chạm, chỉ còn 2 cách quy hoạch quỹ đạo phủ kín 20 ô.",
         "waypoints": {
           "A": [
             {
-              "r": 3,
+              "r": 1,
               "c": 2
             },
             {
@@ -2428,10 +2436,10 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 4,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 7.5,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "0%"
         },
@@ -2525,7 +2533,7 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Code 6: Ultimate 2-Stop 4x5",
-        "note": "Cực hạn 20 ô U=1: Mốc 1 và Mốc 2 nằm kề nhau, phải đi xuyên trọn vẹn 18 ô trống trước khi chạm Mốc 2!",
+        "note": "Cực hạn 19 ô U=1: 1 tảng đá án ngữ ngay lối tắt giữa Mốc 1 và Mốc 2 — buộc phải đi vòng trọn vẹn hết nửa bàn cờ trước khi được chạm Mốc 2. Chỉ đúng 1 đường sống duy nhất.",
         "rocks": [
           {
             "r": 1,
@@ -2539,8 +2547,8 @@ export const CATEGORIES = [
               "c": 1
             },
             {
-              "r": 0,
-              "c": 2
+              "r": 2,
+              "c": 0
             }
           ]
         },
@@ -2554,11 +2562,11 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 2,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 8.7,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "5%"
         },
         "solution": {
@@ -2572,72 +2580,72 @@ export const CATEGORIES = [
               0
             ],
             [
+              1,
+              1
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              0,
+              2
+            ],
+            [
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              3
+            ],
+            [
               2,
+              3
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              3,
+              4
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
               0
             ],
             [
-              3,
+              2,
               0
-            ],
-            [
-              3,
-              1
-            ],
-            [
-              3,
-              2
-            ],
-            [
-              3,
-              3
-            ],
-            [
-              3,
-              4
-            ],
-            [
-              2,
-              4
-            ],
-            [
-              1,
-              4
-            ],
-            [
-              0,
-              4
-            ],
-            [
-              0,
-              3
-            ],
-            [
-              1,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              2,
-              2
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              1,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
-              2
             ]
           ]
         }
@@ -3103,18 +3111,18 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Switches 5: Cascade Relays 4x5",
-        "note": "Mở khóa dây chuyền (A -> B -> C): Dây A mở cổng cho B, B mở cổng cho C, C mở cổng thoát cho đuôi A.",
+        "note": "Mở khóa dây chuyền U=2: Mỗi dây tự đè Chìa của chính mình ngay trên lộ trình để mở Cổng cho dây kế — thứ tự A rồi B rồi C chỉ còn 2 cách chia lãnh thổ hợp lệ.",
         "switches": [
           {
-            "r": 0,
-            "c": 1,
-            "gateR": 2,
-            "gateC": 1,
+            "r": 1,
+            "c": 4,
+            "gateR": 0,
+            "gateC": 2,
             "latch": true
           },
           {
-            "r": 3,
-            "c": 3,
+            "r": 0,
+            "c": 1,
             "gateR": 1,
             "gateC": 3,
             "latch": true
@@ -3144,10 +3152,10 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 20,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "20%"
         },
@@ -3158,24 +3166,24 @@ export const CATEGORIES = [
               0
             ],
             [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
               1,
               0
             ],
             [
-              1,
+              2,
+              0
+            ],
+            [
+              2,
               1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
-              2
-            ],
-            [
-              1,
-              2
             ],
             [
               2,
@@ -3188,14 +3196,6 @@ export const CATEGORIES = [
               0
             ],
             [
-              2,
-              0
-            ],
-            [
-              2,
-              1
-            ],
-            [
               3,
               1
             ],
@@ -3210,6 +3210,14 @@ export const CATEGORIES = [
             [
               2,
               3
+            ],
+            [
+              1,
+              3
+            ],
+            [
+              1,
+              2
             ]
           ],
           "C": [
@@ -3234,8 +3242,8 @@ export const CATEGORIES = [
               3
             ],
             [
-              1,
-              3
+              0,
+              2
             ]
           ]
         }
@@ -3245,11 +3253,11 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Switches 6: Chicken & Egg 4x5",
-        "note": "Nghịch lý Con Gà & Quả Trứng: Cả 2 Neo đều bị Cổng chặn lối xuất phát. Phải tìm ra khe hẹp 1 ô duy nhất để lọt đuôi qua mở khóa.",
+        "note": "Nghịch lý Con Gà & Quả Trứng U=1: Cả 2 Chìa vàng đều nằm trên chính lộ trình của dây sở hữu — nhưng Cổng lại khóa NGAY lối đi của dây còn lại, buộc thứ tự chạm-mở phải tuyệt đối chính xác. Chỉ đúng 1 cách.",
         "switches": [
           {
-            "r": 1,
-            "c": 1,
+            "r": 2,
+            "c": 4,
             "gateR": 0,
             "gateC": 1,
             "latch": true
@@ -3258,7 +3266,7 @@ export const CATEGORIES = [
             "r": 2,
             "c": 3,
             "gateR": 3,
-            "gateC": 3,
+            "gateC": 0,
             "latch": true
           }
         ],
@@ -3267,23 +3275,23 @@ export const CATEGORIES = [
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 10,
+            "length": 11,
             "color": "#1b5e8a"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
-            "length": 10,
+            "length": 9,
             "color": "#a82e2e"
           }
         ],
         "metrics": {
-          "u": 20,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "20%"
         },
         "solution": {
@@ -3297,15 +3305,7 @@ export const CATEGORIES = [
               0
             ],
             [
-              2,
-              0
-            ],
-            [
-              3,
-              0
-            ],
-            [
-              3,
+              1,
               1
             ],
             [
@@ -3313,20 +3313,32 @@ export const CATEGORIES = [
               1
             ],
             [
-              1,
-              1
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
+              2,
               2
             ],
             [
-              1,
+              2,
+              3
+            ],
+            [
+              3,
+              3
+            ],
+            [
+              3,
               2
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
             ]
           ],
           "B": [
@@ -3355,20 +3367,16 @@ export const CATEGORIES = [
               3
             ],
             [
-              2,
-              3
-            ],
-            [
-              3,
-              3
-            ],
-            [
-              3,
+              1,
               2
             ],
             [
-              2,
+              0,
               2
+            ],
+            [
+              0,
+              1
             ]
           ]
         }
@@ -3843,11 +3851,11 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Bombs 5: Crossfire Mines 4x5",
-        "note": "Giao lộ sinh tử: Hai thùng đẩy theo 2 hướng vuông góc. Đẩy sai thứ tự thì thùng này sẽ cản hướng đẩy của thùng kia.",
+        "note": "Giao lộ sinh tử U=2: 2 thùng ở 2 nửa bàn cờ, mỗi dây phá đúng 1 bom trên lộ trình riêng của mình — chỉ còn 2 cách bọc viền hợp lệ sau khi cả 2 bom đã bị dọn sạch.",
         "pushRocks": [
           {
-            "r": 0,
-            "c": 1
+            "r": 1,
+            "c": 3
           },
           {
             "r": 2,
@@ -3869,22 +3877,22 @@ export const CATEGORIES = [
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 10,
+            "length": 12,
             "color": "#1b5e8a"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
-            "length": 10,
+            "length": 8,
             "color": "#a82e2e"
           }
         ],
         "metrics": {
-          "u": 11,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "20%"
         },
@@ -3895,11 +3903,19 @@ export const CATEGORIES = [
               0
             ],
             [
-              0,
-              1
+              1,
+              0
             ],
             [
-              1,
+              2,
+              0
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              3,
               1
             ],
             [
@@ -3916,19 +3932,19 @@ export const CATEGORIES = [
             ],
             [
               3,
-              1
-            ],
-            [
-              3,
-              0
+              3
             ],
             [
               2,
-              0
+              3
             ],
             [
               1,
-              0
+              3
+            ],
+            [
+              1,
+              2
             ]
           ],
           "B": [
@@ -3957,20 +3973,12 @@ export const CATEGORIES = [
               2
             ],
             [
-              1,
-              2
+              0,
+              1
             ],
             [
               1,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              3,
-              3
+              1
             ]
           ]
         }
@@ -3980,13 +3988,13 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Bombs 6: L-Curved Blast 4x5",
-        "note": "Bãi mìn mê cung U=1: Vách ngăn che trước quả bom. Dây A đẩy thùng lách qua vách rồi Dây B mới tiếp cận ủi thùng nổ bom.",
+        "note": "Bãi mìn góc chết U=1: 1 vách ngăn mỏng cô lập góc trên trái — chỉ 1 dây duy nhất có thể luồn vào đẩy thùng phá bom, dây còn lại phải bọc trọn viền ngoài. Đúng 1 đường sống duy nhất.",
         "walls": [
           {
-            "r1": 1,
-            "c1": 2,
-            "r2": 2,
-            "c2": 2
+            "r1": 0,
+            "c1": 0,
+            "r2": 1,
+            "c2": 0
           }
         ],
         "pushRocks": [
@@ -4018,11 +4026,11 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 7,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "15%"
         },
         "solution": {
@@ -4040,32 +4048,32 @@ export const CATEGORIES = [
               1
             ],
             [
+              2,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
               1,
               1
             ],
             [
               1,
               2
-            ],
-            [
-              0,
-              2
-            ],
-            [
-              0,
-              1
-            ],
-            [
-              0,
-              0
-            ],
-            [
-              1,
-              0
             ],
             [
               2,
-              0
+              2
+            ],
+            [
+              3,
+              2
+            ],
+            [
+              3,
+              3
             ]
           ],
           "B": [
@@ -4078,6 +4086,14 @@ export const CATEGORIES = [
               4
             ],
             [
+              2,
+              3
+            ],
+            [
+              1,
+              3
+            ],
+            [
               1,
               4
             ],
@@ -4090,24 +4106,16 @@ export const CATEGORIES = [
               3
             ],
             [
-              1,
-              3
-            ],
-            [
-              2,
-              3
-            ],
-            [
-              3,
-              3
-            ],
-            [
-              3,
+              0,
               2
             ],
             [
-              2,
-              2
+              0,
+              1
+            ],
+            [
+              0,
+              0
             ]
           ]
         }
@@ -4583,26 +4591,11 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Combo 5: Quad Mechanism 4x5",
-        "note": "Tứ đại cơ chế: Đẩy thùng phá bom -> Chạm Latch mở cổng -> Qua Lăng kính đổi màu -> Lọt qua Cổng màu.",
+        "note": "Tứ đại cơ chế U=2: Dây A đẩy thùng phá bom rồi tự đè Chìa của mình ở cuối lộ trình; Dây B nhuộm màu qua Lăng kính góc đáy rồi vượt Cổng vừa mở. Chỉ còn 2 cách chia lãnh thổ.",
         "pushRocks": [
           {
             "r": 0,
             "c": 1
-          }
-        ],
-        "bombs": [
-          {
-            "r": 0,
-            "c": 2
-          }
-        ],
-        "switches": [
-          {
-            "r": 1,
-            "c": 1,
-            "gateR": 2,
-            "gateC": 2,
-            "latch": true
           }
         ],
         "prisms": [
@@ -4614,9 +4607,24 @@ export const CATEGORIES = [
         ],
         "colorGates": [
           {
-            "r": 2,
+            "r": 1,
             "c": 2,
             "color": "red"
+          }
+        ],
+        "switches": [
+          {
+            "r": 2,
+            "c": 3,
+            "gateR": 1,
+            "gateC": 2,
+            "latch": true
+          }
+        ],
+        "bombs": [
+          {
+            "r": 0,
+            "c": 2
           }
         ],
         "anchors": [
@@ -4624,22 +4632,22 @@ export const CATEGORIES = [
             "id": "A",
             "row": 0,
             "col": 0,
-            "length": 10,
+            "length": 8,
             "color": "#1b5e8a"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
-            "length": 10,
+            "length": 12,
             "color": "#a82e2e"
           }
         ],
         "metrics": {
-          "u": 15,
+          "u": 2,
           "isUnique": false,
           "greedyTrapped": true,
-          "iqScore": 6,
+          "iqScore": 8.7,
           "psychologyTag": "GREEDY TRAP",
           "mechanicDensity": "30%"
         },
@@ -4654,36 +4662,28 @@ export const CATEGORIES = [
               1
             ],
             [
-              1,
-              1
-            ],
-            [
-              1,
-              0
-            ],
-            [
-              2,
-              0
-            ],
-            [
-              3,
-              0
-            ],
-            [
-              3,
-              1
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              2,
+              0,
               2
             ],
             [
-              3,
-              2
+              0,
+              3
+            ],
+            [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              2,
+              3
             ]
           ],
           "B": [
@@ -4692,39 +4692,47 @@ export const CATEGORIES = [
               4
             ],
             [
-              2,
-              4
-            ],
-            [
-              1,
-              4
-            ],
-            [
-              0,
-              4
-            ],
-            [
-              0,
-              3
-            ],
-            [
-              0,
-              2
-            ],
-            [
-              1,
-              2
-            ],
-            [
-              1,
-              3
-            ],
-            [
-              2,
+              3,
               3
             ],
             [
               3,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              3,
+              1
+            ],
+            [
+              3,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              1,
               3
             ]
           ]
@@ -4735,33 +4743,18 @@ export const CATEGORIES = [
         "rows": 4,
         "cols": 5,
         "name": "Combo 6: Ocean Symphony 4x5",
-        "note": "Golden Path #5 (Bản giao hưởng đại dương): Dây A đẩy thùng phá bom -> Dây C bị mũi tên ép vào Latch -> Dây B lấy màu qua cổng màu về đích.",
+        "note": "Bản giao hưởng đại dương U=1: Dây A đẩy thùng phá bom rồi bị mũi tên ép rẽ xuống lõi; Dây C tự đè Chìa của mình; Dây B nhuộm màu qua Lăng kính rồi vượt Cổng vừa mở. Đúng 1 đường sống duy nhất cho cả 3 dây.",
         "pushRocks": [
           {
             "r": 0,
             "c": 1
           }
         ],
-        "bombs": [
-          {
-            "r": 0,
-            "c": 2
-          }
-        ],
         "arrows": [
           {
-            "r": 2,
-            "c": 0,
-            "dir": "RIGHT"
-          }
-        ],
-        "switches": [
-          {
-            "r": 2,
-            "c": 1,
-            "gateR": 3,
-            "gateC": 2,
-            "latch": true
+            "r": 1,
+            "c": 2,
+            "dir": "DOWN"
           }
         ],
         "prisms": [
@@ -4776,6 +4769,21 @@ export const CATEGORIES = [
             "r": 3,
             "c": 2,
             "color": "red"
+          }
+        ],
+        "switches": [
+          {
+            "r": 2,
+            "c": 1,
+            "gateR": 3,
+            "gateC": 2,
+            "latch": true
+          }
+        ],
+        "bombs": [
+          {
+            "r": 0,
+            "c": 2
           }
         ],
         "anchors": [
@@ -4802,11 +4810,11 @@ export const CATEGORIES = [
           }
         ],
         "metrics": {
-          "u": 8,
-          "isUnique": false,
+          "u": 1,
+          "isUnique": true,
           "greedyTrapped": true,
-          "iqScore": 6,
-          "psychologyTag": "GREEDY TRAP",
+          "iqScore": 10,
+          "psychologyTag": "MASTERPIECE",
           "mechanicDensity": "30%"
         },
         "solution": {
@@ -4820,14 +4828,6 @@ export const CATEGORIES = [
               1
             ],
             [
-              1,
-              1
-            ],
-            [
-              1,
-              2
-            ],
-            [
               0,
               2
             ],
@@ -4836,16 +4836,24 @@ export const CATEGORIES = [
               3
             ],
             [
+              0,
+              4
+            ],
+            [
+              1,
+              4
+            ],
+            [
               1,
               3
             ],
             [
               1,
-              4
+              2
             ],
             [
-              0,
-              4
+              2,
+              2
             ]
           ],
           "C": [
@@ -4854,16 +4862,16 @@ export const CATEGORIES = [
               0
             ],
             [
+              1,
+              1
+            ],
+            [
+              2,
+              1
+            ],
+            [
               2,
               0
-            ],
-            [
-              2,
-              1
-            ],
-            [
-              3,
-              1
             ],
             [
               3,
@@ -4892,8 +4900,8 @@ export const CATEGORIES = [
               2
             ],
             [
-              2,
-              2
+              3,
+              1
             ]
           ]
         }
