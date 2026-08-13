@@ -34,7 +34,7 @@ const key = (r, c) => r + '_' + c;
 
 // ---------------- RNG có seed (mulberry32) ----------------
 
-function hashSeed(str) {
+export function hashSeed(str) {
   let h = 1779033703 ^ str.length;
   for (let i = 0; i < str.length; i++) {
     h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
@@ -42,7 +42,7 @@ function hashSeed(str) {
   }
   return h >>> 0;
 }
-function mulberry32(seed) {
+export function mulberry32(seed) {
   let a = seed;
   return function () {
     a |= 0; a = (a + 0x6D2B79F5) | 0;
@@ -240,7 +240,7 @@ function boxCorners(rows, cols) { return [[0, 0], [0, cols - 1], [rows - 1, 0], 
 // Tìm 1 đường Hamilton hợp lệ trên khung rows x cols trừ các ô trong holeSet
 // (chướng ngại + ô ngoài hình dạng). Thử các điểm xuất phát theo THỨ TỰ NGẪU
 // NHIÊN (seed riêng/màn) để 2 màn cùng khung vẫn ra hình dạng đường đi khác.
-function generatePath(rows, cols, holeSet, forcedPrefix, rng) {
+export function generatePath(rows, cols, holeSet, forcedPrefix, rng) {
   if (forcedPrefix) return findHamPath(rows, cols, holeSet, forcedPrefix[0], forcedPrefix.slice(1), rng);
   const allCorners = boxCorners(rows, cols).filter(([r, c]) => !holeSet.has(key(r, c)));
   const usable = [];
@@ -255,7 +255,7 @@ function generatePath(rows, cols, holeSet, forcedPrefix, rng) {
 
 // ---------------- Cắt đường Hamilton thành N xích (độ dài ngẫu nhiên hợp lệ) -
 
-function cutPath(path, chainCount, rng, minLen = 4) {
+export function cutPath(path, chainCount, rng, minLen = 4) {
   const total = path.length;
   const safeMin = Math.min(minLen, Math.max(2, Math.floor(total / chainCount / 2)));
   const weights = Array.from({ length: chainCount }, () => 0.6 + rng());
@@ -275,10 +275,10 @@ function cutPath(path, chainCount, rng, minLen = 4) {
   return segs;
 }
 
-const PALETTE = ['#1b5e8a', '#a82e2e', '#2a7b4c', '#8a6a10', '#6a4fb3'];
+const PALETTE = ['#4a90f2', '#f2657f', '#3ecf8e', '#ffca4a', '#a78bfa'];
 const IDS = ['A', 'B', 'C', 'D', 'E'];
 
-function segsToAnchorsAndSolution(segs) {
+export function segsToAnchorsAndSolution(segs) {
   const anchors = [];
   const solution = {};
   segs.forEach((seg, i) => {
@@ -327,7 +327,7 @@ function buildWithPushInto(rows, cols, chainCount, rng) {
 // Thử nhiều phương án (rows, cols, số xích) trước khi bỏ cuộc — để KHÔNG BAO
 // GIỜ phải rơi vào cơ chế khác chỉ vì 1 tổ hợp cụ thể không tìm được đường ép
 // đẩy. Ưu tiên giữ đúng kích thước đề nghị trước, rồi mới nới lỏng dần.
-function buildWithPushIntoRobust(rows, cols, chains, rng) {
+export function buildWithPushIntoRobust(rows, cols, chains, rng) {
   const attempts = [
     [rows, cols, chains],
     [rows, cols, Math.max(2, chains - 1)],
@@ -348,7 +348,7 @@ function buildWithPushIntoRobust(rows, cols, chains, rng) {
   return null;
 }
 
-function randomHoles(rows, cols, count, rng, exclude = new Set()) {
+export function randomHoles(rows, cols, count, rng, exclude = new Set()) {
   const cells = [];
   for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!exclude.has(key(r, c))) cells.push([r, c]);
   return shuffle(cells, rng).slice(0, count);
@@ -707,6 +707,14 @@ function tryGen(spec, i, seedSalt) {
   catch (e) { return { lvl: null, err: e.message }; }
 }
 
+// Bọc phần sinh+ghi file trong guard "chạy trực tiếp" — script này còn được
+// `import`-ed bởi scripts/gen-levels-demo.mjs để tái dùng các hàm Hamilton
+// path ở trên; nếu không có guard, MỌI lần import cũng chạy lại toàn bộ khối
+// sinh 210 màn và GHI ĐÈ src/data/levels.js (đã từng xảy ra thật, xoá mất bộ
+// 42 màn tay đang dùng).
+const isMain = process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
+if (isMain) {
+
 const categories = [];
 let totalFail = 0;
 for (const spec of CATEGORY_SPECS) {
@@ -761,3 +769,5 @@ export function getCategory(categoryId) {
 
 writeFileSync(OUT_FILE, out, 'utf-8');
 console.log(`\nĐã ghi ${OUT_FILE}`);
+
+}

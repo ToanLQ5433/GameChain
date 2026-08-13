@@ -53,7 +53,7 @@ function buildDockButton(scene, cx, topY, icon, label, onClick, isCenter, isActi
   iconBg.lineStyle(3, borderColor, 1).strokeRoundedRect(cx - size / 2, iconY - size / 2, size, size, 14);
   scene.add.text(cx, iconY, icon, { fontSize: (isCenter ? 26 : 20) + 'px' }).setOrigin(0.5);
   scene.add.text(cx, iconY + size / 2 + 10, label, {
-    fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#36324c'
+    fontFamily: 'Baloo 2', fontSize: '9px', fontStyle: '900', color: '#36324c'
   }).setOrigin(0.5);
 
   const hit = scene.add.rectangle(cx, topY + 34, size + 22, 84, 0xffffff, 0.001).setInteractive({ useHandCursor: true });

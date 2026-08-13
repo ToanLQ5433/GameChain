@@ -15,16 +15,16 @@ import { buildBottomDock, DOCK_HOME_H } from '../utils/dock.js';
 
 const AD_COINS_REWARD = 50;
 
-const LOCK_BG = 0x7a5230;
-const LOCK_BORDER = 0x442711;
+const LOCK_BG = 0x6b7280;
+const LOCK_BORDER = 0x374151;
 const CURRENT_BG = 0xffc200;
 const CURRENT_BORDER = 0xc68a00;
 const PASSED_BG = 0x22c55e;
 const PASSED_BORDER = 0x15803d;
-const ROAD_COLOR = 0x4a2c11;
-const ROAD_COLOR_LOCKED = 0x6b4423;
-const ROAD_STRIPE = 0xfef08a;
-const ROAD_STRIPE_LOCKED = 0x8a7550;
+const ROAD_COLOR = 0x35538c;
+const ROAD_COLOR_LOCKED = 0x475266;
+const ROAD_STRIPE = 0xdff0ff;
+const ROAD_STRIPE_LOCKED = 0x8a93ab;
 const NODE_SPACING = 150;
 const NODE_R = 42;
 const NODE_R_CURRENT = 52;
@@ -71,7 +71,7 @@ export default class HomeScene extends Phaser.Scene {
 
   drawBackground(width, height) {
     const sky = this.add.graphics();
-    sky.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
+    sky.fillGradientStyle(0xeaf4ff, 0xeaf4ff, 0xe9e2ff, 0xe9e2ff, 1);
     sky.fillRect(0, 0, width, height);
 
     // Soft, low-opacity background haze — no outline at all, since even a
@@ -84,13 +84,13 @@ export default class HomeScene extends Phaser.Scene {
       deco.save();
       deco.translateCanvas(cx, cy);
       deco.rotateCanvas(rot);
-      deco.fillStyle(0x4ade80, 0.14).fillEllipse(0, 0, w * 1.3, h * 1.3);
-      deco.fillStyle(0x4ade80, 0.22).fillEllipse(0, 0, w, h);
+      deco.fillStyle(0x7dd8a8, 0.22).fillEllipse(0, 0, w * 1.3, h * 1.3);
+      deco.fillStyle(0x7dd8a8, 0.35).fillEllipse(0, 0, w, h);
       deco.restore();
     };
     const cloud = (cx, cy, w, h) => {
-      deco.fillStyle(0xffffff, 0.2).fillRoundedRect(cx - w * 0.65, cy - h * 0.65, w * 1.3, h * 1.3, h * 0.65);
-      deco.fillStyle(0xffffff, 0.35).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
+      deco.fillStyle(0xffffff, 0.55).fillRoundedRect(cx - w * 0.65, cy - h * 0.65, w * 1.3, h * 1.3, h * 0.65);
+      deco.fillStyle(0xffffff, 0.8).fillRoundedRect(cx - w / 2, cy - h / 2, w, h, h / 2);
     };
     island(width * 0.12, height * 0.16, 62, 38, -0.15);
     island(width * 0.92, height * 0.4, 70, 42, 0.2);
@@ -183,7 +183,7 @@ export default class HomeScene extends Phaser.Scene {
     trackBg.lineStyle(1.5, COLORS.woodDark, 0.6).strokeRoundedRect(this.eventTrackX, this.eventTrackY, this.eventTrackW, this.eventTrackH, this.eventTrackH / 2);
     this.eventFill = this.add.graphics();
     this.eventLabel = this.add.text(x + w - 8, y + h / 2, '', {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#16213e'
     }).setOrigin(1, 0.5);
 
     const hit = this.add.rectangle(x + w / 2, y + h / 2, w, h, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
@@ -340,7 +340,7 @@ export default class HomeScene extends Phaser.Scene {
 
     if (done) {
       group.add(this.add.text(0, 0, '✓', {
-        fontFamily: 'Cinzel', fontSize: '32px', fontStyle: '900', color: '#ffffff'
+        fontFamily: 'Baloo 2', fontSize: '32px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     } else if (locked) {
       // Locked nodes show ONLY the lock icon, big and centered — no level
@@ -349,7 +349,7 @@ export default class HomeScene extends Phaser.Scene {
     } else {
       // Unlocked/current nodes show ONLY the level number — no lock icon.
       group.add(this.add.text(0, 0, String(item.globalIndex + 1), {
-        fontFamily: 'Cinzel', fontSize: '26px', fontStyle: '900', color: '#2b1e16'
+        fontFamily: 'Baloo 2', fontSize: '26px', fontStyle: '900', color: '#16213e'
       }).setOrigin(0.5));
     }
 
@@ -466,7 +466,7 @@ export default class HomeScene extends Phaser.Scene {
     const box = this.add.container(x, y);
 
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x2b1e16, 0.35).fillRoundedRect(-size / 2, -size / 2 + 4, size, size, 12);
+    shadow.fillStyle(0x000000, 0.3).fillRoundedRect(-size / 2, -size / 2 + 4, size, size, 12);
     const bg = this.add.graphics();
     bg.fillStyle(COLORS.wood, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 12);
     bg.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(-size / 2, -size / 2, size, size, 12);
@@ -479,7 +479,7 @@ export default class HomeScene extends Phaser.Scene {
     chip.lineStyle(2, 0x975e55, 1).strokeRoundedRect(-chipW / 2, chipY, chipW, chipH, 8);
     box.add(chip);
     box.add(this.add.text(0, chipY + chipH / 2, 'Daily', {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '9px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5));
 
     const dot = this.add.circle(size / 2 - 4, -size / 2 + 4, 5, 0xef4444).setStrokeStyle(1.5, 0xffffff);
@@ -522,7 +522,7 @@ export default class HomeScene extends Phaser.Scene {
   buildOfferCard(x, y, size, { bg, icon, stamp, label, onClick }) {
     const box = this.add.container(x, y);
     const shadow = this.add.graphics();
-    shadow.fillStyle(0x2b1e16, 0.35).fillRoundedRect(-size / 2, -size / 2 + 5, size, size, 16);
+    shadow.fillStyle(0x000000, 0.3).fillRoundedRect(-size / 2, -size / 2 + 5, size, size, 16);
     const bgG = this.add.graphics();
     bgG.fillStyle(bg, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 16);
     bgG.lineStyle(4, 0xffffff, 0.85).strokeRoundedRect(-size / 2, -size / 2, size, size, 16);
@@ -531,7 +531,7 @@ export default class HomeScene extends Phaser.Scene {
     if (icon) box.add(this.add.text(0, -4, icon, { fontSize: Math.round(size * 0.42) + 'px' }).setOrigin(0.5));
     if (stamp) {
       const stampTxt = this.add.text(0, -4, stamp, {
-        fontFamily: 'Cinzel', fontSize: Math.round(size * 0.32) + 'px', fontStyle: '900', color: '#fff1de'
+        fontFamily: 'Baloo 2', fontSize: Math.round(size * 0.32) + 'px', fontStyle: '900', color: '#fff1de'
       }).setOrigin(0.5).setAngle(-14).setShadow(0, 3, '#00000055', 4);
       box.add(stampTxt);
     }
@@ -542,7 +542,7 @@ export default class HomeScene extends Phaser.Scene {
     chip.lineStyle(2, 0x975e55, 1).strokeRoundedRect(-chipW / 2, chipY, chipW, chipH, 10);
     box.add(chip);
     box.add(this.add.text(0, chipY + chipH / 2, label, {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#fff9f4'
+      fontFamily: 'Baloo 2', fontSize: '9px', fontStyle: '900', color: '#fff9f4'
     }).setOrigin(0.5));
 
     // Same true-centroid fix as buildDailyCheckInButton's hit rect above.
@@ -633,7 +633,7 @@ export default class HomeScene extends Phaser.Scene {
     // lên (y:-8, 20px) để chừa chỗ cho pill Tag ngay dưới, không đè lên nhau.
     const strokeColor = '#' + shadowColor.toString(16).padStart(6, '0');
     const levelLabel = this.add.text(0, diffTagText ? -8 : 0, `Level ${levelNum}`, {
-      fontFamily: 'Cinzel',
+      fontFamily: 'Baloo 2',
       fontSize: diffTagText ? '20px' : '22px',
       fontStyle: '900',
       color: '#fef2d4',
@@ -652,7 +652,7 @@ export default class HomeScene extends Phaser.Scene {
       tagBg.fillStyle(0x000000, 0.45);
       tagBg.fillRoundedRect(-tagW / 2, -tagH / 2, tagW, tagH, 7);
       const tagTxt = this.add.text(0, 0, diffTagText, {
-        fontFamily: 'Cinzel',
+        fontFamily: 'Baloo 2',
         fontSize: '10px',
         fontStyle: '900',
         color: '#ffedd5'
@@ -718,8 +718,8 @@ export default class HomeScene extends Phaser.Scene {
     if (this.toastText) this.toastText.destroy();
     const { width } = this.scale;
     this.toastText = this.add.text(width / 2, this.mapViewTop - 8, text, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
-      backgroundColor: '#2b1e16', padding: { x: 10, y: 5 }, align: 'center',
+      fontFamily: 'Baloo 2', fontSize: '10px', color: '#ffb020',
+      backgroundColor: '#16213e', padding: { x: 10, y: 5 }, align: 'center',
       wordWrap: { width: width - 60 }
     }).setOrigin(0.5, 1).setDepth(60);
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });

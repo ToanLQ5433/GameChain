@@ -17,21 +17,21 @@ const APP_VERSION = '0.1.0';
 function buildToggleRow(scene, x, y, w, icon, label, getValue, onToggle) {
   const iconTxt = scene.add.text(x, y, icon, { fontSize: '18px' }).setOrigin(0, 0.5);
   const labelTxt = scene.add.text(x + 30, y, label, {
-    fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#8b5a2b'
+    fontFamily: 'Baloo 2', fontSize: '14px', fontStyle: '900', color: '#16213e'
   }).setOrigin(0, 0.5);
 
   const pillW = 68, pillH = 30, pillX = x + w - pillW;
   const pill = scene.add.graphics();
-  const knob = scene.add.circle(0, y, pillH / 2 - 2, 0xffffff).setStrokeStyle(2, 0x4a2c11);
+  const knob = scene.add.circle(0, y, pillH / 2 - 2, 0xffffff).setStrokeStyle(2, 0x374151);
   const stateTxt = scene.add.text(0, y, '', {
-    fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ffffff'
+    fontFamily: 'Baloo 2', fontSize: '11px', fontStyle: '900', color: '#ffffff'
   }).setOrigin(0.5);
 
   const drawPill = (on) => {
     pill.clear();
     const bgColor = on ? 0x22c55e : 0xef4444;
     pill.fillStyle(bgColor, 1).fillRoundedRect(pillX, y - pillH / 2, pillW, pillH, pillH / 2);
-    pill.lineStyle(2.5, 0x3d2b1f, 1).strokeRoundedRect(pillX, y - pillH / 2, pillW, pillH, pillH / 2);
+    pill.lineStyle(2.5, 0x2e3760, 1).strokeRoundedRect(pillX, y - pillH / 2, pillW, pillH, pillH / 2);
     
     knob.setPosition(on ? pillX + pillW - pillH / 2 : pillX + pillH / 2, y);
     stateTxt.setText(on ? 'On' : 'Off');
@@ -64,7 +64,7 @@ export function buildSettingsModal(scene, width, height, opts = {}) {
   const panelW = Math.min(width - 40, 350);
   const panelX = width / 2 - panelW / 2, panelY = Math.max(16, height / 2 - panelH / 2);
 
-  const bg = scene.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+  const bg = scene.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
 
   // Ticket card frame with blue border
   const panel = scene.add.graphics();
@@ -158,7 +158,7 @@ export function buildSettingsModal(scene, width, height, opts = {}) {
   }
 
   const versionTxt = scene.add.text(width / 2, panelY + panelH - 18, `Version: ${APP_VERSION}`, {
-    fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#2b1e16'
+    fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: 'bold', color: '#16213e'
   }).setOrigin(0.5);
   items.push(versionTxt);
 
@@ -168,23 +168,23 @@ export function buildSettingsModal(scene, width, height, opts = {}) {
 export function buildLifeCostConfirm(scene, width, height, { icon, title, message, actionLabel, actionVariant, cost, onConfirm, onCancel }) {
   const panelW = Math.min(width - 50, 310), panelH = 310;
   const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
-  const bg = scene.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+  const bg = scene.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
   const panel = drawPanel(scene, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.parchment, border: COLORS.ruby, borderWidth: 3 });
 
   const titleTxt = scene.add.text(width / 2, panelY + 32, title, {
-    fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#b91c1c'
+    fontFamily: 'Baloo 2', fontSize: '18px', fontStyle: '900', color: '#b91c1c'
   }).setOrigin(0.5);
 
   const heartY = panelY + 98;
   const heart = scene.add.text(width / 2, heartY, icon, { fontSize: '56px' }).setOrigin(0.5);
   if (cost > 0) {
     scene.add.text(width / 2, heartY, `-${cost}`, {
-      fontFamily: 'Cinzel', fontSize: '18px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '18px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5).setDepth(1);
   }
 
   const msgTxt = scene.add.text(width / 2, panelY + 154, message, {
-    fontFamily: 'Crimson Pro', fontSize: '13px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 40 }
+    fontFamily: 'Baloo 2', fontSize: '13px', color: '#16213e', align: 'center', wordWrap: { width: panelW - 40 }
   }).setOrigin(0.5);
 
   const btnW = panelW - 48;

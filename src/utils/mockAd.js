@@ -11,12 +11,12 @@ export function showMockedAdOverlay(scene, { label = '📺 Watching ad…', dura
   const { width, height } = scene.scale;
   const container = scene.add.container(0, 0).setDepth(1000);
 
-  const bg = scene.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.86).setOrigin(0);
+  const bg = scene.add.rectangle(0, 0, width, height, 0x1b2340, 0.6).setOrigin(0);
   const panelW = width - 80, panelH = 150;
   const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
   const panel = drawPanel(scene, panelX, panelY, panelW, panelH, { radius: 16, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
   const text = scene.add.text(width / 2, panelY + panelH / 2 - 20, label, {
-    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
+    fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900', color: '#16213e'
   }).setOrigin(0.5);
   const spinner = scene.add.graphics().setPosition(width / 2, panelY + panelH / 2 + 20);
   spinner.lineStyle(4, COLORS.gold, 1);

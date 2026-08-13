@@ -19,7 +19,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 9,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -83,14 +83,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 5,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 2,
             "length": 4,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -156,14 +156,14 @@ export const CATEGORIES = [
             "row": 1,
             "col": 3,
             "length": 7,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 1,
             "length": 5,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -249,14 +249,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 1,
             "col": 1,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -364,21 +364,21 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
             "length": 5,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           },
           {
             "id": "C",
             "row": 0,
             "col": 3,
             "length": 4,
-            "color": "#2a7b4c"
+            "color": "#3ecf8e"
           }
         ],
         "metrics": {
@@ -478,21 +478,21 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 7,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           },
           {
             "id": "C",
             "row": 3,
             "col": 4,
             "length": 5,
-            "color": "#2a7b4c"
+            "color": "#3ecf8e"
           }
         ],
         "metrics": {
@@ -619,14 +619,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 3,
             "length": 5,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -714,14 +714,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 1,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
-            "length": 7,
-            "color": "#a82e2e"
+            "length": 8,
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -795,6 +795,10 @@ export const CATEGORIES = [
             [
               2,
               2
+            ],
+            [
+              3,
+              2
             ]
           ]
         }
@@ -817,14 +821,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 0,
             "col": 3,
-            "length": 5,
-            "color": "#a82e2e"
+            "length": 6,
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -898,6 +902,10 @@ export const CATEGORIES = [
             [
               3,
               2
+            ],
+            [
+              2,
+              2
             ]
           ]
         }
@@ -931,14 +939,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 7,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 7,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1038,14 +1046,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 13,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 6,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1171,14 +1179,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
             "length": 9,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1300,14 +1308,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 3,
             "length": 6,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1399,14 +1407,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1514,14 +1522,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1627,14 +1635,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 10,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1768,14 +1776,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 10,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -1906,14 +1914,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 10,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -2044,7 +2052,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 9,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2124,7 +2132,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 12,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2212,7 +2220,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 16,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2324,7 +2332,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 16,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2432,7 +2440,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 20,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2558,7 +2566,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 19,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -2680,14 +2688,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 3,
             "length": 6,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -2774,14 +2782,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 2,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -2884,14 +2892,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3001,14 +3009,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 10,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3134,21 +3142,21 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 7,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 0,
             "length": 7,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           },
           {
             "id": "C",
             "row": 3,
             "col": 4,
             "length": 6,
-            "color": "#2a7b4c"
+            "color": "#3ecf8e"
           }
         ],
         "metrics": {
@@ -3276,14 +3284,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 11,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 9,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3414,14 +3422,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 3,
             "length": 6,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3519,14 +3527,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3636,14 +3644,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 7,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3745,14 +3753,14 @@ export const CATEGORIES = [
             "row": 3,
             "col": 1,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 0,
             "col": 4,
-            "length": 9,
-            "color": "#a82e2e"
+            "length": 10,
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -3842,6 +3850,10 @@ export const CATEGORIES = [
             [
               1,
               3
+            ],
+            [
+              0,
+              3
             ]
           ]
         }
@@ -3878,14 +3890,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 12,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4015,14 +4027,14 @@ export const CATEGORIES = [
             "row": 3,
             "col": 0,
             "length": 10,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 10,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4154,14 +4166,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 6,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 2,
             "col": 3,
             "length": 5,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4257,14 +4269,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 8,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4373,14 +4385,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 3,
             "length": 7,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4464,6 +4476,12 @@ export const CATEGORIES = [
         "cols": 5,
         "name": "Combo 4: Minefield Cipher 4x5",
         "note": "Phá bom trên lộ trình mật mã số: Nối mốc 1 -> Đẩy thùng phá Bom -> Nối mốc 2.",
+        "rocks": [
+          {
+            "r": 1,
+            "c": 0
+          }
+        ],
         "pushRocks": [
           {
             "r": 0,
@@ -4494,7 +4512,7 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 19,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           }
         ],
         "metrics": {
@@ -4633,14 +4651,14 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 8,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 12,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {
@@ -4792,21 +4810,21 @@ export const CATEGORIES = [
             "row": 0,
             "col": 0,
             "length": 9,
-            "color": "#1b5e8a"
+            "color": "#4a90f2"
           },
           {
             "id": "C",
             "row": 1,
             "col": 0,
             "length": 5,
-            "color": "#2a7b4c"
+            "color": "#3ecf8e"
           },
           {
             "id": "B",
             "row": 3,
             "col": 4,
             "length": 6,
-            "color": "#a82e2e"
+            "color": "#f2657f"
           }
         ],
         "metrics": {

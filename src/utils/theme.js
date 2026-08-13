@@ -1,80 +1,82 @@
-// Design tokens + UI helper lấy từ style guide Figma "Giải Mã Hải Hành"
-// (navy sâu + gold + teal + khung gỗ), dùng chung cho mọi scene để toàn app
-// nhất quán 1 phong cách thay vì mỗi scene tự bịa màu riêng.
+// Design tokens + UI helper cho concept "Soft Sky" — nền pastel sáng, thẻ
+// trắng đổ bóng nhẹ, màu điểm nhấn bão hoà vừa phải (không neon gắt) — ngôn
+// ngữ thị giác dễ nhìn/dễ tiếp cận của dòng game Two Dots/soft-UI casual,
+// dùng chung cho mọi scene để toàn app nhất quán 1 phong cách sáng sủa.
 import Phaser from 'phaser';
 
 export const COLORS = {
-  bgDeep: 0x04070d,
-  cardBg: 0x0a1d33,
-  cardBgLight: 0x0f2740,
-  cardBgHover: 0x123049,
-  gold: 0xf3c64f,
-  goldDim: 0x8a6a10,
-  goldBorder: 0xc9a13a,
-  teal: 0x14b8a6,
-  tealDim: 0x0a4c4f,
-  wood: 0x5c3a21,
-  woodDark: 0x3d2b1f,
-  ruby: 0xa82e2e,
-  emerald: 0x2a7b4c,
-  ink: 0x2b1e16,
-  parchment: 0xf4e8cf
+  bgDeep: 0xeaf2ff,
+  cardBg: 0xffffff,
+  cardBgLight: 0xf4f8ff,
+  cardBgHover: 0xe6eefd,
+  gold: 0xffd166,
+  goldDim: 0xe6ac2e,
+  goldBorder: 0xffb020,
+  teal: 0x3ec6d1,
+  tealDim: 0x1f8a92,
+  wood: 0xffffff,
+  woodDark: 0xc3d3f2,
+  ruby: 0xef5b6f,
+  emerald: 0x34c774,
+  ink: 0x33395c,
+  parchment: 0xffffff
 };
 
-// Nền hải đồ chuẩn: navy gần đen + lưới toạ độ mờ, dùng lại ở mọi scene.
+// Nền màn hình chuẩn: gradient trời pastel xanh-tím nhạt, không lưới toạ độ
+// nặng nề — chỉ 1 dải màu êm, dùng lại ở mọi scene.
 export function drawChartBackground(scene, width, height) {
-  scene.add.rectangle(0, 0, width, height, COLORS.bgDeep).setOrigin(0);
   const g = scene.add.graphics();
-  g.lineStyle(1, COLORS.teal, 0.05);
-  for (let x = 0; x < width; x += 32) g.lineBetween(x, 0, x, height);
-  for (let y = 0; y < height; y += 32) g.lineBetween(0, y, width, y);
+  g.fillGradientStyle(0xeaf4ff, 0xeaf4ff, 0xe9e2ff, 0xe9e2ff, 1);
+  g.fillRect(0, 0, width, height);
   return g;
 }
 
-// Panel/card viền vàng dày bo góc — mọi khung nội dung trong style guide đều
-// dùng mẫu này (menu card, board frame, victory card, world-map frame).
+// Panel/card trắng bo tròn, đổ bóng nhẹ phía dưới thay cho viền nổi — mọi
+// khung nội dung dùng mẫu này (menu card, board frame, victory card, world-
+// map frame).
 export function drawPanel(scene, x, y, w, h, opts = {}) {
-  const { radius = 18, fill = COLORS.cardBg, border = COLORS.gold, borderWidth = 3, alpha = 1 } = opts;
+  const { radius = 22, fill = COLORS.cardBg, border = COLORS.woodDark, borderWidth = 2, alpha = 1, shadow = true } = opts;
   const g = scene.add.graphics();
+  if (shadow) g.fillStyle(0x1b2340, 0.1).fillRoundedRect(x, y + 4, w, h, radius);
   g.fillStyle(fill, alpha).fillRoundedRect(x, y, w, h, radius);
   g.lineStyle(borderWidth, border, 1).strokeRoundedRect(x, y, w, h, radius);
   return g;
 }
 
-// Nút viên thuốc chuẩn mobile game (Candy/Wood/Gold style) — bo tròn, nổi 3D,
-// chữ to rõ ràng (15px-18px) và diện tích bấm tối thiểu 44px-52px.
+// Nút viên thuốc phẳng chuẩn mobile game Basic/Connect-Dots — bo tròn hết
+// cỡ, không viền nổi 3D, chữ to rõ ràng (15px-18px) và diện tích bấm tối
+// thiểu 44px-52px.
 export function makeButton(scene, x, y, label, opts = {}) {
   const {
     variant = 'ink', fontSize = '15px', paddingX = 22, paddingY = 11,
-    originX = 0.5, onClick = null, shadow = true, shadowOffset = 5, width: forcedWidth = null,
+    originX = 0.5, onClick = null, shadow = true, shadowOffset = 3, width: forcedWidth = null,
     minHeight = 46
   } = opts;
 
   const palette = {
-    gold: { bg: COLORS.gold, border: COLORS.goldDim, text: '#2b1e16', hoverBg: 0xffe07a },
-    teal: { bg: null, border: COLORS.teal, text: '#8fe8de', hoverBg: 0x0d2a28 },
-    ink: { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 },
-    tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x18d4bd },
-    ruby: { bg: 0xdd2d2d, border: 0x991b1b, text: '#ffffff', hoverBg: 0xef4444 },
-    blue: { bg: 0x0284c7, border: 0x0369a1, text: '#ffffff', hoverBg: 0x38bdf8 },
-    emerald: { bg: 0x65a30d, border: 0x3f6212, text: '#ffffff', hoverBg: 0x84cc16 },
-    parchment3D: { bg: 0xdfc49c, border: 0x9e7b4f, text: '#42281d', hoverBg: 0xebd9bd }
-  }[variant] || { bg: COLORS.woodDark, border: COLORS.tealDim, text: '#f4e8cf', hoverBg: 0x4a3626 };
+    gold: { bg: COLORS.gold, border: COLORS.goldDim, text: '#33395c', hoverBg: 0xffdd94 },
+    teal: { bg: null, border: COLORS.teal, text: '#1f8a92', hoverBg: 0xd7f5f2 },
+    ink: { bg: COLORS.cardBg, border: COLORS.woodDark, text: '#33395c', hoverBg: COLORS.cardBgHover },
+    tealSolid: { bg: COLORS.teal, border: COLORS.tealDim, text: '#ffffff', hoverBg: 0x5cdbe3 },
+    ruby: { bg: 0xef5b6f, border: 0xc63b4e, text: '#ffffff', hoverBg: 0xf47a8a },
+    blue: { bg: 0x4a90f2, border: 0x2f6fd6, text: '#ffffff', hoverBg: 0x6ba6ff },
+    emerald: { bg: COLORS.emerald, border: 0x1f9d5c, text: '#ffffff', hoverBg: 0x4fe08c },
+    parchment3D: { bg: COLORS.parchment, border: COLORS.woodDark, text: '#33395c', hoverBg: 0xffffff }
+  }[variant] || { bg: COLORS.cardBg, border: COLORS.woodDark, text: '#33395c', hoverBg: COLORS.cardBgHover };
 
   const txt = scene.add.text(0, 0, label, {
-    fontFamily: 'Cinzel', fontSize, fontStyle: 'bold', color: palette.text
+    fontFamily: 'Baloo 2', fontSize, fontStyle: 'bold', color: palette.text
   }).setOrigin(0.5);
 
-  const dotGap = variant === 'gold' ? 14 : 0;
-  const rawW = txt.width + paddingX * 2 + dotGap * 2;
+  const rawW = txt.width + paddingX * 2;
   const rawH = Math.max(minHeight, txt.height + paddingY * 2);
   const w = forcedWidth || rawW, h = rawH;
   const container = scene.add.container(0, 0);
 
-  // Viền "kẹo 3D" — khối màu đậm lệch xuống dưới, tạo cảm giác nút nổi khối
+  // Bóng đổ phẳng nhẹ — chỉ gợi ý độ nổi, không phải viền kẹo 3D.
   if (shadow) {
     const shadowG = scene.add.graphics();
-    shadowG.fillStyle(palette.border, 1).fillRoundedRect(-w / 2, -h / 2 + shadowOffset, w, h, h / 2);
+    shadowG.fillStyle(0x1b2340, 0.16).fillRoundedRect(-w / 2, -h / 2 + shadowOffset, w, h, h / 2);
     container.add(shadowG);
   }
 
@@ -83,16 +85,10 @@ export function makeButton(scene, x, y, label, opts = {}) {
   const drawBg = (fillColor, alpha) => {
     bg.clear();
     if (fillColor !== null) bg.fillStyle(fillColor, alpha !== undefined ? alpha : 1).fillRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-    bg.lineStyle(3, palette.border, 1).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    bg.lineStyle(2, palette.border, 1).strokeRoundedRect(-w / 2, -h / 2, w, h, h / 2);
   };
   drawBg(palette.bg);
   container.add([bg, txt]);
-
-  if (variant === 'gold') {
-    const dotL = scene.add.circle(-w / 2 + paddingX * 0.7, 0, 3, 0x2b1e16, 0.7);
-    const dotR = scene.add.circle(w / 2 - paddingX * 0.7, 0, 3, 0x2b1e16, 0.7);
-    container.add([dotL, dotR]);
-  }
 
   container.setPosition(x - (originX - 0.5) * w, y);
   container.setInteractive(new Phaser.Geom.Rectangle(-w / 2, -h / 2, w, h), Phaser.Geom.Rectangle.Contains);
@@ -108,26 +104,26 @@ export function makeButton(scene, x, y, label, opts = {}) {
   return container;
 }
 
-// Nút Icon tròn/bo vuông nổi 3D chuẩn mobile (Settings ⚙️, Quay lại 🏠, Đóng ✕, Replay 🔄)
+// Nút Icon tròn phẳng chuẩn mobile (Settings ⚙️, Quay lại 🏠, Đóng ✕, Replay 🔄)
 // Kích thước chuẩn 44x44px trở lên cho ngón tay bấm thoải mái.
 export function makeIconButton(scene, x, y, icon, opts = {}) {
   const {
-    size = 44, variant = 'wood', iconSize = '20px', onClick = null, shadow = true, shadowOffset = 4
+    size = 44, variant = 'wood', iconSize = '20px', onClick = null, shadow = true, shadowOffset = 3
   } = opts;
 
   const palette = {
-    wood: { bg: COLORS.parchment, border: COLORS.woodDark, iconColor: '#2b1e16', hoverBg: 0xfff6e5 },
-    gold: { bg: COLORS.gold, border: COLORS.goldDim, iconColor: '#2b1e16', hoverBg: 0xffe07a },
-    teal: { bg: COLORS.teal, border: COLORS.tealDim, iconColor: '#ffffff', hoverBg: 0x18d4bd },
-    ruby: { bg: 0xe0605a, border: COLORS.ruby, iconColor: '#ffffff', hoverBg: 0xf47a74 },
-    dark: { bg: COLORS.cardBgLight, border: COLORS.goldBorder, iconColor: '#f3c64f', hoverBg: 0x183a5e }
-  }[variant] || { bg: COLORS.parchment, border: COLORS.woodDark, iconColor: '#2b1e16', hoverBg: 0xfff6e5 };
+    wood: { bg: COLORS.cardBg, border: COLORS.woodDark, iconColor: '#33395c', hoverBg: COLORS.cardBgHover },
+    gold: { bg: COLORS.gold, border: COLORS.goldDim, iconColor: '#33395c', hoverBg: 0xffdd94 },
+    teal: { bg: COLORS.teal, border: COLORS.tealDim, iconColor: '#ffffff', hoverBg: 0x5cdbe3 },
+    ruby: { bg: COLORS.ruby, border: 0xc63b4e, iconColor: '#ffffff', hoverBg: 0xf47a8a },
+    dark: { bg: COLORS.cardBg, border: COLORS.woodDark, iconColor: '#33395c', hoverBg: COLORS.cardBgHover }
+  }[variant] || { bg: COLORS.cardBg, border: COLORS.woodDark, iconColor: '#33395c', hoverBg: COLORS.cardBgHover };
 
   const container = scene.add.container(x, y);
 
   if (shadow) {
     const shadowG = scene.add.graphics();
-    shadowG.fillStyle(palette.border, 1).fillCircle(0, shadowOffset, size / 2);
+    shadowG.fillStyle(0x1b2340, 0.16).fillCircle(0, shadowOffset, size / 2);
     container.add(shadowG);
   }
 
@@ -135,7 +131,7 @@ export function makeIconButton(scene, x, y, icon, opts = {}) {
   const drawBg = (fillColor) => {
     bg.clear();
     bg.fillStyle(fillColor, 1).fillCircle(0, 0, size / 2);
-    bg.lineStyle(3, palette.border, 1).strokeCircle(0, 0, size / 2);
+    bg.lineStyle(2, palette.border, 1).strokeCircle(0, 0, size / 2);
   };
   drawBg(palette.bg);
 
@@ -160,13 +156,13 @@ export function makeIconButton(scene, x, y, icon, opts = {}) {
 export function makeHudChip(scene, x, y, label, value, opts = {}) {
   const { variant = 'teal', originX = 0.5, minWidth = 72 } = opts;
   const border = variant === 'gold' ? COLORS.gold : COLORS.teal;
-  const valueColor = variant === 'gold' ? '#f3c64f' : '#7fe9de';
+  const valueColor = variant === 'gold' ? '#e6ac2e' : '#1f8a92';
 
   const labelTxt = scene.add.text(0, -10, label, {
-    fontFamily: 'Cinzel', fontSize: '9px', color: '#9fb8c9', letterSpacing: 1
+    fontFamily: 'Baloo 2', fontSize: '9px', color: '#8892ad', letterSpacing: 1
   }).setOrigin(0.5);
   const valueTxt = scene.add.text(0, 7, value, {
-    fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: valueColor
+    fontFamily: 'Baloo 2', fontSize: '15px', fontStyle: '900', color: valueColor
   }).setOrigin(0.5);
 
   const w = Math.max(minWidth, Math.max(labelTxt.width, valueTxt.width) + 24);
@@ -199,7 +195,7 @@ export function buildStatCluster(scene, x, y, { icon, iconBg, iconBorder, value,
   const pillH = 32, pillGap = 6, textPad = 10;
   const pillX = cx + iconR + pillGap;
   const measureTxt = scene.add.text(0, 0, measureText !== undefined ? measureText : String(value), {
-    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900'
+    fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900'
   });
   const textWidth = measureTxt.width;
   measureTxt.destroy();
@@ -210,7 +206,7 @@ export function buildStatCluster(scene, x, y, { icon, iconBg, iconBorder, value,
   pillG.lineStyle(4, 0x16a5ff, 1).strokeRoundedRect(pillX, cy - pillH / 2, pillW, pillH, pillH / 2);
 
   const valueTxt = scene.add.text(pillX + textPad, cy, String(value), {
-    fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: valueColor || '#996150'
+    fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900', color: valueColor || '#3a4160'
   }).setOrigin(0, 0.5);
 
   let badgeTxt = null;
@@ -219,7 +215,7 @@ export function buildStatCluster(scene, x, y, { icon, iconBg, iconBorder, value,
     const bx = cx + iconR * 0.68, by = cy - iconR * 0.68;
     scene.add.circle(bx, by, badgeR, badgeColor || 0xef4444).setStrokeStyle(2, 0xffffff);
     badgeTxt = scene.add.text(bx, by, String(badge), {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '10px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
   }
 
@@ -258,7 +254,7 @@ export function makeStatChip(scene, rightEdgeX, y, icon, value, accentColor) {
   scene.add.circle(xLeft + 17, y + h / 2, 13, accentColor).setStrokeStyle(2, COLORS.woodDark);
   scene.add.text(xLeft + 17, y + h / 2, icon, { fontSize: '13px' }).setOrigin(0.5);
   const valTxt = scene.add.text(xLeft + 36, y + h / 2, String(value), {
-    fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#2b1e16'
+    fontFamily: 'Baloo 2', fontSize: '14px', fontStyle: '900', color: '#16213e'
   }).setOrigin(0, 0.5);
   return { setValue: (v) => valTxt.setText(String(v)), rightEdge: xLeft };
 }

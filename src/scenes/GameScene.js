@@ -29,15 +29,15 @@ const MAX_RESCUE_USES_PER_ATTEMPT = 1;
 // touch->cell lookup while dragging.
 const TOUCH_OFFSET_Y = 26;
 
-// Bright parchment/teal palette — matches Home & Shop instead of the old
-// dark navy "chart" theme, so the whole app reads as one consistently
-// cheerful game instead of a bright menu bookending a gloomy board screen.
+// Soft Sky board palette — near-white cells with a barely-there blue grid so
+// the bright chain dots/lines stay the loudest thing on screen, matching
+// Home & Shop's white-card token set instead of a dark board.
 const TILE = {
-  cellBg: 0xfdf6e3,
+  cellBg: 0xeef3ff,
   cellBgLight: 0xffffff,
-  cellBorder: 0xd9c49a,
-  rock: 0x8a7259,
-  rockBorder: 0x4a2c11,
+  cellBorder: 0xd6e2fb,
+  rock: 0x9aa3b8,
+  rockBorder: 0x6b7280,
   crateWood: 0xb9814a,
   crateWoodDark: 0x6b4423,
   crateSteel: 0xb0b8bf,
@@ -112,12 +112,8 @@ export default class GameScene extends Phaser.Scene {
 
   drawBackground(width, height) {
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0xfff3d6, 0xfff3d6, 0xf3e3b8, 0xf3e3b8, 1);
+    bg.fillGradientStyle(0xeaf4ff, 0xeaf4ff, 0xe9e2ff, 0xe9e2ff, 1);
     bg.fillRect(0, 0, width, height);
-    const grid = this.add.graphics();
-    grid.lineStyle(1, COLORS.woodDark, 0.05);
-    for (let x = 0; x < width; x += 32) grid.lineBetween(x, 0, x, height);
-    for (let y = 0; y < height; y += 32) grid.lineBetween(0, y, width, y);
   }
 
   // ---------------- UI khung ngoài ----------------
@@ -142,20 +138,20 @@ export default class GameScene extends Phaser.Scene {
     this.add.circle(pillX + pillH / 2, cy, pillH / 2 - 3, COLORS.gold).setStrokeStyle(2, COLORS.woodDark);
     this.add.text(pillX + pillH / 2, cy, '🪙', { fontSize: '16px' }).setOrigin(0.5);
     const coinValTxt = this.add.text(pillX + pillH + 6, cy, String(this.save.coins), {
-      fontFamily: 'Cinzel', fontSize: '16px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '16px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0, 0.5);
     this.coinChip = { setValue: (v) => coinValTxt.setText(String(v)) };
 
     // ── CENTER: "Level X" banner pill ───────────────────────────────────────
     const bannerW = 120, bannerH = 38, bannerX = width / 2 - bannerW / 2;
     const bannerBg = this.add.graphics();
-    bannerBg.fillStyle(0x5c3a21, 1).fillRoundedRect(bannerX, cy - bannerH / 2, bannerW, bannerH, bannerH / 2);
+    bannerBg.fillStyle(COLORS.cardBgLight, 1).fillRoundedRect(bannerX, cy - bannerH / 2, bannerW, bannerH, bannerH / 2);
     bannerBg.lineStyle(3, COLORS.gold, 1).strokeRoundedRect(bannerX, cy - bannerH / 2, bannerW, bannerH, bannerH / 2);
     this.add.text(width / 2, cy - 6, 'LEVEL', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#f3c64f', letterSpacing: 2
+      fontFamily: 'Baloo 2', fontSize: '10px', fontStyle: '900', color: '#e6ac2e', letterSpacing: 2
     }).setOrigin(0.5);
     this.levelNumberText = this.add.text(width / 2, cy + 8, '', {
-      fontFamily: 'Cinzel', fontSize: '16px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '16px', fontStyle: '900', color: '#33395c'
     }).setOrigin(0.5);
     this.levelBadgeBottom = cy + bannerH / 2;
 
@@ -183,7 +179,7 @@ export default class GameScene extends Phaser.Scene {
     timerBg.lineStyle(2.5, COLORS.woodDark, 1).strokeRoundedRect(pillX, timerY, timerW, timerH, 14);
     const timerIcon = this.add.text(pillX + 18, timerY + timerH / 2, '⏱️', { fontSize: '14px' }).setOrigin(0.5);
     this.timerPillLabel = this.add.text(pillX + timerW - 10, timerY + timerH / 2, '0:00', {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '14px', fontStyle: '900', color: '#16213e'
     }).setOrigin(1, 0.5);
     this.timerPillGroup = this.add.container(0, 0, [timerBg, timerIcon, this.timerPillLabel]).setVisible(false);
 
@@ -208,7 +204,7 @@ export default class GameScene extends Phaser.Scene {
     g.fillStyle(style.color, 1).fillRoundedRect(x, y, w, h, 10);
     g.lineStyle(2, 0x2b1e16, 1).strokeRoundedRect(x, y, w, h, 10);
     const t = this.add.text(x + w / 2, y + h / 2, `${style.icon} ${style.label}`, {
-      fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '11px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0.5);
     this.difficultyChip = this.add.container(0, 0, [g, t]);
     this.headerBottom = Math.max(this.headerBottom, y + h + 8);
@@ -299,7 +295,7 @@ export default class GameScene extends Phaser.Scene {
     const drawBg = (enabled) => {
       g.clear();
       // Shadow
-      g.fillStyle(COLORS.woodDark, enabled ? 0.5 : 0.2).fillRoundedRect(-w / 2, -h / 2 + 5, w, h, 16);
+      g.fillStyle(0x1b2340, enabled ? 0.14 : 0.06).fillRoundedRect(-w / 2, -h / 2 + 5, w, h, 16);
       // Main face
       g.fillStyle(0xfff8eb, enabled ? 1 : 0.55).fillRoundedRect(-w / 2, -h / 2, w, h, 16);
       g.lineStyle(3, COLORS.woodDark, enabled ? 1 : 0.3).strokeRoundedRect(-w / 2, -h / 2, w, h, 16);
@@ -307,10 +303,10 @@ export default class GameScene extends Phaser.Scene {
     drawBg(true);
     const icon = this.add.text(0, -22, item.icon, { fontSize: '30px' }).setOrigin(0.5);
     const name = this.add.text(0, 12, item.name, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
+      fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0.5);
     const costText = this.add.text(0, 30, '', {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#ee4343'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#ee4343'
     }).setOrigin(0.5);
 
     const container = this.add.container(x, y, [g, icon, name, costText]);
@@ -396,15 +392,15 @@ export default class GameScene extends Phaser.Scene {
   offerBuffAd(key, message, retryAction) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
     const panelW = width - 60, panelH = 220;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 16, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
     const title = this.add.text(width / 2, panelY + 34, '🟡 Not Enough Coins', {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#b91c1c'
+      fontFamily: 'Baloo 2', fontSize: '15px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 68, message, {
-      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 30 }
+      fontFamily: 'Baloo 2', fontSize: '11px', color: '#16213e', align: 'center', wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5);
 
     const btnW = panelW - 36;
@@ -523,7 +519,7 @@ export default class GameScene extends Phaser.Scene {
     bg.fillStyle(ICE_COLOR, 1).fillRoundedRect(0, 0, badgeW, badgeH, 11);
     bg.lineStyle(2, ICE_COLOR_DARK, 1).strokeRoundedRect(0, 0, badgeW, badgeH, 11);
     const label = this.add.text(badgeW / 2, badgeH / 2, '❄️ FROZEN', {
-      fontFamily: 'Cinzel', fontSize: '9px', fontStyle: '900', color: '#0c4a6e'
+      fontFamily: 'Baloo 2', fontSize: '9px', fontStyle: '900', color: '#0c4a6e'
     }).setOrigin(0.5);
     this.freezeBadge = this.add.container(bx, by, [bg, label]);
     this.fxContainer.add(this.freezeBadge);
@@ -563,8 +559,8 @@ export default class GameScene extends Phaser.Scene {
     if (this.toastText) this.toastText.destroy();
     const { width } = this.scale;
     this.toastText = this.add.text(width / 2, this.headerBottom + 6, text, {
-      fontFamily: 'Crimson Pro', fontSize: '13px', color: '#f3c64f',
-      backgroundColor: '#2b1e16', padding: { x: 12, y: 6 }, align: 'center',
+      fontFamily: 'Baloo 2', fontSize: '13px', color: '#ffb020',
+      backgroundColor: '#16213e', padding: { x: 12, y: 6 }, align: 'center',
       wordWrap: { width: width - 60 }
     }).setOrigin(0.5, 0).setDepth(50);
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });
@@ -619,17 +615,17 @@ export default class GameScene extends Phaser.Scene {
   showTimeoutChoices() {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
 
     const panelW = width - 56, panelH = 300;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
     const title = this.add.text(width / 2, panelY + 34, '⏰ TIME OUT!', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+      fontFamily: 'Baloo 2', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 66, 'Out of time! Your board is safe —\nchoose how to keep going.', {
-      fontFamily: 'Crimson Pro', fontSize: '10.5px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 40 }
+      fontFamily: 'Baloo 2', fontSize: '10.5px', color: '#16213e', align: 'center', wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5);
 
     const items = [bg, panel, title, sub];
@@ -833,7 +829,7 @@ export default class GameScene extends Phaser.Scene {
     bg.fillStyle(0x1f2937, 0.92).fillRoundedRect(-capW / 2, -h / 2, capW, h, h / 2);
     bg.lineStyle(2, COLORS.gold, 1).strokeRoundedRect(-capW / 2, -h / 2, capW, h, h / 2);
     const txt = this.add.text(0, 0, text, {
-      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '11px', color: '#ffffff'
     }).setOrigin(0.5);
     box.add([bg, txt]);
     this.fxContainer.add(box);
@@ -953,7 +949,7 @@ export default class GameScene extends Phaser.Scene {
     const pad = Math.max(10, Math.round(this.cellSize * 0.18));
     const boardW = this.cellSize * this.engine.cols, boardH = this.cellSize * this.engine.rows;
     const frame = drawPanel(this, this.boardOriginX - pad, this.boardOriginY - pad, boardW + pad * 2, boardH + pad * 2, {
-      radius: 16, fill: COLORS.wood, border: COLORS.gold, borderWidth: 3
+      radius: 16, fill: COLORS.wood, border: COLORS.woodDark, borderWidth: 2
     });
     this.boardFrameContainer.add(frame);
   }
@@ -1020,7 +1016,7 @@ export default class GameScene extends Phaser.Scene {
           if (idx !== -1) {
             const badge = this.add.circle(x + cs / 2, y + cs / 2, cs * 0.32, COLORS.gold).setStrokeStyle(2, COLORS.goldDim);
             const num = this.add.text(x + cs / 2, y + cs / 2, String(idx + 1), {
-              fontFamily: 'Cinzel', fontSize: Math.round(cs * 0.32) + 'px', fontStyle: '900', color: '#2b1e16'
+              fontFamily: 'Baloo 2', fontSize: Math.round(cs * 0.32) + 'px', fontStyle: '900', color: '#16213e'
             }).setOrigin(0.5);
             this.boardStaticContainer.add([badge, num]);
           }
@@ -1211,7 +1207,7 @@ export default class GameScene extends Phaser.Scene {
         if (i === 0) {
           const remaining = chain.length - chain.path.length;
           const txt = this.add.text(x, y, chain.locked ? '✓' : String(Math.max(0, remaining)), {
-            fontFamily: 'Cinzel', fontSize: Math.round(cs * 0.3) + 'px', fontStyle: '900', color: '#ffffff'
+            fontFamily: 'Baloo 2', fontSize: Math.round(cs * 0.3) + 'px', fontStyle: '900', color: '#ffffff'
           }).setOrigin(0.5);
           this.chainContainer.add(txt);
         } else if (isHead && !chain.locked) {
@@ -1505,7 +1501,7 @@ export default class GameScene extends Phaser.Scene {
   showWin(isSkip, speedBonus = 0) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
     const panelW = width - 56;
 
     // Layout is built top-down from a running cursor (Y offset from the
@@ -1547,10 +1543,10 @@ export default class GameScene extends Phaser.Scene {
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: COLORS.parchment, border: COLORS.gold, borderWidth: 3 });
 
     const eyebrow = this.add.text(width / 2, panelY + eyebrowY, isSkip ? 'SKIPPED' : 'VICTORY!', {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: 'bold', color: '#12826c', letterSpacing: 2
+      fontFamily: 'Baloo 2', fontSize: '10px', fontStyle: 'bold', color: '#12826c', letterSpacing: 2
     }).setOrigin(0.5);
     const title = this.add.text(width / 2, panelY + titleY, this.levelDef.name, {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#42281d', align: 'center',
+      fontFamily: 'Baloo 2', fontSize: '15px', fontStyle: '900', color: '#16213e', align: 'center',
       wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5, 0);
 
@@ -1576,7 +1572,7 @@ export default class GameScene extends Phaser.Scene {
     // grow/collide with the buttons below it.
     const rewardAmount = isSkip ? '' : `+${20 + speedBonus} Coins${speedBonus > 0 ? ` (⚡+${speedBonus})` : ''}`;
     const rewardText = this.add.text(width / 2, panelY + rewardTextY, rewardAmount, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#c68a00'
+      fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900', color: '#c68a00'
     }).setOrigin(0.5);
 
     const next = getNextLevel(this.categoryId, this.levelIndex);
@@ -1701,20 +1697,20 @@ export default class GameScene extends Phaser.Scene {
     playSound('lose', this.save.soundMuted);
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
 
     const panelW = width - 50, panelH = 300;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
     const title = this.add.text(width / 2, panelY + 32, '💥 Oh No!', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+      fontFamily: 'Baloo 2', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 66, text, {
-      fontFamily: 'Crimson Pro', fontSize: '11px', color: '#42281d', align: 'center', wordWrap: { width: panelW - 36 }
+      fontFamily: 'Baloo 2', fontSize: '11px', color: '#16213e', align: 'center', wordWrap: { width: panelW - 36 }
     }).setOrigin(0.5);
     const countdownTxt = this.add.text(width / 2, panelY + 108, '', {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#b91c1c'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
 
     const items = [bg, panel, title, sub, countdownTxt];
@@ -1796,17 +1792,17 @@ export default class GameScene extends Phaser.Scene {
   showLose(text) {
     this.overlayContainer.removeAll(true);
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
 
     const panelW = width - 50, panelH = 240;
     const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
     const panel = drawPanel(this, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
     const title = this.add.text(width / 2, panelY + 36, '💥 LEVEL FAILED', {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
+      fontFamily: 'Baloo 2', fontSize: '20px', fontStyle: '900', color: '#b91c1c'
     }).setOrigin(0.5);
     const sub = this.add.text(width / 2, panelY + 84, text, {
-      fontFamily: 'Crimson Pro', fontSize: '13px', color: '#42281d', align: 'center',
+      fontFamily: 'Baloo 2', fontSize: '13px', color: '#16213e', align: 'center',
       wordWrap: { width: panelW - 36 }
     }).setOrigin(0.5);
 

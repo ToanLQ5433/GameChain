@@ -68,7 +68,7 @@ export default class ShopScene extends Phaser.Scene {
   // brightness consistent instead of the shop reading as a different, gloomier app.
   drawBackground(width, height) {
     const bg = this.add.graphics();
-    bg.fillGradientStyle(0x4cb3ec, 0x4cb3ec, 0x1c7dc4, 0x1c7dc4, 1);
+    bg.fillGradientStyle(0xeaf4ff, 0xeaf4ff, 0xe9e2ff, 0xe9e2ff, 1);
     bg.fillRect(0, 0, width, height);
     // Diagonal gold/wood canopy stripe under the header, echoing a
     // market-stall awning without borrowing the reference's purple accent.
@@ -146,7 +146,7 @@ export default class ShopScene extends Phaser.Scene {
     g.fillStyle(COLORS.parchment, 1).fillRoundedRect(14, y, width - 28, h, 10);
     g.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(14, y, width - 28, h, 10);
     const label = this.add.text(width / 2, y + h / 2, text.toUpperCase(), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16', letterSpacing: 1
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#16213e', letterSpacing: 1
     }).setOrigin(0.5);
     this.content.add([g, label]);
     return y + h;
@@ -156,7 +156,7 @@ export default class ShopScene extends Phaser.Scene {
     const h = 92, x = 14, w = width - 28;
     const owned = !!this.save.adsRemoved;
     const g = this.add.graphics();
-    g.fillStyle(owned ? COLORS.tealDim : 0x7a1f1f, 1).fillRoundedRect(x, y, w, h, 16);
+    g.fillStyle(owned ? COLORS.tealDim : 0xd63d52, 1).fillRoundedRect(x, y, w, h, 16);
     g.lineStyle(3, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, 16);
     this.content.add(g);
 
@@ -165,10 +165,10 @@ export default class ShopScene extends Phaser.Scene {
     this.content.add(this.add.text(x + 44, y + h / 2, owned ? '✓' : '🚫', { fontSize: owned ? '24px' : '22px', color: '#e0605a' }).setOrigin(0.5));
 
     this.content.add(this.add.text(x + 86, y + 22, 'Remove Ads', {
-      fontFamily: 'Cinzel', fontSize: '15px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '15px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0, 0.5));
     this.content.add(this.add.text(x + 86, y + 44, owned ? 'Thanks for your support, Captain!' : 'No interruptions. Ever.', {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f4e8cf', wordWrap: { width: w - 160 }
+      fontFamily: 'Baloo 2', fontSize: '10px', color: '#eef1f8', wordWrap: { width: w - 160 }
     }).setOrigin(0, 0.5));
 
     const btnW = 92, btnH = 34, btnX = x + w - 14 - btnW, btnY = y + h - 20 - btnH / 2;
@@ -200,7 +200,7 @@ export default class ShopScene extends Phaser.Scene {
       this.content.add(g);
       this.content.add(this.add.text(sx + slotW / 2, y + 15, BUFF_ICONS[key], { fontSize: '16px' }).setOrigin(0.5));
       this.content.add(this.add.text(sx + slotW - 4, y + slotH - 3, `×${buffs[key]}`, {
-        fontFamily: 'Cinzel', fontSize: '8px', fontStyle: '900', color: '#2b1e16'
+        fontFamily: 'Baloo 2', fontSize: '8px', fontStyle: '900', color: '#16213e'
       }).setOrigin(1, 1));
     });
     return slotH;
@@ -245,7 +245,7 @@ export default class ShopScene extends Phaser.Scene {
     const rg = this.add.graphics();
     rg.fillStyle(0xf43f5e, 1).fillRoundedRect(-rw / 2, -10, rw, 20, 6);
     rg.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(-rw / 2, -10, rw, 20, 6);
-    const rt = this.add.text(0, 0, pack.tag, { fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
+    const rt = this.add.text(0, 0, pack.tag, { fontFamily: 'Baloo 2', fontSize: '11px', fontStyle: '900', color: '#ffffff' }).setOrigin(0.5);
     ribbon.add([rg, rt]);
     ribbon.setRotation(-0.12);
     this.content.add(ribbon);
@@ -257,7 +257,7 @@ export default class ShopScene extends Phaser.Scene {
       bg2.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(x + w - 12 - badgeW, y + 8, badgeW, 18, 9);
       this.content.add(bg2);
       this.content.add(this.add.text(x + w - 12 - badgeW / 2, y + 17, 'NO ADS', {
-        fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#ffffff'
+        fontFamily: 'Baloo 2', fontSize: '10px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     }
 
@@ -271,12 +271,12 @@ export default class ShopScene extends Phaser.Scene {
     const coinW = 64;
     this.content.add(this.add.text(boxX + coinW / 2, boxY + 20, '🟡', { fontSize: '18px' }).setOrigin(0.5));
     this.content.add(this.add.text(boxX + coinW / 2, boxY + 42, fmt(pack.coins), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0.5));
     this.drawBuffRow(boxX + coinW + 8, boxY + 13, boxW - coinW - 16, pack.buffs);
 
     this.content.add(this.add.text(x + 16, y + h - 16, pack.title, {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#ffffff'
+      fontFamily: 'Baloo 2', fontSize: '14px', fontStyle: '900', color: '#ffffff'
     }).setOrigin(0, 0.5));
 
     const btnW = 92, btnH = 32;
@@ -312,15 +312,15 @@ export default class ShopScene extends Phaser.Scene {
       tg.fillStyle(0xf43f5e, 1).fillRoundedRect(x + 10, y - 8, tagW, 16, 8);
       this.content.add(tg);
       this.content.add(this.add.text(x + 10 + tagW / 2, y, bundle.tag, {
-        fontFamily: 'Cinzel', fontSize: '7px', fontStyle: '900', color: '#ffffff'
+        fontFamily: 'Baloo 2', fontSize: '7px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     }
 
     this.content.add(this.add.text(x + 14, y + 16, bundle.title, {
-      fontFamily: 'Cinzel', fontSize: '13px', fontStyle: '900', color: '#42281d'
+      fontFamily: 'Baloo 2', fontSize: '13px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0, 0.5));
     this.content.add(this.add.text(x + 14, y + 32, `${fmt(bundle.coins)} Coins`, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#b45309'
+      fontFamily: 'Baloo 2', fontSize: '10px', color: '#b45309'
     }).setOrigin(0, 0.5));
     this.drawBuffRow(x + 14, y + 44, w - 28 - 100, bundle.buffs);
 
@@ -362,13 +362,13 @@ export default class ShopScene extends Phaser.Scene {
       tg.fillStyle(0xf43f5e, 1).fillRoundedRect(x + w / 2 - tagW / 2, y - 7, tagW, 14, 7);
       this.content.add(tg);
       this.content.add(this.add.text(x + w / 2, y, pack.tag, {
-        fontFamily: 'Cinzel', fontSize: '6px', fontStyle: '900', color: '#ffffff'
+        fontFamily: 'Baloo 2', fontSize: '6px', fontStyle: '900', color: '#ffffff'
       }).setOrigin(0.5));
     }
 
     this.content.add(this.add.text(x + w / 2, y + 26, '🟡', { fontSize: '22px' }).setOrigin(0.5));
     this.content.add(this.add.text(x + w / 2, y + 50, fmt(pack.coins), {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#42281d'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0.5));
 
     const btnW = w - 16, btnH = 26;
@@ -395,7 +395,7 @@ export default class ShopScene extends Phaser.Scene {
     g.lineStyle(2, COLORS.woodDark, 1).strokeRoundedRect(x, y, w, h, h / 2);
     this.content.add(g);
     this.content.add(this.add.text(x + w / 2, y + h / 2 - 1, label, {
-      fontFamily: 'Cinzel', fontSize: '10px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '10px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0.5));
     this.hitAreas.push({ x, y, w, h: h + 3, onTap });
   }
@@ -442,7 +442,7 @@ export default class ShopScene extends Phaser.Scene {
   showPurchaseModal({ icon, title, subtitle, price, onConfirm }) {
     this.modalOpen = true;
     const { width, height } = this.scale;
-    const bg = this.add.rectangle(0, 0, width, height, 0x04070d, 0.85).setOrigin(0).setInteractive().setDepth(100);
+    const bg = this.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0).setInteractive().setDepth(100);
     const panelW = width - 70, panelH = 260, px = width / 2 - panelW / 2, py = height / 2 - panelH / 2;
     const panel = this.add.graphics().setDepth(101);
     panel.fillStyle(COLORS.parchment, 1).fillRoundedRect(px, py, panelW, panelH, 18);
@@ -451,13 +451,13 @@ export default class ShopScene extends Phaser.Scene {
     const iconBg = this.add.circle(width / 2, py + 44, 30, 0xffffff).setStrokeStyle(3, COLORS.woodDark).setDepth(101);
     const iconTxt = this.add.text(width / 2, py + 44, icon, { fontSize: '24px' }).setOrigin(0.5).setDepth(101);
     const titleTxt = this.add.text(width / 2, py + 88, title, {
-      fontFamily: 'Cinzel', fontSize: '14px', fontStyle: '900', color: '#42281d', align: 'center', wordWrap: { width: panelW - 40 }
+      fontFamily: 'Baloo 2', fontSize: '14px', fontStyle: '900', color: '#16213e', align: 'center', wordWrap: { width: panelW - 40 }
     }).setOrigin(0.5).setDepth(101);
     const subTxt = this.add.text(width / 2, py + 116, subtitle, {
-      fontFamily: 'Crimson Pro', fontSize: '9.5px', color: '#5c4a3e', align: 'center', wordWrap: { width: panelW - 30 }
+      fontFamily: 'Baloo 2', fontSize: '9.5px', color: '#5c4a3e', align: 'center', wordWrap: { width: panelW - 30 }
     }).setOrigin(0.5).setDepth(101);
     const priceTxt = this.add.text(width / 2, py + 154, price, {
-      fontFamily: 'Cinzel', fontSize: '20px', fontStyle: '900', color: '#f3c64f'
+      fontFamily: 'Baloo 2', fontSize: '20px', fontStyle: '900', color: '#ffb020'
     }).setOrigin(0.5).setDepth(101);
 
     const group = this.add.container(0, 0, [bg, panel, iconBg, iconTxt, titleTxt, subTxt, priceTxt]).setDepth(100);
@@ -467,7 +467,7 @@ export default class ShopScene extends Phaser.Scene {
     cancelG.fillStyle(COLORS.woodDark, 1).fillRoundedRect(width / 2 - gap / 2 - btnW, btnY - btnH / 2, btnW, btnH, btnH / 2);
     cancelG.lineStyle(2, COLORS.tealDim, 1).strokeRoundedRect(width / 2 - gap / 2 - btnW, btnY - btnH / 2, btnW, btnH, btnH / 2);
     const cancelTxt = this.add.text(width / 2 - gap / 2 - btnW / 2, btnY, 'Cancel', {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: 'bold', color: '#f4e8cf'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: 'bold', color: '#33395c'
     }).setOrigin(0.5).setDepth(101);
     const cancelHit = this.add.rectangle(width / 2 - gap / 2 - btnW / 2, btnY, btnW, btnH, 0xffffff, 0.001).setDepth(101)
       .setInteractive({ useHandCursor: true });
@@ -476,7 +476,7 @@ export default class ShopScene extends Phaser.Scene {
     buyG.fillStyle(COLORS.gold, 1).fillRoundedRect(width / 2 + gap / 2, btnY - btnH / 2, btnW, btnH, btnH / 2);
     buyG.lineStyle(2, COLORS.goldDim, 1).strokeRoundedRect(width / 2 + gap / 2, btnY - btnH / 2, btnW, btnH, btnH / 2);
     const buyTxt = this.add.text(width / 2 + gap / 2 + btnW / 2, btnY, `Buy ${price}`, {
-      fontFamily: 'Cinzel', fontSize: '12px', fontStyle: '900', color: '#2b1e16'
+      fontFamily: 'Baloo 2', fontSize: '12px', fontStyle: '900', color: '#16213e'
     }).setOrigin(0.5).setDepth(101);
     const buyHit = this.add.rectangle(width / 2 + gap / 2 + btnW / 2, btnY, btnW, btnH, 0xffffff, 0.001).setDepth(101)
       .setInteractive({ useHandCursor: true });
@@ -497,17 +497,17 @@ export default class ShopScene extends Phaser.Scene {
       spinner.strokePath();
       this.tweens.add({ targets: spinner, angle: 360, duration: 700, repeat: -1 });
       const processingTxt = this.add.text(width / 2, btnY + 26, 'Processing purchase…', {
-        fontFamily: 'Crimson Pro', fontSize: '10px', color: '#9fb8c9'
+        fontFamily: 'Baloo 2', fontSize: '10px', color: '#7a869e'
       }).setOrigin(0.5).setDepth(101);
       group.add([spinner, processingTxt]);
 
       this.time.delayedCall(750, () => {
         spinner.destroy(); processingTxt.destroy();
         const check = this.add.text(width / 2, btnY, '✓', {
-          fontFamily: 'Cinzel', fontSize: '30px', fontStyle: '900', color: '#22c55e'
+          fontFamily: 'Baloo 2', fontSize: '30px', fontStyle: '900', color: '#22c55e'
         }).setOrigin(0.5).setDepth(101).setScale(0);
         const doneTxt = this.add.text(width / 2, btnY + 26, 'Purchase complete!', {
-          fontFamily: 'Cinzel', fontSize: '11px', fontStyle: '900', color: '#22c55e'
+          fontFamily: 'Baloo 2', fontSize: '11px', fontStyle: '900', color: '#22c55e'
         }).setOrigin(0.5).setDepth(101);
         group.add([check, doneTxt]);
         this.tweens.add({ targets: check, scale: 1, duration: 220, ease: 'Back.Out' });
@@ -533,8 +533,8 @@ export default class ShopScene extends Phaser.Scene {
     if (this.toastText) this.toastText.destroy();
     const { width } = this.scale;
     this.toastText = this.add.text(width / 2, this.viewTop - 8, text, {
-      fontFamily: 'Crimson Pro', fontSize: '10px', color: '#f3c64f',
-      backgroundColor: '#2b1e16', padding: { x: 10, y: 5 }, align: 'center',
+      fontFamily: 'Baloo 2', fontSize: '10px', color: '#ffb020',
+      backgroundColor: '#16213e', padding: { x: 10, y: 5 }, align: 'center',
       wordWrap: { width: width - 60 }
     }).setOrigin(0.5, 1).setDepth(60);
     this.time.delayedCall(1800, () => { if (this.toastText) { this.toastText.destroy(); this.toastText = null; } });

@@ -20,17 +20,17 @@ export function showOutOfLives(scene, container, { onGranted, onClose } = {}) {
   container.removeAll(true);
   const { width, height } = scene.scale;
 
-  const bg = scene.add.rectangle(0, 0, width, height, COLORS.bgDeep, 0.82).setOrigin(0);
+  const bg = scene.add.rectangle(0, 0, width, height, 0x1b2340, 0.55).setOrigin(0);
   const panelW = width - 56, panelH = 300;
   const panelX = width / 2 - panelW / 2, panelY = height / 2 - panelH / 2;
   const panel = drawPanel(scene, panelX, panelY, panelW, panelH, { radius: 18, fill: 0xfff0ee, border: COLORS.ruby, borderWidth: 3 });
 
   const title = scene.add.text(width / 2, panelY + 34, '💔 Out of Lives!', {
-    fontFamily: 'Cinzel', fontSize: '19px', fontStyle: '900', color: '#b91c1c'
+    fontFamily: 'Baloo 2', fontSize: '19px', fontStyle: '900', color: '#b91c1c'
   }).setOrigin(0.5);
   const remaining = msUntilNextLife(save);
   const sub = scene.add.text(width / 2, panelY + 64, remaining > 0 ? `Next free Life in ${formatMs(remaining)}` : 'A new Life is ready!', {
-    fontFamily: 'Crimson Pro', fontSize: '12px', color: '#42281d'
+    fontFamily: 'Baloo 2', fontSize: '12px', color: '#16213e'
   }).setOrigin(0.5);
 
   const items = [bg, panel, title, sub];
