@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gameplay Style 6: Con Rắn Rực Rỡ (Slither Path Puzzle)</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #14532d;
+  color: #f0fdf4;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+}
+
+.style-switcher-bar {
+  display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; max-width: 480px;
+}
+.style-link {
+  padding: 6px 12px; border-radius: 12px; background: rgba(255,255,255,0.1);
+  color: #bbf7d0; text-decoration: none; font-family: 'Outfit', sans-serif;
+  font-size: 12px; font-weight: 700; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s;
+}
+.style-link:hover, .style-link.active {
+  background: #84cc16; color: #14532d; border-color: #fff; transform: translateY(-2px);
+}
+
+.phone {
+  width: 380px; height: 800px; position: relative; overflow: hidden;
+  border-radius: 44px; border: 12px solid #052e16; box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+  background: #f0fdf4; color: #14532d;
+}
+
+.hud-top {
+  position: absolute; top: 16px; left: 14px; right: 14px;
+  display: flex; align-items: center; justify-content: space-between; z-index: 10;
+}
+.level-badge {
+  height: 42px; padding: 0 14px; border-radius: 21px;
+  background: #65a30d; color: #fff; border: 2px solid #a3e635;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.level-badge .lbl { font-family: 'Outfit', sans-serif; font-size: 8.5px; font-weight: 900; color: #ecfccb; }
+.level-badge .num { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900; }
+
+.timer-chip {
+  height: 36px; padding: 0 14px; border-radius: 18px;
+  background: #fff; color: #14532d; border: 2px solid #84cc16;
+  display: flex; align-items: center; gap: 6px; font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px;
+}
+
+.star-rating { display: flex; gap: 3px; font-size: 14px; }
+.gear-btn {
+  width: 42px; height: 42px; border-radius: 15px; background: #fff; color: #84cc16;
+  border: 2px solid #84cc16; display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+
+.progress-bar-wrap {
+  position: absolute; top: 68px; left: 14px; right: 14px; height: 28px;
+  border-radius: 14px; background: #fff; color: #14532d; border: 2px solid #84cc16;
+  display: flex; align-items: center; padding: 0 12px; justify-content: space-between;
+  font-family: 'Outfit', sans-serif; font-size: 11.5px; font-weight: 800; z-index: 10;
+}
+.progress-fill { position: absolute; inset: 0; width: 93%; background: rgba(132,204,22,0.25); border-radius: 14px; }
+
+.board-container {
+  position: absolute; top: 106px; left: 12px; right: 12px; bottom: 118px;
+  background: #14532d; border: 4px solid #84cc16; border-radius: 28px; padding: 12px;
+  display: flex; flex-direction: column;
+}
+
+.grid-board {
+  width: 100%; height: 100%; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(6, 1fr); gap: 6px; position: relative;
+}
+
+.grid-cell {
+  background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px;
+  position: relative; display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.grid-cell.void-cell { background: transparent !important; border: none !important; }
+.grid-cell.rock { background: #b45309; border-color: #78350f; color: #fff; }
+
+.wall-edge-v {
+  position: absolute; top: 6px; bottom: 6px; left: -4px; width: 5px;
+  background: #15803d; border-radius: 3px; z-index: 8;
+}
+
+.anchor-asset-wrap {
+  width: 52px; height: 52px; position: relative; display: flex; align-items: center; justify-content: center; z-index: 5;
+}
+.anchor-num-badge {
+  position: absolute; bottom: -2px; right: -2px; width: 22px; height: 22px;
+  border-radius: 50%; background: #14532d; color: #fff; border: 2px solid #fff;
+  font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 11px;
+  display: flex; align-items: center; justify-content: center; z-index: 6;
+}
+
+.path-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+
+.buff-bar {
+  position: absolute; bottom: 14px; left: 12px; right: 12px; height: 92px; display: flex; gap: 7px;
+}
+.buff-card {
+  flex: 1; background: #fff; border: 2.5px solid #84cc16; border-radius: 18px;
+  box-shadow: 0 4px 0 #4d7c0f; color: #14532d; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px; padding: 4px; cursor: pointer;
+}
+.buff-card .icon { font-size: 24px; line-height: 1; }
+.buff-card .name { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 10px; text-align: center; }
+.buff-card .cost { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 9px; opacity: 0.85; }
+
+.legend-box {
+  margin-top: 14px; max-width: 380px; background: #052e16; border: 2px solid #84cc16;
+  border-radius: 18px; padding: 12px 16px; font-size: 12px; color: #bbf7d0;
+}
+.legend-box b { color: #a3e635; }
+</style>
+</head>
+<body>
+
+<div class="style-switcher-bar">
+  <a href="gameplay-yarn.html" class="style-link">🧵 1. Len & Đan Móc</a>
+  <a href="gameplay-garden.html" class="style-link">🌿 2. Khu Vườn</a>
+  <a href="gameplay-neon.html" class="style-link">⚡ 3. Cyber Neon</a>
+  <a href="gameplay-rail.html" class="style-link">🚂 4. Đường Sắt</a>
+  <a href="gameplay-magic.html" class="style-link">🔮 5. Chiêm Tinh</a>
+  <a href="gameplay-snake.html" class="style-link active">🐍 6. Con Rắn</a>
+</div>
+
+<div class="phone">
+  <div class="hud-top">
+    <div class="level-badge"><span class="lbl">LEVEL</span><span class="num">25</span></div>
+    <div class="timer-chip"><span>⏱️</span><span>01:45</span></div>
+    <div class="star-rating">⭐⭐⭐</div>
+    <div class="gear-btn">⚙️</div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-fill"></div>
+    <span>ĐỘ PHỦ: <b>28/30 Ô (93%)</b></span>
+    <span>XÍCH: <b>2/3 LCK</b></span>
+  </div>
+
+  <div class="board-container">
+    <div class="grid-board">
+      <!-- Row 0 -->
+      <div class="grid-cell">
+        <div class="anchor-asset-wrap">
+          <svg width="48" height="48" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="26" fill="#f43f5e" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="21" cy="22" r="5" fill="#fff"/><circle cx="21" cy="22" r="3" fill="#000"/>
+            <circle cx="39" cy="22" r="5" fill="#fff"/><circle cx="39" cy="22" r="3" fill="#000"/>
+            <path d="M 30 38 L 30 46 M 30 46 L 26 50 M 30 46 L 34 50" fill="none" stroke="#f43f5e" stroke-width="2.5"/>
+          </svg>
+          <div class="anchor-num-badge">10</div>
+        </div>
+      </div>
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell void-cell"></div>
+
+      <!-- Row 1 -->
+      <div class="grid-cell">
+        <div class="anchor-asset-wrap">
+          <svg width="48" height="48" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="26" fill="#84cc16" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="21" cy="22" r="5" fill="#fff"/><circle cx="21" cy="22" r="3" fill="#000"/>
+            <circle cx="39" cy="22" r="5" fill="#fff"/><circle cx="39" cy="22" r="3" fill="#000"/>
+          </svg>
+          <div class="anchor-num-badge">8</div>
+        </div>
+      </div>
+      <div class="grid-cell"><div class="wall-edge-v"></div></div><div class="grid-cell"></div><div class="grid-cell rock">🍉</div><div class="grid-cell"></div>
+
+      <!-- Row 2 -->
+      <div class="grid-cell"><div class="anchor-num-badge" style="top:2px;left:2px;background:#15803d;">🍎1</div></div>
+      <div class="grid-cell" style="background:rgba(34,197,94,0.2);border:2px solid #22c55e;">🚪</div>
+      <div class="grid-cell" style="background:rgba(217,119,6,0.3);border:2px dashed #f59e0b;">📦</div>
+      <div class="grid-cell" style="background:rgba(239,68,68,0.25);border:2px solid #ef4444;">🦔</div>
+      <div class="grid-cell"></div>
+
+      <!-- Row 3 -->
+      <div class="grid-cell"><div class="anchor-num-badge" style="top:2px;left:2px;background:#15803d;">🍎2</div></div>
+      <div class="grid-cell" style="background:rgba(255,255,255,0.4);border:2px solid #22c55e;">🔘</div>
+      <div class="grid-cell" style="background:rgba(56,189,248,0.2);border:1.5px solid #38bdf8;">⬆️</div>
+      <div class="grid-cell"></div><div class="grid-cell"></div>
+
+      <!-- Row 4 -->
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+
+      <!-- Row 5 -->
+      <div class="grid-cell">
+        <div class="anchor-asset-wrap">
+          <svg width="48" height="48" viewBox="0 0 60 60">
+            <circle cx="30" cy="30" r="26" fill="#0284c7" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="21" cy="22" r="5" fill="#fff"/><circle cx="21" cy="22" r="3" fill="#000"/>
+            <circle cx="39" cy="22" r="5" fill="#fff"/><circle cx="39" cy="22" r="3" fill="#000"/>
+          </svg>
+          <div class="anchor-num-badge">10</div>
+        </div>
+      </div>
+      <div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div><div class="grid-cell"></div>
+
+      <!-- SVG Path Lines -->
+      <svg class="path-svg" viewBox="0 0 350 400">
+        <path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#f43f5e" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+        <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#0284c7" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+        <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#84cc16" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+        <circle cx="172" cy="162" r="11" fill="#84cc16" stroke="#fff" stroke-width="2"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="buff-bar">
+    <div class="buff-card"><div class="icon">🍎</div><div class="name">Táo Gợi Ý</div><div class="cost">30 Xu</div></div>
+    <div class="buff-card"><div class="icon">🧊</div><div class="name">Tê Cấm Bổn</div><div class="cost">Free</div></div>
+    <div class="buff-card"><div class="icon">🐍</div><div class="name">Rắn Bò Lùi</div><div class="cost">10 Xu</div></div>
+    <div class="buff-card"><div class="icon">🦘</div><div class="name">Nhảy Vọt</div><div class="cost">50 Xu</div></div>
+  </div>
+</div>
+
+<div class="legend-box">
+  <b>5 Cơ Chế MEC-01 đến MEC-05 Được Thể Hiện:</b><br>
+  • <b>Anchor L:</b> Đầu Rắn 3D Mắt Tròn mang chỉ số L=10, 10, 8.<br>
+  • <b>MEC-01:</b> Dưa Hấu 🍉 (Rock), Hàng Rào Nứa 🪵 (Wall Edge), Thùng Trái Cây 📦 (Push Rock).<br>
+  • <b>MEC-02:</b> Mũi Tên Hướng ⬆️ (Arrow), Quả Đổi Màu (Prism).<br>
+  • <b>MEC-03:</b> Quả Táo Thứ Tự 🍎1, 2 (Waypoints).<br>
+  • <b>MEC-04:</b> Nút Vàng 🔘 ➔ Chuồng Rắn 🚪 (Switch -> Gate).<br>
+  • <b>MEC-05:</b> Nhím Gai 🦔 (Bomb - chỉ phá bằng Thùng Trái Cây 📦).
+</div>
+
+</body>
+</html>
