@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bản Thiết Kế Gameplay 6 Theme Đầy Đủ 100% Cơ Chế ChainEngine — Ultimate Showcase</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #060911;
+  color: #f8fafc;
+  min-height: 100vh;
+  padding: 20px 12px 60px;
+}
+
+/* Master Header */
+.header-container {
+  max-width: 1340px;
+  margin: 0 auto 20px;
+  text-align: center;
+}
+
+.header-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  background: linear-gradient(135deg, #38bdf8 0%, #a855f7 50%, #f43f5e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+
+.header-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  max-width: 960px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.header-badges {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.h-badge {
+  padding: 5px 14px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #38bdf8;
+}
+
+/* Nav Tabs */
+.theme-nav {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  max-width: 1340px;
+  margin: 0 auto 24px;
+  padding: 8px;
+  background: #1e293b;
+  border-radius: 20px;
+  border: 1px solid #334155;
+}
+
+.theme-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid transparent;
+  border-radius: 14px;
+  color: #cbd5e1;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-tab:hover { background: rgba(255, 255, 255, 0.12); color: #fff; transform: translateY(-2px); }
+
+.theme-tab.active {
+  background: linear-gradient(135deg, #0284c7 0%, #3b82f6 100%);
+  border-color: #38bdf8;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(56, 189, 248, 0.35);
+}
+
+.theme-tab.grid-toggle {
+  background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+  border-color: #f472b6;
+  margin-left: auto;
+}
+
+/* Stage Layout */
+.main-stage { max-width: 1340px; margin: 0 auto; }
+.single-mode-container { display: flex; gap: 28px; align-items: flex-start; justify-content: center; flex-wrap: wrap; }
+.grid-mode-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(370px, 1fr)); gap: 28px; justify-items: center; }
+
+/* Phone Frame */
+.phone-wrapper { display: flex; flex-direction: column; align-items: center; }
+.phone-label {
+  font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px; padding: 6px 18px; background: #1e293b;
+  border-radius: 20px; border: 1px solid #334155; color: #f1f5f9;
+}
+
+.phone {
+  width: 385px;
+  height: 820px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 44px;
+  border: 12px solid #090d16;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+/* Top HUD Elements */
+.hud-top {
+  position: absolute; top: 16px; left: 14px; right: 14px;
+  display: flex; align-items: center; justify-content: space-between; z-index: 10;
+}
+
+.level-badge {
+  height: 42px; padding: 0 14px; border-radius: 21px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.level-badge .lbl { font-family: 'Outfit', sans-serif; font-size: 8.5px; font-weight: 900; letter-spacing: 1.5px; }
+.level-badge .num { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 900; line-height: 1; }
+
+.timer-chip {
+  height: 36px; padding: 0 14px; border-radius: 18px;
+  display: flex; align-items: center; gap: 6px;
+  font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.star-rating { display: flex; gap: 3px; font-size: 14px; }
+.gear-btn {
+  width: 42px; height: 42px; border-radius: 15px;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: pointer;
+}
+
+/* Progress / Coverage Bar */
+.progress-bar-wrap {
+  position: absolute; top: 68px; left: 14px; right: 14px; height: 28px;
+  border-radius: 14px; display: flex; align-items: center; padding: 0 12px;
+  justify-content: space-between; font-family: 'Outfit', sans-serif; font-size: 11.5px; font-weight: 800;
+  z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+.progress-track { position: absolute; inset: 0; border-radius: 14px; overflow: hidden; opacity: 0.22; }
+.progress-fill { height: 100%; width: 93%; border-radius: 14px; }
+
+/* Board Container & Grid */
+.board-container {
+  position: absolute; top: 106px; left: 12px; right: 12px; bottom: 118px;
+  border-radius: 28px; padding: 12px; display: flex; flex-direction: column;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.25);
+}
+
+.grid-board {
+  width: 100%; height: 100%;
+  display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(6, 1fr);
+  gap: 6px; position: relative;
+}
+
+.grid-cell {
+  border-radius: 12px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; user-select: none;
+}
+.grid-cell.void-cell { background: transparent !important; border: none !important; box-shadow: none !important; }
+
+/* Wall Line Edge Elements */
+.wall-edge-h {
+  position: absolute; top: -4px; left: 6px; right: 6px; height: 5px;
+  border-radius: 3px; z-index: 8; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.wall-edge-v {
+  position: absolute; top: 6px; bottom: 6px; left: -4px; width: 5px;
+  border-radius: 3px; z-index: 8; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+/* Anchor Asset Base styling */
+.anchor-asset-wrap {
+  width: 52px; height: 52px; position: relative;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 5; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+}
+
+.anchor-num-badge {
+  position: absolute; bottom: -2px; right: -2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #0f172a; color: #fff; border: 2px solid #fff;
+  font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 11px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4); z-index: 6;
+}
+
+.path-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+
+/* Buff Bar Styling */
+.buff-bar {
+  position: absolute; bottom: 14px; left: 12px; right: 12px; height: 94px;
+  display: flex; gap: 7px;
+}
+
+.buff-card {
+  flex: 1; border-radius: 18px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px;
+  box-shadow: 0 5px 0 rgba(0,0,0,0.3); cursor: pointer; padding: 4px;
+}
+.buff-card .icon { font-size: 24px; line-height: 1; }
+.buff-card .name { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 10px; text-align: center; line-height: 1.15; }
+.buff-card .cost { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 9px; opacity: 0.85; margin-top: 1px; }
+
+/* ----------------------------------------------------
+   THEME DEFINITIONS FOR ALL 6 THEMES
+   ---------------------------------------------------- */
+
+/* THEME 1: YARN & STITCHING */
+.theme-yarn { background: #fdf4ff; color: #701a75; }
+.theme-yarn .level-badge { background: #c026d3; color: #fff; border: 2px solid #f472b6; }
+.theme-yarn .level-badge .lbl { color: #fecdd3; }
+.theme-yarn .timer-chip { background: #fff; color: #c026d3; border: 2px solid #e879f9; }
+.theme-yarn .gear-btn { background: #fff; color: #c026d3; border: 2px solid #e879f9; }
+.theme-yarn .progress-bar-wrap { background: #fff; color: #701a75; border: 2px solid #e879f9; }
+.theme-yarn .progress-fill { background: #d946ef; }
+.theme-yarn .board-container { background: #fdf6ee; border: 4px solid #e879f9; }
+.theme-yarn .grid-cell { background: #fffbf5; border: 1.5px dashed #f0abfc; }
+.theme-yarn .grid-cell.rock { background: #fae8ff; border: 2px solid #c026d3; }
+.theme-yarn .wall-edge-h, .theme-yarn .wall-edge-v { background: #c026d3; }
+.theme-yarn .buff-card { background: #fff; border: 2.5px solid #e879f9; box-shadow: 0 4px 0 #c026d3; color: #701a75; }
+
+/* THEME 2: WATER & SECRET GARDEN */
+.theme-garden { background: #ecfdf5; color: #065f46; }
+.theme-garden .level-badge { background: #047857; color: #fff; border: 2px solid #34d399; }
+.theme-garden .level-badge .lbl { color: #a7f3d0; }
+.theme-garden .timer-chip { background: #fff; color: #047857; border: 2px solid #10b981; }
+.theme-garden .gear-btn { background: #fff; color: #047857; border: 2px solid #10b981; }
+.theme-garden .progress-bar-wrap { background: #fff; color: #065f46; border: 2px solid #10b981; }
+.theme-garden .progress-fill { background: #10b981; }
+.theme-garden .board-container { background: #e6f4ea; border: 4px solid #059669; }
+.theme-garden .grid-cell { background: #f0fdf4; border: 1.5px solid #a7f3d0; }
+.theme-garden .grid-cell.rock { background: #78350f; border-color: #451a03; color: #fff; }
+.theme-garden .wall-edge-h, .theme-garden .wall-edge-v { background: #047857; }
+.theme-garden .buff-card { background: #fff; border: 2.5px solid #10b981; box-shadow: 0 4px 0 #047857; color: #065f46; }
+
+/* THEME 3: NEON CYBER POWER GRID */
+.theme-neon { background: #0b0f19; color: #f3f4f6; }
+.theme-neon .level-badge { background: #581c87; color: #fff; border: 2px solid #a855f7; box-shadow: 0 0 12px rgba(168,85,247,0.4); }
+.theme-neon .level-badge .lbl { color: #e9d5ff; }
+.theme-neon .timer-chip { background: #111827; color: #38bdf8; border: 2px solid #06b6d4; box-shadow: 0 0 10px rgba(6,182,212,0.3); }
+.theme-neon .gear-btn { background: #1f2937; color: #06b6d4; border: 2px solid #06b6d4; }
+.theme-neon .progress-bar-wrap { background: #111827; color: #38bdf8; border: 2px solid #06b6d4; }
+.theme-neon .progress-fill { background: #06b6d4; }
+.theme-neon .board-container { background: #0f172a; border: 3.5px solid #38bdf8; box-shadow: inset 0 0 20px rgba(56,189,248,0.2); }
+.theme-neon .grid-cell { background: #1e293b; border: 1.5px solid #334155; }
+.theme-neon .grid-cell.rock { background: #334155; border-color: #64748b; }
+.theme-neon .wall-edge-h, .theme-neon .wall-edge-v { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
+.theme-neon .buff-card { background: #1e293b; border: 2.5px solid #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.3); color: #e9d5ff; }
+
+/* THEME 4: MINI TRACKS & EXPRESS RAIL */
+.theme-rail { background: #fff8eb; color: #78350f; }
+.theme-rail .level-badge { background: #9a3412; color: #fff; border: 2px solid #f97316; }
+.theme-rail .level-badge .lbl { color: #ffedd5; }
+.theme-rail .timer-chip { background: #fff; color: #78350f; border: 2px solid #d97706; }
+.theme-rail .gear-btn { background: #fff; color: #d97706; border: 2px solid #d97706; }
+.theme-rail .progress-bar-wrap { background: #fff; color: #78350f; border: 2px solid #d97706; }
+.theme-rail .progress-fill { background: #f59e0b; }
+.theme-rail .board-container { background: #78350f; border: 4px solid #f59e0b; }
+.theme-rail .grid-cell { background: #fef3c7; border: 1.5px solid #fde68a; }
+.theme-rail .grid-cell.rock { background: #92400e; border-color: #451a03; color: #fff; }
+.theme-rail .wall-edge-h, .theme-rail .wall-edge-v { background: #9a3412; }
+.theme-rail .buff-card { background: #fff; border: 2.5px solid #d97706; box-shadow: 0 4px 0 #b45309; color: #78350f; }
+
+/* THEME 5: MAGIC CONSTELLATION */
+.theme-magic { background: #0f172a; color: #e2e8f0; }
+.theme-magic .level-badge { background: #4c1d95; color: #fff; border: 2px solid #c026d3; box-shadow: 0 0 12px rgba(192,38,211,0.4); }
+.theme-magic .level-badge .lbl { color: #f5d0fe; }
+.theme-magic .timer-chip { background: #1e1b4b; color: #e9d5ff; border: 2px solid #a855f7; }
+.theme-magic .gear-btn { background: #1e1b4b; color: #a855f7; border: 2px solid #a855f7; }
+.theme-magic .progress-bar-wrap { background: #1e1b4b; color: #e9d5ff; border: 2px solid #a855f7; }
+.theme-magic .progress-fill { background: #c026d3; }
+.theme-magic .board-container { background: #2e1065; border: 3.5px solid #c026d3; }
+.theme-magic .grid-cell { background: #3b0764; border: 1.5px solid #581c87; }
+.theme-magic .grid-cell.rock { background: #581c87; border-color: #7e22ce; }
+.theme-magic .wall-edge-h, .theme-magic .wall-edge-v { background: #facc15; box-shadow: 0 0 8px #facc15; }
+.theme-magic .buff-card { background: #3b0764; border: 2.5px solid #e879f9; box-shadow: 0 0 10px rgba(232,121,249,0.3); color: #f5d0fe; }
+
+/* THEME 6: SNAKE PATH SLITHER */
+.theme-snake { background: #f0fdf4; color: #14532d; }
+.theme-snake .level-badge { background: #65a30d; color: #fff; border: 2px solid #a3e635; }
+.theme-snake .level-badge .lbl { color: #ecfccb; }
+.theme-snake .timer-chip { background: #fff; color: #14532d; border: 2px solid #84cc16; }
+.theme-snake .gear-btn { background: #fff; color: #84cc16; border: 2px solid #84cc16; }
+.theme-snake .progress-bar-wrap { background: #fff; color: #14532d; border: 2px solid #84cc16; }
+.theme-snake .progress-fill { background: #84cc16; }
+.theme-snake .board-container { background: #14532d; border: 4px solid #84cc16; }
+.theme-snake .grid-cell { background: #ecfdf5; border: 1.5px solid #a7f3d0; }
+.theme-snake .grid-cell.rock { background: #b45309; border-color: #78350f; color: #fff; }
+.theme-snake .wall-edge-h, .theme-snake .wall-edge-v { background: #15803d; }
+.theme-snake .buff-card { background: #fff; border: 2.5px solid #84cc16; box-shadow: 0 4px 0 #4d7c0f; color: #14532d; }
+
+/* Info Sidebar */
+.info-card {
+  flex: 1; min-width: 320px; max-width: 580px;
+  background: #1e293b; border: 2px solid #334155; border-radius: 24px; padding: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+.info-title { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+.info-tag { font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 8px; background: #0284c7; color: #fff; }
+.info-desc { font-size: 13.5px; color: #cbd5e1; line-height: 1.6; margin-bottom: 18px; }
+
+.mapping-table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+.mapping-table th, .mapping-table td { padding: 8px 12px; font-size: 12px; border-bottom: 1px solid #334155; text-align: left; }
+.mapping-table th { background: rgba(255,255,255,0.04); color: #38bdf8; font-weight: 800; }
+.mapping-table td:first-child { font-weight: 700; color: #f1f5f9; }
+
+.ua-box { background: rgba(56, 189, 248, 0.1); border: 1.5px solid #0284c7; border-radius: 14px; padding: 14px; font-size: 13px; color: #e0f2fe; line-height: 1.5; }
+.ua-box b { color: #38bdf8; }
+
+</style>
+</head>
+<body>
+
+<div class="header-container">
+  <div class="header-title">👑 TỔNG THỂ 100% CƠ CHẾ CHAINENGINE TRÊN 6 THEME GAMEPLAY</div>
+  <div class="header-subtitle">Đáp ứng đầy đủ <b>10 Cơ Chế Cốt Lõi</b> (Anchor L, Shape Void, Rock, Wall Edge, Push Rock, Switch/Gate, Arrow, Prism/ColorGate, Waypoints 1-2-3, Static Bomb) & <b>4 Thể Loại Buff</b> theo phong cách chuẩn game puzzle mobile chuyên nghiệp!</div>
+  
+  <div class="header-badges">
+    <span class="h-badge">1. Anchor L (10,10,8)</span>
+    <span class="h-badge">2. Shape Void 0</span>
+    <span class="h-badge">3. Rock 🪨</span>
+    <span class="h-badge">4. Wall Edge 🧱</span>
+    <span class="h-badge">5. Push Rock 📦</span>
+    <span class="h-badge">6. Switch/Gate 🔒</span>
+    <span class="h-badge">7. Arrow ⬆️</span>
+    <span class="h-badge">8. Prism & ColorGate 🌈</span>
+    <span class="h-badge">9. Waypoint 1-2-3 📍</span>
+    <span class="h-badge">10. Bomb 💣</span>
+  </div>
+</div>
+
+<!-- Navigation Tabs -->
+<div class="theme-nav">
+  <button class="theme-tab active" onclick="switchTheme(1)">🧵 1. Len & Đan Móc</button>
+  <button class="theme-tab" onclick="switchTheme(2)">🌿 2. Khu Vườn & Dòng Nước</button>
+  <button class="theme-tab" onclick="switchTheme(3)">⚡ 3. Mạch Điện Neon</button>
+  <button class="theme-tab" onclick="switchTheme(4)">🚂 4. Đường Sắt Mini</button>
+  <button class="theme-tab" onclick="switchTheme(5)">🔮 5. Chiêm Tinh Magic</button>
+  <button class="theme-tab" onclick="switchTheme(6)">🐍 6. Con Rắn Rực Rỡ</button>
+  <button class="theme-tab grid-toggle" onclick="toggleGridMode()">📱 Xem Cùng Lúc 6 Màn Hình</button>
+</div>
+
+<!-- Main Display Area -->
+<div class="main-stage">
+  <div id="single-mode" class="single-mode-container">
+    <div class="phone-wrapper">
+      <div class="phone-label" id="active-phone-label">🧵 Style 1: Len & Đan Móc (Cozy Craft)</div>
+      <div class="phone theme-yarn" id="active-phone"></div>
+    </div>
+    <div class="info-card" id="info-card"></div>
+  </div>
+
+  <div id="grid-mode" class="grid-mode-container" style="display: none;"></div>
+</div>
+
+<script>
+// VECTOR SVG ASSET GENERATORS FOR ANCHORS
+
+function getYarnBallSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="${colorHex}" stroke="#fff" stroke-width="2.5"/>
+        <path d="M 12 24 C 20 10, 40 10, 48 24 C 38 38, 18 38, 12 24 Z" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2.5"/>
+        <path d="M 8 32 C 16 18, 44 18, 52 32 C 40 48, 16 48, 8 32 Z" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="2.5"/>
+        <path d="M 20 8 C 34 16, 34 44, 20 52 C 8 40, 8 16, 20 8 Z" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+        <line x1="6" y1="6" x2="38" y2="38" stroke="#d97706" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="6" cy="6" r="3.5" fill="#f59e0b"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+function getWaterSpoutSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="${colorHex}" stroke="#fff" stroke-width="2.5"/>
+        <path d="M 22 14 L 38 14 L 34 26 L 26 26 Z" fill="#fff" opacity="0.9"/>
+        <path d="M 26 26 C 26 38, 18 42, 18 48 C 18 52, 22 54, 26 54 L 34 54 C 38 54, 42 52, 42 48 C 42 42, 34 38, 34 26 Z" fill="rgba(255,255,255,0.85)"/>
+        <circle cx="30" cy="18" r="4" fill="#047857"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+function getNeonCoreSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="#111827" stroke="${colorHex}" stroke-width="3" style="filter:drop-shadow(0 0 8px ${colorHex});"/>
+        <circle cx="30" cy="30" r="18" fill="${colorHex}" opacity="0.4"/>
+        <circle cx="30" cy="30" r="10" fill="${colorHex}"/>
+        <path d="M 30 8 L 36 24 L 24 36 L 30 52" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+function getTrainStationSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="${colorHex}" stroke="#fff" stroke-width="2.5"/>
+        <path d="M 12 28 L 30 12 L 48 28 Z" fill="#78350f" stroke="#fff" stroke-width="1.5"/>
+        <rect x="18" y="28" width="24" height="20" rx="3" fill="#fff"/>
+        <rect x="25" y="34" width="10" height="14" fill="#9a3412"/>
+        <circle cx="30" cy="22" r="4.5" fill="#f59e0b" stroke="#78350f" stroke-width="1"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+function getMagicOrbSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="24" fill="${colorHex}" stroke="#fff" stroke-width="2" style="filter:drop-shadow(0 0 10px ${colorHex});"/>
+        <ellipse cx="30" cy="30" rx="28" ry="10" fill="none" stroke="#facc15" stroke-width="2.5" transform="rotate(-25 30 30)"/>
+        <circle cx="24" cy="22" r="6" fill="#fff" opacity="0.6"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+function getSnakeHeadSVG(colorHex, num) {
+  return `
+    <div class="anchor-asset-wrap">
+      <svg width="48" height="48" viewBox="0 0 60 60">
+        <circle cx="30" cy="30" r="26" fill="${colorHex}" stroke="#fff" stroke-width="2.5"/>
+        <circle cx="21" cy="22" r="6" fill="#fff"/><circle cx="21" cy="22" r="3.5" fill="#0f172a"/>
+        <circle cx="39" cy="22" r="6" fill="#fff"/><circle cx="39" cy="22" r="3.5" fill="#0f172a"/>
+        <circle cx="16" cy="32" r="4.5" fill="#f43f5e" opacity="0.5"/>
+        <circle cx="44" cy="32" r="4.5" fill="#f43f5e" opacity="0.5"/>
+        <path d="M 30 38 L 30 46 M 30 46 L 26 50 M 30 46 L 34 50" fill="none" stroke="#f43f5e" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div class="anchor-num-badge" style="border-color:${colorHex};">${num}</div>
+    </div>`;
+}
+
+// FULL DATASET WITH 10 MECHANICS & 4 BUFFS MAPPED FOR EACH THEME
+const themesData = [
+  {
+    id: 1,
+    name: "Len & Đan Móc (Cozy Craft)",
+    icon: "🧵",
+    class: "theme-yarn",
+    tag: "Tối ưu UA Nữ 65% — ASMR",
+    desc: "Đầy đủ 10 cơ chế ChainEngine. Cuộn len mang chỉ số L=10, 10, 8 đan qua mặt nạ khoét lỗ 0, tránh nút cúc gỗ 🔘, vượt vách khâu 🧱, đẩy cuộn chỉ 🧻 để phá cụm chỉ rối ✂️ (Bom).",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Cuộn Len Thêu Đỏ, Xanh, Lá (L=10, 10, 8)", icon: "🧶" },
+      { mechanic: "2. Shape / Void 0", item: "Mặt nạ cắt góc khoét lỗ bàn cờ", icon: "🔳" },
+      { mechanic: "3. Rock", item: "Nút Cúc Áo Gỗ Khâu Tĩnh", icon: "🔘" },
+      { mechanic: "4. Wall Edge", item: "Vách Ngăn Khâu Chỉ", icon: "🧱" },
+      { mechanic: "5. Push Rock", item: "Cuộn Chỉ Gỗ Đẩy Trượt (Sokoban)", icon: "🧻" },
+      { mechanic: "6. Switch & Gate", item: "Cúc Bấm 📍 ➔ Khuy Áo 🪡", icon: "🪡" },
+      { mechanic: "7. Arrow", item: "Mũi Khâu Thêu Ép Hướng ⬆️", icon: "⬆️" },
+      { mechanic: "8. Prism & ColorGate", item: "Khuy Nhuộm Màu ➔ Cổng Chỉ Màu", icon: "🪡" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Thứ Tự Mũi Móc 1 ➔ 2 ➔ 3", icon: "📍" },
+      { mechanic: "10. Bomb", item: "Cụm Chỉ Rối (Đẩy cuộn chỉ phá rối)", icon: "✂️" },
+    ],
+    buffs: [
+      { icon: "🪡", name: "Kim Gợi Ý", cost: "30 Xu" },
+      { icon: "❄️", name: "Đóng Băng Vách", cost: "Miễn phí" },
+      { icon: "✂️", name: "Kéo Cắt Lùi", cost: "10 Xu" },
+      { icon: "🧸", name: "Bỏ Qua Màn", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Tệp nữ rất thích đồ may vá thủ công. Âm thanh kéo len ASMR kết hợp hiệu ứng tạo ra gấu bông len hoàn chỉnh đem lại CTR vượt trội.",
+    anchorFn: getYarnBallSVG,
+    colors: { a: "#e11d48", b: "#0284c7", c: "#16a34a" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#e11d48" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8,5" opacity="0.95"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#0284c7" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8,5" opacity="0.95"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#16a34a" stroke-width="20" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8,5" opacity="0.95"/>
+          <circle cx="172" cy="228" r="10" fill="#fff" stroke="#e11d48" stroke-width="3"/>`
+  },
+
+  {
+    id: 2,
+    name: "Khu Vườn & Dòng Nước (Secret Garden)",
+    icon: "🌿",
+    class: "theme-garden",
+    tag: "Top Conversion Ads — Before & After",
+    desc: "Vòi tưới đài sen (Anchor L=10, 10, 8), dẫn dòng nước mát chảy qua mảnh vườn, tránh đá cuội 🪨, đẩy chậu cây 🪴 phá bụi gai 🌵 (Bom), giẫm van 🚿 mở cổng 🚪.",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Vòi Tưới Đài Sen Đỏ, Xanh, Lá (L=10, 10, 8)", icon: "💧" },
+      { mechanic: "2. Shape / Void 0", item: "Mảnh vườn khoét ô sạt lở", icon: "🕳️" },
+      { mechanic: "3. Rock", item: "Đá Cuội Vườn Tĩnh", icon: "🪨" },
+      { mechanic: "4. Wall Edge", item: "Rào Rơm Ngăn Cạnh", icon: "🪵" },
+      { mechanic: "5. Push Rock", item: "Chậu Cây Đất Nung Đẩy Trượt", icon: "🪴" },
+      { mechanic: "6. Switch & Gate", item: "Van Tưới 🚿 ➔ Cổng Vườn 🚪", icon: "🚪" },
+      { mechanic: "7. Arrow", item: "Rãnh Nước Dốc ⬆️", icon: "⬆️" },
+      { mechanic: "8. Prism & ColorGate", item: "Bụi Hoa Đổi Màu ➔ Cổng Sắc Hoa", icon: "🌸" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Nụ Hoa Nở Thứ Tự 1 ➔ 2 ➔ 3", icon: "🌸" },
+      { mechanic: "10. Bomb", item: "Bụi Gai Cạn (Đẩy chậu cây đè gai)", icon: "🌵" },
+    ],
+    buffs: [
+      { icon: "🌸", name: "Hoa Gợi Ý", cost: "30 Xu" },
+      { icon: "❄️", name: "Đóng Băng Rào", cost: "Miễn phí" },
+      { icon: "🧹", name: "Dọn Cỏ Lùi", cost: "10 Xu" },
+      { icon: "☀️", name: "Nắng Bỏ Qua", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Quảng cáo dạng 'Mảnh vườn khô cằn ➔ Nối nước ➔ Hoa nở đồng loạt 100% màn hình' có tỷ lệ cài đặt cực cao.",
+    anchorFn: getWaterSpoutSVG,
+    colors: { a: "#f43f5e", b: "#06b6d4", c: "#10b981" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#f43f5e" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#06b6d4" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#10b981" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+          <circle cx="172" cy="228" r="12" fill="#fff" stroke="#f43f5e" stroke-width="3"/>`
+  },
+
+  {
+    id: 3,
+    name: "Mạch Điện Neon (Cyber Power Grid)",
+    icon: "⚡",
+    class: "theme-neon",
+    tag: "Tối ưu Chi phí Dev — Glow Shader",
+    desc: "Tụ pin Cyber (Anchor L=10, 10, 8), phóng cáp laser qua vi mạch khoét lỗ 0, tránh khối cách điện 🧊, đẩy tụ pin 🎛️ phá cầu chì 💥 (Bom), giẫm relay 🔘 mở laser gate 🛡️.",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Tụ Pin Cyber Vàng, Xanh, Tím (L=10, 10, 8)", icon: "🔋" },
+      { mechanic: "2. Shape / Void 0", item: "Mạch điện cắt khoét góc", icon: "🔳" },
+      { mechanic: "3. Rock", item: "Khối Cách Điện Tản Nhiệt", icon: "🧊" },
+      { mechanic: "4. Wall Edge", item: "Dải Phân Cách Cách Điện", icon: "⚡" },
+      { mechanic: "5. Push Rock", item: "Tụ Năng Lượng Slider", icon: "🎛️" },
+      { mechanic: "6. Switch & Gate", item: "Relay 🔘 ➔ Laser Gate 🛡️", icon: "🛡️" },
+      { mechanic: "7. Arrow", item: "Diode Ép Hướng Điện ⬆️", icon: "⬆️" },
+      { mechanic: "8. Prism & ColorGate", item: "Lăng Kính Khúc Xạ ➔ Cổng Lọc Tần", icon: "💎" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Xung Nhịp CPU Node 1 ➔ 2 ➔ 3", icon: "📟" },
+      { mechanic: "10. Bomb", item: "Cầu Chì Overload 💥", icon: "💥" },
+    ],
+    buffs: [
+      { icon: "💡", name: "AI Gợi Ý", cost: "30 Xu" },
+      { icon: "🧊", name: "Tản Nhiệt Vách", cost: "Miễn phí" },
+      { icon: "⚡", name: "Đảo Dòng Điện", cost: "10 Xu" },
+      { icon: "🚀", name: "Nảy Lượng Tử", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Nền tối OLED tôn dải màu Neon rực rỡ làm nổi bật 100% hình ảnh gameplay trong 1 giây đầu quảng cáo.",
+    anchorFn: getNeonCoreSVG,
+    colors: { a: "#a855f7", b: "#06b6d4", c: "#eab308" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#a855f7" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 10px #a855f7);"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#06b6d4" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 10px #06b6d4);"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#eab308" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 10px #eab308);"/>`
+  },
+
+  {
+    id: 4,
+    name: "Đường Sắt Mini (Express Rail)",
+    icon: "🚂",
+    class: "theme-rail",
+    tag: "Tàu chạy vèo vèo khi Win",
+    desc: "Nhà ga xe lửa tí hon (Anchor L=10, 10, 8), kéo tuyến đường ray qua sa bàn khoét lỗ 0, tránh gỗ đổ 🪵, đẩy toa hàng 🚃 va thùng thuốc nổ 🧨 (Bom), gạt ghi 🎛️ mở cổng chắn 🚧.",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Nhà Ga Xe Lửa Tí Hon Đỏ, Xanh, Vàng (L=10, 10, 8)", icon: "🚉" },
+      { mechanic: "2. Shape / Void 0", item: "Sa bàn đồ chơi khoét vực", icon: "🕳️" },
+      { mechanic: "3. Rock", item: "Gỗ Núi Đổ Cố Định", icon: "🪵" },
+      { mechanic: "4. Wall Edge", item: "Tường Rào Gỗ Ngăn Đường", icon: "🧱" },
+      { mechanic: "5. Push Rock", item: "Toa Hàng Đẩy Trượt", icon: "🚃" },
+      { mechanic: "6. Switch & Gate", item: "Ghi Xẻ 🎛️ ➔ Cổng Chắn 🚧", icon: "🚧" },
+      { mechanic: "7. Arrow", item: "Biển Báo Tín Hiệu ⬆️", icon: "🚩" },
+      { mechanic: "8. Prism & ColorGate", item: "Trạm Sơn Tuyến ➔ Cổng Phân Tuyến", icon: "🚉" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Trạm Dừng Ga 1 ➔ 2 ➔ 3", icon: "🚏" },
+      { mechanic: "10. Bomb", item: "Thùng Thuốc Nổ 🧨", icon: "🧨" },
+    ],
+    buffs: [
+      { icon: "🚩", name: "Cờ Tín Hiệu", cost: "30 Xu" },
+      { icon: "🛑", name: "Hãm Phanh Vách", cost: "Miễn phí" },
+      { icon: "🚂", name: "Lùi Ga Xe", cost: "10 Xu" },
+      { icon: "🎟️", name: "Vé Tàu Nhanh", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Hiệu ứng đoàn tàu hỏa mini cất tiếng còi và chạy dọc tuyến đường khi hoàn thành mang lại trải nghiệm mãn nhãn.",
+    anchorFn: getTrainStationSVG,
+    colors: { a: "#dc2626", b: "#0284c7", c: "#d97706" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#dc2626" stroke-width="20" stroke-dasharray="5,6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#0284c7" stroke-width="20" stroke-dasharray="5,6" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#d97706" stroke-width="20" stroke-dasharray="5,6" stroke-linecap="round" stroke-linejoin="round"/>`
+  },
+
+  {
+    id: 5,
+    name: "Chiêm Tinh Phép Thuật (Constellation Magic)",
+    icon: "🔮",
+    class: "theme-magic",
+    tag: "Huyền Áo & Mộng Mơ",
+    desc: "Cầu phép thuật (Anchor L=10, 10, 8), nối luồng dải ngân hà tránh bia đá 🗿, đẩy lăng kính 💎 giải ngọc nguyền 💥 (Bom), giẫm vòng phép ☸️ mở phong ấn 🔒.",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Cầu Phép Thuật Tím, Xanh, Vàng (L=10, 10, 8)", icon: "🔮" },
+      { mechanic: "2. Shape / Void 0", item: "Ma trận không gian hư vô", icon: "🌌" },
+      { mechanic: "3. Rock", item: "Bia Đá Hắc Ích Cổ Ngữ", icon: "🗿" },
+      { mechanic: "4. Wall Edge", item: "Dải Phân Cách Ma Thuật", icon: "✨" },
+      { mechanic: "5. Push Rock", item: "Lăng Kính Thạch Anh", icon: "💎" },
+      { mechanic: "6. Switch & Gate", item: "Vòng Tròn Phép ☸️ ➔ Phong Ấn 🔒", icon: "🔒" },
+      { mechanic: "7. Arrow", item: "Véc-tơ Ánh Sáng ⬆️", icon: "⬆️" },
+      { mechanic: "8. Prism & ColorGate", item: "Đá Đổi Màu ➔ Cổng Quang Phổ", icon: "💎" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Ngôi Sao Hoàng Đạo 1 ➔ 2 ➔ 3", icon: "⭐" },
+      { mechanic: "10. Bomb", item: "Ngọc Nguyền Rủa 💥", icon: "💥" },
+    ],
+    buffs: [
+      { icon: "🔮", name: "Mắt Thấu Thị", cost: "30 Xu" },
+      { icon: "❄️", name: "Đóng Băng Dải", cost: "Miễn phí" },
+      { icon: "⌛", name: "Đảo Thời Gian", cost: "10 Xu" },
+      { icon: "🌌", name: "Cổng Càn Khôn", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Hiệu ứng hạt sao lấp lánh (Star Dust) thu hút người chơi yêu thích phong cách huyền bí, giả tưởng.",
+    anchorFn: getMagicOrbSVG,
+    colors: { a: "#c026d3", b: "#06b6d4", c: "#facc15" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#c026d3" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 8px #c026d3);"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#06b6d4" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 8px #06b6d4);"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#facc15" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 8px #facc15);"/>`
+  },
+
+  {
+    id: 6,
+    name: "Con Rắn Rực Rỡ (Slither Path Puzzle)",
+    icon: "🐍",
+    class: "theme-snake",
+    tag: "HOT TREND 2026 — Dễ Thương & Cuốn",
+    desc: "Đầu rắn 3D ngộ nghĩnh (Anchor L=10, 10, 8), bò ngoằn ngoèo qua thảm cỏ khoét lỗ 0, tránh dưa hấu 🍉, đẩy thùng trái cây 📦 đè nhím gai 🦔 (Bom), giẫm nút vàng 🔘 mở chuồng 🚪.",
+    mapping: [
+      { mechanic: "1. Anchor (A, L)", item: "Đầu Rắn 3D Mắt Tròn Hồng, Xanh, Lá (L=10, 10, 8)", icon: "👀" },
+      { mechanic: "2. Shape / Void 0", item: "Thảm cỏ khoét góc ao hồ", icon: "🌊" },
+      { mechanic: "3. Rock", item: "Quả Dưa Hấu Rớt Tĩnh", icon: "🍉" },
+      { mechanic: "4. Wall Edge", item: "Hàng Rào Nứa Ngăn Cạnh", icon: "🪵" },
+      { mechanic: "5. Push Rock", item: "Thùng Trái Cây Đẩy Trượt", icon: "📦" },
+      { mechanic: "6. Switch & Gate", item: "Nút Vàng 🔘 ➔ Chuồng Rắn 🚪", icon: "🚪" },
+      { mechanic: "7. Arrow", item: "Mũi Tên Chỉ Hướng ⬆️", icon: "⬆️" },
+      { mechanic: "8. Prism & ColorGate", item: "Quả Đổi Màu Vảy ➔ Cổng Vảy Rắn", icon: "🍎" },
+      { mechanic: "9. Waypoints 1-2-3", item: "Quả Táo Đỏ Số 1 ➔ 2 ➔ 3", icon: "🍎" },
+      { mechanic: "10. Bomb", item: "Báo Thức Nhím Gai 🦔", icon: "🦔" },
+    ],
+    buffs: [
+      { icon: "🍎", name: "Táo Thần Gợi Ý", cost: "30 Xu" },
+      { icon: "🧊", name: "Tê Cấm Bổn Vách", cost: "Miễn phí" },
+      { icon: "🐍", name: "Rắn Bò Lùi", cost: "10 Xu" },
+      { icon: "🦘", name: "Nhảy Vọt", cost: "50 Xu" },
+    ],
+    ua: "<b>Ưu điểm Ads:</b> Trend Rắn săn mồi bò ngoằn ngoèo ngộ nghĩnh cực kỳ hút mắt cả trẻ em lẫn người lớn, CTR quảng cáo cao nhất hiện tại.",
+    anchorFn: getSnakeHeadSVG,
+    colors: { a: "#f43f5e", b: "#0284c7", c: "#84cc16" },
+    svg: `<path d="M 32 30 L 102 30 L 172 30 L 242 30 L 312 30 L 312 96 L 312 162 L 312 228 L 242 228 L 172 228" fill="none" stroke="#f43f5e" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+          <path d="M 32 360 L 102 360 L 172 360 L 242 360 L 312 360 L 312 294 L 242 294 L 172 294 L 102 294 L 32 294" fill="none" stroke="#0284c7" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+          <path d="M 32 96 L 32 162 L 32 228 L 102 228 L 102 162 L 102 96 L 172 96 L 172 162" fill="none" stroke="#84cc16" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+          <circle cx="172" cy="162" r="11" fill="#84cc16" stroke="#fff" stroke-width="2"/>`
+  }
+];
+
+// MATRIX SETUP SHOWING VOID SHAPE, WALL EDGES, PUSH ROCKS, BOMBS, ARROWS & WAYPOINTS
+const boardMatrix = [
+  // Row 0: Void cell at (0,0)? No, let's put Void cell at (0,4) to show Shape feature!
+  [ { t: 'anchor', id: 'a', val: 10, col: 'a' }, { t: 'path', col: 'a' }, { t: 'path', col: 'a' }, { t: 'path', col: 'a' }, { t: 'void' } ],
+  // Row 1: Wall edge between (1,1) and (1,2)
+  [ { t: 'anchor', id: 'c', val: 8, col: 'c' },  { t: 'path', col: 'c', wallR: true }, { t: 'path', col: 'c' }, { t: 'rock' }, { t: 'path', col: 'a' } ],
+  // Row 2: Waypoint 1 at (2,0), Gate at (2,1), Push Rock at (2,2), Bomb at (2,3)
+  [ { t: 'path', col: 'c', wp: 1 }, { t: 'gate' }, { t: 'pushRock' }, { t: 'bomb' }, { t: 'path', col: 'a' } ],
+  // Row 3: Waypoint 2 at (3,0), Switch at (3,1), Arrow UP at (3,2)
+  [ { t: 'path', col: 'c', wp: 2 }, { t: 'switch' }, { t: 'arrow' }, { t: 'path', col: 'a' }, { t: 'path', col: 'a' } ],
+  // Row 4:
+  [ { t: 'path', col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' } ],
+  // Row 5:
+  [ { t: 'anchor', id: 'b', val: 10, col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' }, { t: 'path', col: 'b' } ],
+];
+
+function renderPhoneHTML(data) {
+  return `
+    <div class="hud-top">
+      <div class="level-badge">
+        <span class="lbl">LEVEL</span>
+        <span class="num">47</span>
+      </div>
+      <div class="timer-chip">
+        <span>⏱️</span>
+        <span>01:45</span>
+      </div>
+      <div class="star-rating">⭐⭐⭐</div>
+      <div class="gear-btn">⚙️</div>
+    </div>
+
+    <div class="progress-bar-wrap">
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <span>ĐỘ PHỦ: <b>28/30 Ô (93%)</b></span>
+      <span>XÍCH: <b>2/3 LCK</b></span>
+    </div>
+
+    <div class="board-container">
+      <div class="grid-board">
+        ${boardMatrix.map((row, r) => row.map((cell, c) => {
+          if (cell.t === 'void') {
+            return `<div class="grid-cell void-cell"></div>`;
+          } else if (cell.t === 'anchor') {
+            const hex = data.colors[cell.col];
+            return `<div class="grid-cell">${data.anchorFn(hex, cell.val)}</div>`;
+          } else if (cell.t === 'rock') {
+            return `<div class="grid-cell rock">${data.mapping[2].icon}</div>`;
+          } else if (cell.t === 'pushRock') {
+            return `<div class="grid-cell" style="background:rgba(217,119,6,0.3);border:2px dashed #f59e0b;">${data.mapping[4].icon}</div>`;
+          } else if (cell.t === 'bomb') {
+            return `<div class="grid-cell" style="background:rgba(239,68,68,0.25);border:2px solid #ef4444;">${data.mapping[9].icon}</div>`;
+          } else if (cell.t === 'switch') {
+            return `<div class="grid-cell" style="background:rgba(255,255,255,0.4);border:2px solid #22c55e;">${data.mapping[5].icon.split('➔')[0]}</div>`;
+          } else if (cell.t === 'gate') {
+            return `<div class="grid-cell" style="background:rgba(34,197,94,0.2);border:2px solid #22c55e;">🔓</div>`;
+          } else if (cell.t === 'arrow') {
+            return `<div class="grid-cell" style="background:rgba(56,189,248,0.2);border:1.5px solid #38bdf8;">${data.mapping[6].icon}</div>`;
+          } else {
+            // Render Wall Edge if present
+            const wallH = cell.wallR ? `<div class="wall-edge-v"></div>` : '';
+            const wpBadge = cell.wp ? `<div class="anchor-num-badge" style="position:absolute;top:2px;left:2px;background:#f59e0b;">${cell.wp}</div>` : '';
+            return `<div class="grid-cell">${wallH}${wpBadge}</div>`;
+          }
+        }).join('')).join('')}
+
+        <svg class="path-svg" viewBox="0 0 355 406">
+          ${data.svg}
+        </svg>
+      </div>
+    </div>
+
+    <div class="buff-bar">
+      ${data.buffs.map(b => `
+        <div class="buff-card">
+          <div class="icon">${b.icon}</div>
+          <div class="name">${b.name}</div>
+          <div class="cost">${b.cost}</div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function renderInfoHTML(data) {
+  return `
+    <div class="info-title">
+      <span>${data.icon} ${data.name}</span>
+      <span class="info-tag">${data.tag}</span>
+    </div>
+    <div class="info-desc">${data.desc}</div>
+
+    <h4 style="color:#38bdf8; font-family:'Outfit'; margin-bottom:10px; font-size:14px;">🔄 Đầy Đủ 10 Cơ Chế ChainEngine & Vật Phẩm Quy Đổi:</h4>
+    <table class="mapping-table">
+      <thead>
+        <tr><th>Cơ chế Logic ChainEngine</th><th>Vật phẩm quy đổi theo Theme mới</th></tr>
+      </thead>
+      <tbody>
+        ${data.mapping.map(m => `
+          <tr>
+            <td>${m.mechanic}</td>
+            <td>${m.icon} ${m.item}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+
+    <div class="ua-box">${data.ua}</div>
+  `;
+}
+
+let currentThemeId = 1;
+let isGridMode = false;
+
+function updateSingleView() {
+  const data = themesData.find(t => t.id === currentThemeId);
+  const phoneEl = document.getElementById('active-phone');
+  const labelEl = document.getElementById('active-phone-label');
+  const infoEl = document.getElementById('info-card');
+
+  labelEl.innerHTML = `${data.icon} Style ${data.id}: ${data.name}`;
+  phoneEl.className = `phone ${data.class}`;
+  phoneEl.innerHTML = renderPhoneHTML(data);
+  infoEl.innerHTML = renderInfoHTML(data);
+}
+
+function switchTheme(id) {
+  currentThemeId = id;
+  if (isGridMode) toggleGridMode();
+  document.querySelectorAll('.theme-tab').forEach((tab, idx) => {
+    if (idx < 6) tab.classList.toggle('active', idx + 1 === id);
+  });
+  updateSingleView();
+}
+
+function toggleGridMode() {
+  isGridMode = !isGridMode;
+  const singleEl = document.getElementById('single-mode');
+  const gridEl = document.getElementById('grid-mode');
+  const toggleBtn = document.querySelector('.grid-toggle');
+
+  if (isGridMode) {
+    singleEl.style.display = 'none';
+    gridEl.style.display = 'grid';
+    toggleBtn.classList.add('active');
+    toggleBtn.innerHTML = '📱 Trở Về Xem Chi Tiết 1 Màn Hình';
+
+    gridEl.innerHTML = themesData.map(t => `
+      <div class="phone-wrapper">
+        <div class="phone-label">${t.icon} Style ${t.id}: ${t.name}</div>
+        <div class="phone ${t.class}">
+          ${renderPhoneHTML(t)}
+        </div>
+      </div>
+    `).join('');
+  } else {
+    gridEl.style.display = 'none';
+    singleEl.style.display = 'flex';
+    toggleBtn.classList.remove('active');
+    toggleBtn.innerHTML = '📱 Xem Cùng Lúc 6 Màn Hình';
+    updateSingleView();
+  }
+}
+
+updateSingleView();
+</script>
+</body>
+</html>
