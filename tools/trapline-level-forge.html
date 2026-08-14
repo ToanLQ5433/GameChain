@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TRAPLINE LEVEL FORGE — Tool tạo level đo độ khó thật</title>
+<style>
+:root{
+  --surface-1:#fcfcfb; --page:#f9f9f7;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --ring:rgba(11,11,11,0.10);
+  /* categorical — 4 slot đã qua validator all-pairs (CVD ΔE 9.2 / normal 16.3) */
+  --ch1:#2a78d6; --ch2:#eb6834; --ch3:#1baf7a; --ch4:#4a3aa7;
+  /* ordinal ramp 1 hue cho 5 bậc kỹ thuật (light→dark, đã qua validator) */
+  --t1:#86b6ef; --t2:#5598e7; --t3:#2a78d6; --t4:#1c5cab; --t5:#0d366b;
+  /* status — 4 hạng độ khó (luôn kèm nhãn chữ, không bao giờ chỉ dùng màu) */
+  --s1:#0ca30c; --s2:#fab219; --s3:#ec835a; --s4:#d03b3b;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;}
+h1,h2,h3{margin:0 0 .4em;line-height:1.25}
+h1{font-size:21px;letter-spacing:.2px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-2)}
+h3{font-size:13px;color:var(--ink-2)}
+p{margin:.35em 0}
+a{color:var(--ch1)}
+header{background:var(--ink);color:#fff;padding:20px 22px}
+header h1{color:#fff}
+header p{color:#d8d7d0;max-width:110ch;font-size:13px}
+main{max-width:1240px;margin:0 auto;padding:18px}
+.card{background:var(--surface-1);border:1px solid var(--ring);border-radius:10px;
+  padding:16px 18px;margin-bottom:16px}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.f input,.f select{font:inherit;padding:6px 8px;border:1px solid var(--axis);border-radius:6px;
+  background:#fff;color:var(--ink);width:100px}
+.f.wide input{width:150px}
+button{font:inherit;font-weight:600;padding:8px 14px;border-radius:7px;border:1px solid var(--ink);
+  background:var(--ink);color:#fff;cursor:pointer}
+button.ghost{background:#fff;color:var(--ink)}
+button.ghost[aria-pressed="true"]{background:var(--ink);color:#fff}
+button:disabled{opacity:.45;cursor:default}
+button.sm{padding:5px 10px;font-size:12px}
+.hint{font-size:12px;color:var(--muted)}
+.note{font-size:12.5px;color:var(--ink-2);background:#fffdf4;border-left:3px solid var(--s2);
+  padding:8px 11px;border-radius:0 6px 6px 0;margin:10px 0}
+.tiles{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+.tile{border:1px solid var(--ring);border-radius:8px;padding:9px 12px;min-width:104px;background:#fff}
+.tile .v{font-size:19px;font-weight:650;line-height:1.15}
+.tile .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;white-space:nowrap}
+.dot{width:11px;height:11px;border-radius:3px;flex:0 0 auto}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;color:var(--ink-2)}
+.chip i{width:10px;height:10px;border-radius:2px;display:block}
+.bars{display:flex;flex-direction:column;gap:2px;margin:8px 0}
+.bar{display:flex;align-items:center;gap:8px;font-size:12px}
+.bar .nm{width:150px;color:var(--ink-2);flex:0 0 auto}
+.bar .tr{flex:1;height:15px;background:#f2f1ec;border-radius:3px;overflow:hidden;display:block}
+.bar .fl{display:block;height:100%;border-radius:0 4px 4px 0;min-width:2px}
+.bar .ct{width:78px;text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums;flex:0 0 auto}
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{border-bottom:1px solid var(--grid);padding:5px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#f7f7f4}
+.scroll{max-height:330px;overflow:auto;border:1px solid var(--grid);border-radius:7px}
+.lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:11px}
+.lvcard{border:1px solid var(--ring);border-radius:9px;padding:9px;background:#fff;color:var(--ink);cursor:pointer;text-align:left}
+.lvcard:hover{border-color:var(--ink)}
+.lvcard[aria-current="true"]{border-color:var(--ink);box-shadow:0 0 0 2px var(--ink) inset}
+.lvcard .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:6px}
+.lvcard .id{font-weight:650;font-size:12px}
+.lvcard .mt{font-size:11px;color:var(--muted);margin-top:5px;line-height:1.45}
+.split{display:grid;grid-template-columns:minmax(320px,auto) 1fr;gap:20px;align-items:start}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+svg.board{display:block;touch-action:none;user-select:none}
+.tt{position:fixed;pointer-events:none;background:var(--ink);color:#fff;font-size:11.5px;
+  padding:5px 8px;border-radius:5px;opacity:0;transition:opacity .1s;z-index:50;max-width:260px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 2px}
+pre{background:#f4f4f1;border:1px solid var(--grid);border-radius:7px;padding:10px;
+  font-size:11px;overflow:auto;max-height:240px;margin:6px 0}
+.tierpill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;color:#fff;
+  padding:1px 7px;border-radius:20px}
+.win{background:#f0fbf0;border-left:3px solid var(--s1);padding:9px 12px;border-radius:0 6px 6px 0;margin:8px 0}
+.vote{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}
+.sec-off{display:none}
+progress{width:220px;height:9px}
+</style>
+</head>
+<body data-palette="#2a78d6,#eb6834,#1baf7a,#4a3aa7">
+
+<header>
+  <h1>TRAPLINE LEVEL FORGE <span style="font-weight:400;opacity:.65;font-size:14px">— tool tạo level đo ĐỘ KHÓ THẬT</span></h1>
+  <p><b>Vấn đề của tool cũ:</b> công thức <code>D = w₁·|V| + w₂·ΣDegree − w₃·ForcedMoves</code> chỉ đếm đặc điểm bàn cờ (to/nhỏ, nhiều/ít vật cản) — nên bàn to trông rối vẫn có thể dễ như không, còn bàn nhỏ trơ trọi lại khó thật.
+  <b>Tool này đo khác:</b> nó chạy một <i>Solver mô phỏng người chơi</i> — chỉ được dùng các kỹ thuật suy luận theo bậc, không brute-force, không đoán — rồi tính độ khó từ chuỗi suy luận mà người chơi buộc phải thực hiện. Mọi level sinh ra đều đã được chứng minh <b>có đúng 1 nghiệm</b>.</p>
+</header>
+
+<main>
+
+<!-- ============ 1. CONFIG ============ -->
+<section class="card">
+  <h2>1 · Cấu hình sinh level</h2>
+  <div class="row">
+    <div class="f"><label for="fR">Số hàng</label><input id="fR" type="number" min="3" max="9" value="5"></div>
+    <div class="f"><label for="fC">Số cột</label><input id="fC" type="number" min="3" max="8" value="5"></div>
+    <div class="f"><label for="fO">Ô Khóa</label><input id="fO" type="number" min="0" max="20" value="2"></div>
+    <div class="f"><label for="fK">Số dây (Anchor)</label><input id="fK" type="number" min="1" max="4" value="3"></div>
+    <div class="f"><label for="fM">Dây ngắn nhất</label><input id="fM" type="number" min="2" max="12" value="3"></div>
+    <div class="f"><label for="fT">Hạng mục tiêu</label>
+      <select id="fT">
+        <option value="0">Tất cả (đo tự do)</option>
+        <option value="1">1 · Dễ</option>
+        <option value="2" selected>2 · Thường</option>
+        <option value="3">3 · Khó</option>
+        <option value="4">4 · Siêu Khó</option>
+      </select></div>
+    <div class="f"><label for="fN">Số level cần</label><input id="fN" type="number" min="1" max="40" value="8"></div>
+    <div class="f"><label for="fS">Seed</label><input id="fS" type="number" value="2026"></div>
+    <div class="f"><label for="fA">Mũi Tên</label><select id="fA"><option value="1" selected>Cho phép</option><option value="0">Không</option></select></div>
+    <div class="f"><label for="fW">Mốc Nối</label><select id="fW"><option value="1" selected>Cho phép</option><option value="0">Không</option></select></div>
+    <div class="f"><button id="btnGen">Sinh level</button></div>
+    <div class="f"><progress id="prog" value="0" max="100" class="sec-off"></progress><span class="hint" id="progTxt"></span></div>
+  </div>
+  <div class="note">
+    <b>Vì sao chỉ cho tối đa 4 dây:</b> nhiều dây hơn nghĩa là mỗi dây ngắn hơn → gần như mọi bước đều là "Ô Ép Buộc" → level <i>dễ đi</i> chứ không khó thêm. Ngoài ra 4 là số màu tối đa còn phân biệt được an toàn cho người mù màu (đã kiểm bằng validator).<br>
+    <b>Mũi Tên / Mốc Nối chỉ được dùng để HẠ độ khó</b> về đúng hạng mục tiêu — đúng như nghiên cứu chỉ ra: thêm ràng buộc làm level dễ đi, không phải khó hơn.
+  </div>
+</section>
+
+<!-- ============ 2. SUMMARY ============ -->
+<section class="card sec-off" id="secSum">
+  <h2>2 · Kết quả loạt sinh</h2>
+  <div class="tiles" id="sumTiles"></div>
+  <h3>Phân bố hạng độ khó thật</h3>
+  <div class="legend" id="clsLegend"></div>
+  <div class="bars" id="clsBars"></div>
+  <p class="hint" id="sumFails"></p>
+</section>
+
+<!-- ============ 3. PROOF ============ -->
+<section class="card sec-off" id="secProof">
+  <h2>3 · Đối chứng với công thức cũ</h2>
+  <div class="tiles" id="proofTiles"></div>
+  <div id="proofNote"></div>
+  <div class="row" style="margin:10px 0">
+    <button class="ghost" id="btnSweep">Quét đối chứng trên nhiều kích cỡ bàn</button>
+    <span class="hint" id="sweepTxt">Sinh thêm 4 nhóm level ở 4 kích cỡ bàn khác nhau — đây mới là phép thử thật cho công thức cũ.</span>
+  </div>
+  <div id="sweepOut"></div>
+  <h3>Loạt hiện tại, sắp theo điểm công thức CŨ (giảm dần)</h3>
+  <div class="scroll"><table id="proofTable"></table></div>
+</section>
+
+<!-- ============ 4. LIST ============ -->
+<section class="card sec-off" id="secList">
+  <h2>4 · Danh sách level đã sinh</h2>
+  <div class="row" style="margin-bottom:10px">
+    <button class="ghost sm" id="btnJsonAll">Tải toàn bộ JSON cho Dev</button>
+    <span class="hint">Bấm 1 level để mở chi tiết, xem báo cáo suy luận và tự chơi thử.</span>
+  </div>
+  <div class="lvgrid" id="lvGrid"></div>
+</section>
+
+<!-- ============ 5. DETAIL ============ -->
+<section class="card sec-off" id="secDetail">
+  <h2 id="detTitle">5 · Chi tiết level</h2>
+  <div class="split">
+    <div>
+      <div class="row" style="margin-bottom:9px">
+        <button class="ghost sm" id="btnPlay" aria-pressed="false">Tự chơi thử</button>
+        <button class="ghost sm" id="btnSol" aria-pressed="false">Xem lời giải</button>
+        <button class="ghost sm" id="btnCoord" aria-pressed="false">Toạ độ</button>
+        <button class="ghost sm" id="btnReset">Xoá nét vẽ</button>
+      </div>
+      <div id="boardWrap"></div>
+      <div class="legend" id="chainLegend"></div>
+      <div id="playPanel"></div>
+    </div>
+    <div>
+      <div class="tiles" id="detTiles"></div>
+      <h3>Chuỗi suy luận người chơi buộc phải làm</h3>
+      <div class="legend" id="tierLegend"></div>
+      <div class="bars" id="tierBars"></div>
+      <p class="hint" id="tierWhy"></p>
+      <h3 style="margin-top:14px">Nhật ký từng bước (bảng tra)</h3>
+      <div class="scroll" style="max-height:250px"><table id="traceTable"></table></div>
+      <h3 style="margin-top:14px">JSON bàn giao Dev</h3>
+      <pre id="detJson"></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. CALIBRATION ============ -->
+<section class="card sec-off" id="secCalib">
+  <h2>6 · Hiệu chỉnh theo cảm nhận người chơi thật</h2>
+  <p class="hint">Đây là bước bắt buộc theo mọi nghiên cứu về đo độ khó: máy chỉ ước lượng, <b>người chơi thật mới là chuẩn cuối cùng</b>. Chơi thử ở mục 5, bình chọn cảm nhận, rồi chỉnh trọng số bên dưới cho tới khi bảng hết lệch.</p>
+  <h3>Trọng số chi phí suy luận (chỉnh rồi bấm Tính lại)</h3>
+  <div class="row">
+    <div class="f"><label for="w1">Bậc 1</label><input id="w1" type="number" step="0.5" value="1"></div>
+    <div class="f"><label for="w2">Bậc 2</label><input id="w2" type="number" step="0.5" value="4"></div>
+    <div class="f"><label for="w3">Bậc 3</label><input id="w3" type="number" step="0.5" value="8"></div>
+    <div class="f"><label for="w4">Bậc 4</label><input id="w4" type="number" step="0.5" value="14"></div>
+    <div class="f"><label for="w5">Bậc 5</label><input id="w5" type="number" step="0.5" value="24"></div>
+    <div class="f"><label for="wo">Hệ số độ mở</label><input id="wo" type="number" step="0.1" value="0.9"></div>
+    <div class="f"><label for="h1">Ngưỡng Dễ&lt;</label><input id="h1" type="number" step="0.1" value="2"></div>
+    <div class="f"><label for="h2">Thường&lt;</label><input id="h2" type="number" step="0.1" value="4"></div>
+    <div class="f"><label for="h3">Khó&lt;</label><input id="h3" type="number" step="0.1" value="7"></div>
+    <div class="f"><button class="ghost" id="btnRecalc">Tính lại toàn bộ</button></div>
+  </div>
+  <h3 style="margin-top:14px">Bảng đối chiếu: máy gán vs người chơi cảm nhận</h3>
+  <div id="calibEmpty" class="hint">Chưa có dữ liệu — hãy mở 1 level ở mục 5, bấm "Tự chơi thử", giải xong rồi bình chọn cảm nhận.</div>
+  <div class="scroll sec-off" id="calibWrap"><table id="calibTable"></table></div>
+  <div id="calibVerdict"></div>
+  <div class="row sec-off" id="calibActions"><button class="ghost sm" id="btnCsv">Tải CSV dữ liệu hiệu chỉnh</button></div>
+</section>
+
+<footer style="max-width:1240px;margin:0 auto;padding:0 18px 40px;color:var(--muted);font-size:12px">
+  <p><b>Phạm vi bản này:</b> hỗ trợ đầy đủ Ô Khóa, Thanh Chặn, Mũi Tên, Mốc Nối (các cơ chế TĨNH). Chưa hỗ trợ Khối Trượt và Bom (MEC-01 đẩy / MEC-05) vì chúng làm <i>thay đổi trạng thái bàn cờ</i> — thuộc lớp bài toán Sokoban, cần solver không gian trạng thái riêng ở v2. Công Tắc/Cổng Mở (MEC-04) cũng thuộc v2 vì tạo phụ thuộc thời gian giữa nhiều dây.</p>
+  <p>Cơ sở phương pháp: technique-hierarchy rating của Sudoku (Pelánek — tương quan 0.95 với thời gian giải thật của người), solver phân bậc trong Simon Tatham's Portable Puzzle Collection, và phát hiện của Nathan Sturtevant khi phân tích The Witness ("ít ràng buộc hơn thường thú vị/khó hơn").</p>
+</footer>
+</main>
+
+<div class="tt" id="tt"></div>
+
+<script>
+/* =====================================================================
+   TRAPLINE LEVEL FORGE — ENGINE
+   Sinh level + đo ĐỘ KHÓ THẬT bằng Solver Phân Bậc mô phỏng người chơi.
+
+   Triết lý (theo nghiên cứu Sudoku/Tatham/The Witness):
+     Độ khó KHÔNG phải là "bàn cờ có gì" (to nhỏ, bao nhiêu vật cản)
+     mà là "người chơi phải suy luận ra ĐIỀU GÌ để đi tiếp".
+   ===================================================================== */
+
+const DIRS = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+const DIRGLYPH = ['↑', '↓', '←', '→'];
+
+const TIER_INFO = [
+  null,
+  { id: 1, name: 'Ô Ép Buộc', en: 'Forced Cell', desc: 'Chỉ còn đúng 1 hướng đi hợp lệ — mắt thường thấy ngay, không cần suy luận.' },
+  { id: 2, name: 'Cắt Đường', en: 'Reachability Cut', desc: 'Phải nhận ra "đi hướng này sẽ bỏ sót ô kia" — suy luận 1 bước về khả năng tới được.' },
+  { id: 3, name: 'Chia Vùng & Chẵn/Lẻ', en: 'Region + Parity', desc: 'Phải đếm vùng trống và độ dài còn lại của từng dây (kèm tính chẵn/lẻ ô đen-trắng) mới loại trừ được — suy luận toàn cục.' },
+  { id: 4, name: 'Nhìn Trước 2 Nước', en: 'Shallow Lookahead', desc: 'Phải thử "nếu đi đường này" rồi lần theo các nước ép buộc kế tiếp mới thấy sai — nhìn trước vài bước.' },
+  { id: 5, name: 'Chuỗi Ép Xa', en: 'Long Forcing Chain', desc: 'Phải giả định 1 nước rồi suy luận sâu (kể cả chia vùng/chẵn lẻ) mới truy ra mâu thuẫn ở xa — mức mastery.' }
+];
+
+// Chi phí nhận thức của MỘT bước suy luận ở từng bậc kỹ thuật.
+// Bậc 1 gần như miễn phí (mắt thấy ngay); bậc 5 rất đắt (phải giả định + truy mâu thuẫn).
+const TIER_COST = [0, 1, 4, 8, 14, 24];
+
+// Bộ tham số HIỆU CHỈNH ĐƯỢC — chỉnh sau khi có dữ liệu playtest thật.
+// Đây chính là "vòng phản hồi": số liệu người chơi thật → sửa trọng số → phân hạng lại toàn bộ.
+const SCORING = { cost: TIER_COST.slice(), thr: [2.0, 4.0, 7.0], openW: 0.9, openBase: 1.5 };
+
+// 4 hạng độ khó dùng cho Level Design — khớp đúng Mục 3.6 GDD
+const CLASS_INFO = [
+  null,
+  { id: 1, key: 'EASY', name: 'Dễ', dsMax: 2.0, desc: 'Gần như toàn bộ bước là Ô Ép Buộc — người chơi chỉ cần đi theo, không phải dừng lại nghĩ.' },
+  { id: 2, key: 'NORMAL', name: 'Thường', dsMax: 4.0, desc: 'Có vài điểm phải dừng nghĩ 1 nhịp (cắt đường / chia vùng), nhưng không có bế tắc thật.' },
+  { id: 3, key: 'HARD', name: 'Khó', dsMax: 7.0, desc: 'Nhiều điểm quyết định cần suy luận toàn cục; ít nhất 1 chỗ phải nhìn xa.' },
+  { id: 4, key: 'SUPER', name: 'Siêu Khó', dsMax: Infinity, desc: 'Dày đặc suy luận sâu, có chuỗi ép xa — dành cho nhóm mastery.' }
+];
+
+const TIER_LABEL = [null, 'Rất Dễ', 'Dễ', 'Thường', 'Khó', 'Siêu Khó'];
+
+/**
+ * ĐIỂM ĐỘ KHÓ THẬT (Difficulty Score — DS)
+ *   DS = (Σ_bậc  số_bước(bậc) × chi_phí(bậc)) / tổng_số_bước   +  phụ_phí_độ_mở
+ *
+ * Vì sao chia cho tổng số bước: để KHÔNG thưởng điểm cho việc bàn cờ to ra.
+ * Một bàn 8x8 toàn bước ép buộc vẫn phải ra điểm thấp — đúng như cảm nhận người chơi.
+ * Phụ phí độ mở: theo nghiên cứu Sudoku (Pelánek), 2 màn cùng bậc kỹ thuật vẫn khác
+ * độ khó tuỳ số lựa chọn còn treo tại mỗi điểm quyết định.
+ */
+function difficultyScore(hist, steps, openness) {
+  if (!steps) return 0;
+  let load = 0;
+  for (let t = 1; t <= 5; t++) load += (hist[t] || 0) * SCORING.cost[t];
+  return load / steps + SCORING.openW * Math.max(0, (openness || 1) - SCORING.openBase);
+}
+function classifyDifficulty(ds, peakTier) {
+  if (peakTier <= 1) return 1;                 // thuần ép buộc → luôn là Dễ
+  if (ds < SCORING.thr[0]) return 1;
+  if (ds < SCORING.thr[1]) return 2;
+  if (ds < SCORING.thr[2]) return 3;
+  return 4;
+}
+
+// --------------------------- helpers ---------------------------
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffle(arr, rng) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+const ekey = (a, b) => (a < b ? a + '_' + b : b + '_' + a);
+
+// --------------------------- Puzzle ---------------------------
+class Puzzle {
+  constructor(R, C) {
+    this.R = R; this.C = C;
+    this.blocked = new Set();      // Ô Khóa
+    this.walls = new Set();        // Thanh Chặn (chặn 1 cạnh giữa 2 ô)
+    this.arrows = new Map();       // Mũi Tên: cell -> dirIndex
+    this.anchors = [];             // [{cell, L}]
+    this.wpOf = new Map();         // Mốc Nối: cell -> {k, j}
+    this.wpCount = [];             // số mốc của từng chain
+    this.solution = null;          // [[cells...], ...] lời giải dự kiến
+    this.meta = {};
+  }
+  get RC() { return this.R * this.C; }
+  inb(r, c) { return r >= 0 && r < this.R && c >= 0 && c < this.C; }
+  rc(i) { return [Math.floor(i / this.C), i % this.C]; }
+  color(i) { const [r, c] = this.rc(i); return (r + c) & 1; }
+
+  /** neighbours bỏ qua Mũi Tên (dùng cho kiểm tra liên thông — an toàn vì rộng hơn) */
+  nbrsRaw(i) {
+    const out = [];
+    const [r, c] = this.rc(i);
+    for (const [dr, dc] of DIRS) {
+      const nr = r + dr, nc = c + dc;
+      if (!this.inb(nr, nc)) continue;
+      const j = nr * this.C + nc;
+      if (this.blocked.has(j)) continue;
+      if (this.walls.has(ekey(i, j))) continue;
+      out.push(j);
+    }
+    return out;
+  }
+  /** neighbours khi ĐI RA TỪ ô i — tôn trọng Mũi Tên */
+  nbrsFrom(i) {
+    if (this.arrows.has(i)) {
+      const d = this.arrows.get(i);
+      const [r, c] = this.rc(i);
+      const nr = r + DIRS[d][0], nc = c + DIRS[d][1];
+      if (!this.inb(nr, nc)) return [];
+      const j = nr * this.C + nc;
+      if (this.blocked.has(j)) return [];
+      if (this.walls.has(ekey(i, j))) return [];
+      return [j];
+    }
+    return this.nbrsRaw(i);
+  }
+  validCells() {
+    const v = [];
+    for (let i = 0; i < this.RC; i++) if (!this.blocked.has(i)) v.push(i);
+    return v;
+  }
+  clone() {
+    const p = new Puzzle(this.R, this.C);
+    p.blocked = new Set(this.blocked);
+    p.walls = new Set(this.walls);
+    p.arrows = new Map(this.arrows);
+    p.anchors = this.anchors.map(a => ({ ...a }));
+    p.wpOf = new Map([...this.wpOf].map(([k, v]) => [k, { ...v }]));
+    p.wpCount = this.wpCount.slice();
+    p.solution = this.solution ? this.solution.map(s => s.slice()) : null;
+    p.meta = { ...this.meta };
+    return p;
+  }
+}
+
+// --------------------------- State ---------------------------
+function initState(p) {
+  const owner = new Int16Array(p.RC).fill(-1);
+  for (const b of p.blocked) owner[b] = -2;
+  const chains = p.anchors.map((a, k) => {
+    owner[a.cell] = k;
+    return { k, head: a.cell, len: 1, L: a.L, path: [a.cell], wp: (p.wpOf.get(a.cell) ? p.wpOf.get(a.cell).j : 0) };
+  });
+  let free = 0;
+  for (let i = 0; i < p.RC; i++) if (owner[i] === -1) free++;
+  return { owner, chains, free };
+}
+
+function legalMoves(p, s, k) {
+  const c = s.chains[k];
+  if (c.len >= c.L) return [];
+  const out = [];
+  const nWp = p.wpCount[k] || 0;
+  for (const j of p.nbrsFrom(c.head)) {
+    if (s.owner[j] !== -1) continue;
+    const w = p.wpOf.get(j);
+    if (w) {
+      if (w.k !== k) continue;              // mốc của dây khác — không được chạm
+      if (w.j !== c.wp + 1) continue;       // phải đúng thứ tự tăng dần
+      if (w.j === nWp && c.len + 1 !== c.L) continue; // mốc cuối phải là ô cuối
+    } else if (nWp > 0 && c.len + 1 === c.L) {
+      continue;                              // ô cuối buộc phải là mốc cuối
+    }
+    out.push(j);
+  }
+  return out;
+}
+
+function applyMove(p, s, k, j) {
+  const c = s.chains[k];
+  const undo = { k, j, prevHead: c.head, prevWp: c.wp };
+  s.owner[j] = k; c.head = j; c.len++; c.path.push(j); s.free--;
+  const w = p.wpOf.get(j);
+  if (w) c.wp = w.j;
+  return undo;
+}
+function undoMove(p, s, u) {
+  const c = s.chains[u.k];
+  s.owner[u.j] = -1; c.head = u.prevHead; c.len--; c.path.pop(); s.free++;
+  c.wp = u.prevWp;
+}
+
+// --------------------------- Sound prunes ---------------------------
+/** T2: mọi ô trống phải còn ÍT NHẤT 1 dây có thể tới được trong độ dài còn lại */
+function reachOK(p, s) {
+  const RC = p.RC;
+  const covered = new Uint8Array(RC);
+  const dist = new Int16Array(RC);
+  for (const c of s.chains) {
+    if (c.len >= c.L) continue;
+    const r = c.L - c.len;
+    dist.fill(-1);
+    dist[c.head] = 0;
+    const q = [c.head];
+    for (let qi = 0; qi < q.length; qi++) {
+      const x = q[qi];
+      if (dist[x] >= r) continue;
+      for (const y of p.nbrsRaw(x)) {
+        if (s.owner[y] === -1 && dist[y] < 0) { dist[y] = dist[x] + 1; q.push(y); }
+      }
+    }
+    for (let i = 0; i < RC; i++) if (s.owner[i] === -1 && dist[i] > 0 && dist[i] <= r) covered[i] = 1;
+  }
+  for (let i = 0; i < RC; i++) if (s.owner[i] === -1 && !covered[i]) return false;
+  return true;
+}
+
+function freeComponents(p, s) {
+  const seen = new Uint8Array(p.RC);
+  const comps = [];
+  for (let i = 0; i < p.RC; i++) {
+    if (s.owner[i] !== -1 || seen[i]) continue;
+    const q = [i]; seen[i] = 1;
+    const cells = []; const col = [0, 0];
+    while (q.length) {
+      const x = q.pop(); cells.push(x); col[p.color(x)]++;
+      for (const y of p.nbrsRaw(x)) if (s.owner[y] === -1 && !seen[y]) { seen[y] = 1; q.push(y); }
+    }
+    comps.push({ cells, size: cells.length, col });
+  }
+  return comps;
+}
+
+/** Độ dài còn lại của 1 dây và màu ô còn cần (đường đi luân phiên màu như bàn cờ vua) */
+function needOf(p, s, k) {
+  const c = s.chains[k];
+  const r = c.L - c.len;
+  const h = p.color(c.head);
+  const n = [0, 0];
+  n[1 - h] = Math.ceil(r / 2);
+  n[h] = Math.floor(r / 2);
+  return { r, n };
+}
+
+/**
+ * T3 (useParity=false) / T4 (useParity=true)
+ * Mỗi dây chưa xong buộc phải nằm HẾT trong đúng 1 vùng trống liền kề head nó
+ * (vì đường đi liên tục, không thể nhảy qua ô đã chiếm).
+ * → phải tồn tại 1 cách gán dây→vùng sao cho mỗi vùng được lấp KÍN chính xác.
+ */
+function assignFeasible(p, s, useParity) {
+  const comps = freeComponents(p, s);
+  const inc = s.chains.filter(c => c.len < c.L);
+  if (comps.length === 0) return inc.length === 0;
+  if (inc.length === 0) return false;
+
+  const compOf = new Int16Array(p.RC).fill(-1);
+  comps.forEach((cp, ci) => cp.cells.forEach(x => { compOf[x] = ci; }));
+
+  const opts = [];
+  for (const c of inc) {
+    const set = new Set();
+    for (const j of legalMoves(p, s, c.k)) set.add(compOf[j]);
+    if (set.size === 0) return false;
+    opts.push([...set]);
+  }
+  const needs = inc.map(c => needOf(p, s, c.k));
+  const rem = comps.map(cp => ({ size: cp.size, c0: cp.col[0], c1: cp.col[1] }));
+
+  let ok = false;
+  const order = inc.map((_, i) => i).sort((a, b) => opts[a].length - opts[b].length);
+  (function dfs(t) {
+    if (ok) return;
+    if (t === order.length) {
+      ok = rem.every(x => x.size === 0 && (!useParity || (x.c0 === 0 && x.c1 === 0)));
+      return;
+    }
+    const i = order[t];
+    for (const ci of opts[i]) {
+      const nd = needs[i], tgt = rem[ci];
+      if (tgt.size < nd.r) continue;
+      if (useParity && (tgt.c0 < nd.n[0] || tgt.c1 < nd.n[1])) continue;
+      tgt.size -= nd.r; tgt.c0 -= nd.n[0]; tgt.c1 -= nd.n[1];
+      dfs(t + 1);
+      tgt.size += nd.r; tgt.c0 += nd.n[0]; tgt.c1 += nd.n[1];
+      if (ok) return;
+    }
+  })(0);
+  return ok;
+}
+
+/** Mọi dây chưa xong đều còn nước đi */
+function everyChainCanMove(p, s) {
+  for (const c of s.chains) if (c.len < c.L && legalMoves(p, s, c.k).length === 0) return false;
+  return true;
+}
+
+// --------------------------- Uniqueness (brute force, sound) ---------------------------
+function countSolutions(p, cap = 2, nodeCap = 300000) {
+  const s = initState(p);
+  let count = 0, nodes = 0, aborted = false;
+  const found = [];
+
+  (function rec() {
+    if (count >= cap || aborted) return;
+    if (++nodes > nodeCap) { aborted = true; return; }
+    if (s.free === 0) {
+      if (s.chains.every(c => c.len === c.L)) { count++; found.push(s.chains.map(c => c.path.slice())); }
+      return;
+    }
+    if (!everyChainCanMove(p, s)) return;
+    if (!reachOK(p, s)) return;
+    if (!assignFeasible(p, s, true)) return;
+
+    let best = null;
+    for (const c of s.chains) {
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (!best || ms.length < best.ms.length) best = { k: c.k, ms };
+      if (ms.length === 1) break;
+    }
+    if (!best) return;
+    for (const j of best.ms) {
+      const u = applyMove(p, s, best.k, j);
+      rec();
+      undoMove(p, s, u);
+      if (count >= cap || aborted) return;
+    }
+  })();
+
+  return { count, aborted, nodes, solutions: found };
+}
+
+// --------------------------- Tiered human-like solver ---------------------------
+/** Kiểm tra 1 lựa chọn có thể bị LOẠI ở bậc `tier` hay không (true = còn sống) */
+function optionSurvives(p, s, k, j, tier) {
+  const u = applyMove(p, s, k, j);
+  let ok = true;
+  if (s.free > 0 && !s.chains.some(c => c.len < c.L)) ok = false;
+  if (ok) ok = everyChainCanMove(p, s);
+  if (ok && tier >= 2) ok = reachOK(p, s);
+  if (ok && tier >= 3) ok = assignFeasible(p, s, true);
+  if (ok && tier === 4) ok = propagateNoContradiction(p, s, 1);   // lần theo chuỗi nước ép buộc
+  if (ok && tier >= 5) ok = propagateNoContradiction(p, s, 3);   // suy luận sâu đầy đủ
+  undoMove(p, s, u);
+  return ok;
+}
+
+/**
+ * Chạy suy luận tới điểm dừng rồi xem có mâu thuẫn không.
+ * depth = 1 → chỉ lần theo các nước ÉP BUỘC (bậc 1) + kiểm tra bậc 2-3  → dùng cho bậc 4
+ * depth = 3 → dùng cả loại trừ bậc 2-3 khi lan truyền                   → dùng cho bậc 5
+ */
+function propagateNoContradiction(p, s, depth) {
+  const undos = [];
+  let alive = true;
+  let guard = 0;
+  while (s.free > 0 && guard++ < 400) {
+    if (!everyChainCanMove(p, s)) { alive = false; break; }
+    let did = false;
+    // bậc 1
+    for (const c of s.chains) {
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (ms.length === 1) { undos.push(applyMove(p, s, c.k, ms[0])); did = true; break; }
+    }
+    if (did) continue;
+    if (!reachOK(p, s) || !assignFeasible(p, s, true)) { alive = false; break; }
+    if (depth <= 1) break;   // chỉ lần theo nước ép buộc → dừng ở đây
+    // bậc 2..3
+    outer:
+    for (let t = 2; t <= 3; t++) {
+      for (const c of s.chains) {
+        if (c.len >= c.L) continue;
+        const ms = legalMoves(p, s, c.k);
+        if (ms.length < 2) continue;
+        const surv = ms.filter(x => optionSurvives(p, s, c.k, x, t));
+        if (surv.length === 0) { alive = false; break outer; }
+        if (surv.length === 1) { undos.push(applyMove(p, s, c.k, surv[0])); did = true; break outer; }
+      }
+    }
+    if (!did) break; // bí — không mâu thuẫn
+  }
+  for (let i = undos.length - 1; i >= 0; i--) undoMove(p, s, undos[i]);
+  return alive;
+}
+
+/**
+ * Giải bằng mô phỏng người: mỗi bước luôn thử bậc THẤP NHẤT trước.
+ * Trả về bậc cao nhất buộc phải dùng = ĐỘ KHÓ THẬT.
+ */
+function tierSolve(p, maxTier = 5) {
+  const s = initState(p);
+  const trace = [];
+  const hist = [0, 0, 0, 0, 0, 0];
+  let opennessSum = 0, opennessN = 0, guard = 0;
+
+  while (s.free > 0) {
+    if (guard++ > 4000) return { ok: false, reason: 'loop', trace, hist };
+    if (!everyChainCanMove(p, s)) return { ok: false, reason: 'contradiction', trace, hist };
+
+    let did = false;
+    // ---- Bậc 1: chỉ còn 1 nước
+    for (const c of s.chains) {
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (ms.length === 1) {
+        applyMove(p, s, c.k, ms[0]);
+        trace.push({ k: c.k, cell: ms[0], tier: 1, opts: 1 });
+        hist[1]++; did = true; break;
+      }
+    }
+    if (did) continue;
+
+    // ---- Bậc 2..maxTier: loại trừ lựa chọn
+    for (let t = 2; t <= maxTier && !did; t++) {
+      for (const c of s.chains) {
+        if (c.len >= c.L) continue;
+        const ms = legalMoves(p, s, c.k);
+        if (ms.length < 2) continue;
+        const surv = ms.filter(x => optionSurvives(p, s, c.k, x, t));
+        if (surv.length === 0) return { ok: false, reason: 'contradiction', trace, hist };
+        if (surv.length === 1) {
+          opennessSum += ms.length; opennessN++;
+          applyMove(p, s, c.k, surv[0]);
+          trace.push({ k: c.k, cell: surv[0], tier: t, opts: ms.length });
+          hist[t]++; did = true; break;
+        }
+      }
+    }
+    if (!did) return { ok: false, reason: 'needs-guess', trace, hist };
+  }
+
+  const solved = s.chains.every(c => c.len === c.L);
+  let maxUsed = 1;
+  for (let t = 5; t >= 1; t--) if (hist[t] > 0) { maxUsed = t; break; }
+  return {
+    ok: solved, trace, hist, maxTier: maxUsed,
+    openness: opennessN ? opennessSum / opennessN : 1,
+    steps: trace.length,
+    forcedRatio: trace.length ? hist[1] / trace.length : 1,
+    paths: s.chains.map(c => c.path.slice())
+  };
+}
+
+// --------------------------- Công thức CŨ (để đối chiếu) ---------------------------
+/** D = w1|V| + w2·ΣDegree(Aᵢ) − w3·|ForcedMoves| — chỉ số cấu trúc, dùng để CHỨNG MINH nó sai */
+function legacyDifficulty(p, forcedCount) {
+  const V = p.validCells().length;
+  let degSum = 0;
+  for (const a of p.anchors) degSum += p.nbrsRaw(a.cell).length;
+  return Math.round(1.0 * V + 2.0 * degSum - 1.5 * (forcedCount || 0));
+}
+
+// --------------------------- Generator ---------------------------
+function placeObstacles(R, C, count, rng, maxTry = 60) {
+  for (let t = 0; t < maxTry; t++) {
+    const p = new Puzzle(R, C);
+    const all = shuffle([...Array(R * C).keys()], rng);
+    for (let i = 0; i < count; i++) p.blocked.add(all[i]);
+    const v = p.validCells();
+    if (v.length < 6) continue;
+    // liên thông
+    const seen = new Set([v[0]]); const q = [v[0]];
+    while (q.length) { const x = q.pop(); for (const y of p.nbrsRaw(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
+    if (seen.size !== v.length) continue;
+    // không có ô cụt bậc 0
+    if (v.some(x => p.nbrsRaw(x).length === 0)) continue;
+    return p;
+  }
+  return null;
+}
+
+/**
+ * Phân hoạch toàn bộ ô hợp lệ thành ĐÚNG K đường đi rời nhau (mỗi đường ≥ minLen).
+ * Đây là bước "dựng lời giải trước, xoá đi để thành đề" (Reverse Path Construction).
+ * Tổng quát hơn cách cắt 1 đường Hamilton: các dây có thể nằm CẠNH NHAU thay vì nối tiếp,
+ * nên bố cục đa dạng hơn nhiều và tỉ lệ sinh thành công cao hơn.
+ */
+function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
+  const cells = p.validCells();
+  const N = cells.length;
+  if (K * minLen > N) return null;
+  const target = N / K;
+  const visited = new Uint8Array(p.RC);
+  const segs = [];
+  let cur = null, nodes = 0, done = false;
+
+  const unvisited = () => cells.filter(x => !visited[x]);
+  const degOf = x => { let d = 0; for (const y of p.nbrsRaw(x)) if (!visited[y]) d++; return d; };
+
+  /** Số thành phần liên thông của phần chưa phủ — mỗi thành phần cần ≥1 dây */
+  const compCount = () => {
+    const seen = new Set(); let n = 0;
+    for (const x of cells) {
+      if (visited[x] || seen.has(x)) continue;
+      n++; const q = [x]; seen.add(x);
+      while (q.length) { const y = q.pop(); for (const z of p.nbrsRaw(y)) if (!visited[z] && !seen.has(z)) { seen.add(z); q.push(z); } }
+    }
+    return n;
+  };
+
+  function startSeg(cell) {
+    visited[cell] = 1; cur = [cell]; return true;
+  }
+  function closeSeg() { segs.push(cur); cur = null; }
+
+  function search() {
+    if (done || ++nodes > budget) return false;
+    const left = N - (segs.reduce((a, s) => a + s.length, 0) + (cur ? cur.length : 0));
+    if (left === 0) {
+      if (cur && cur.length >= minLen) { closeSeg(); if (segs.length === K) { done = true; return true; } cur = segs.pop(); return false; }
+      return false;
+    }
+    const segsLeft = K - segs.length - (cur ? 1 : 0);
+    if (left < minLen * Math.max(1, segsLeft + (cur ? 0 : 0))) { /* tiếp tục, kiểm tra mềm */ }
+    if (compCount() > K - segs.length) return false;   // không đủ dây để phủ hết các vùng rời
+
+    if (cur) {
+      const cand = p.nbrsRaw(cur[cur.length - 1]).filter(x => !visited[x]);
+      shuffle(cand, rng);
+      // ưu tiên ô ít lối ra (Warnsdorff) để tránh bỏ sót ô cụt
+      cand.sort((a, b) => degOf(a) - degOf(b));
+      // nếu đã đủ dài, đôi khi chủ động ngắt để giữ đúng K dây và độ dài cân đối
+      const wantClose = cur.length >= minLen && segs.length + 1 < K &&
+        (cur.length >= target * (0.75 + rng() * 0.6) || cand.length === 0);
+      const tryContinue = () => {
+        for (const nx of cand) {
+          visited[nx] = 1; cur.push(nx);
+          if (search()) return true;
+          cur.pop(); visited[nx] = 0;
+        }
+        return false;
+      };
+      const tryClose = () => {
+        if (cur.length < minLen || segs.length + 1 > K) return false;
+        const saved = cur;
+        closeSeg();
+        if (segs.length < K) {
+          const uv = shuffle(unvisited(), rng).sort((a, b) => degOf(a) - degOf(b));
+          for (const st of uv.slice(0, 6)) {
+            visited[st] = 1; cur = [st];
+            if (search()) return true;
+            cur = null; visited[st] = 0;
+          }
+        }
+        segs.pop(); cur = saved;
+        return false;
+      };
+      if (wantClose) { if (tryClose()) return true; if (tryContinue()) return true; }
+      else { if (tryContinue()) return true; if (tryClose()) return true; }
+      return false;
+    }
+    // chưa có dây đang mở → mở dây mới
+    const uv = shuffle(unvisited(), rng).sort((a, b) => degOf(a) - degOf(b));
+    for (const st of uv.slice(0, 8)) {
+      visited[st] = 1; cur = [st];
+      if (search()) return true;
+      cur = null; visited[st] = 0;
+    }
+    return false;
+  }
+
+  const firstPool = shuffle(cells.slice(), rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 3);
+  for (const s0 of firstPool) {
+    visited.fill(0); segs.length = 0; cur = null; nodes = 0; done = false;
+    startSeg(s0);
+    if (search() && segs.length === K && segs.every(s => s.length >= minLen)) return segs.slice();
+  }
+  return null;
+}
+
+/** Thêm Thanh Chặn để triệt tiêu các lời giải khác → đảm bảo NGHIỆM DUY NHẤT */
+function enforceUniqueness(p, intendedEdges, maxWalls = 40, nodeCap = 250000) {
+  for (let it = 0; it < maxWalls; it++) {
+    const r = countSolutions(p, 2, nodeCap);
+    if (r.aborted) return { ok: false, reason: 'timeout' };
+    if (r.count === 0) return { ok: false, reason: 'no-solution' };
+    if (r.count === 1) return { ok: true, walls: p.walls.size };
+    // tìm cạnh mà lời giải phụ dùng nhưng lời giải dự kiến không dùng
+    const alt = r.solutions.find(sol => {
+      const es = solEdges(sol);
+      return [...es].some(e => !intendedEdges.has(e));
+    });
+    if (!alt) return { ok: false, reason: 'twin-solution' };
+    const cand = [...solEdges(alt)].filter(e => !intendedEdges.has(e));
+    p.walls.add(cand[0]);
+  }
+  return { ok: false, reason: 'too-many-walls' };
+}
+function solEdges(sol) {
+  const s = new Set();
+  for (const path of sol) for (let i = 0; i + 1 < path.length; i++) s.add(ekey(path[i], path[i + 1]));
+  return s;
+}
+
+/**
+ * Sinh 1 level và ĐO độ khó thật.
+ * cfg: {R,C,obstacles,anchors,minLen,seed,targetTier,allowArrows,allowWaypoints}
+ */
+function generateOne(cfg, rng) {
+  const p0 = placeObstacles(cfg.R, cfg.C, cfg.obstacles, rng);
+  if (!p0) return { ok: false, reason: 'obstacle-layout' };
+  const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng);
+  if (!segsRaw) return { ok: false, reason: 'no-partition' };
+  // Anchor có thể nằm ở đầu HOẶC cuối mỗi đường — đảo ngẫu nhiên để tăng đa dạng
+  const segs = segsRaw.map(s => (rng() < 0.5 ? s.slice().reverse() : s.slice()));
+
+  const p = p0;
+  p.anchors = segs.map(s => ({ cell: s[0], L: s.length }));
+  p.wpCount = segs.map(() => 0);
+  p.solution = segs.map(s => s.slice());
+  const intended = solEdges(p.solution);
+
+  const uq = enforceUniqueness(p, intended);
+  if (!uq.ok) return { ok: false, reason: uq.reason };
+
+  let rated = tierSolve(p, 5);
+  if (!rated.ok) return { ok: false, reason: rated.reason };
+
+  const dsOf = r => difficultyScore(r.hist, r.steps, r.openness);
+  const classOf = r => classifyDifficulty(dsOf(r), r.maxTier);
+
+  // ---- Hạ độ khó về đúng hạng mong muốn bằng cách THÊM ràng buộc (Mũi Tên / Mốc Nối)
+  // Đây chính là minh chứng: thêm ràng buộc làm level Dễ đi, không phải khó hơn.
+  const added = { arrows: 0, waypoints: 0 };
+  let guard = 0;
+  while (cfg.targetClass && classOf(rated) > cfg.targetClass && guard++ < 16) {
+    const cands = rated.trace.filter(t => t.opts > 1 && t.tier >= 2)
+      .sort((a, b) => b.opts - a.opts || b.tier - a.tier);
+    if (!cands.length) break;
+    let applied = false;
+    for (const st of cands) {
+      const chain = p.solution[st.k];
+      const at = chain.indexOf(st.cell);
+      if (at <= 0) continue;
+      const from = chain[at - 1];
+      if (p.arrows.has(from) || !cfg.allowArrows) {
+        // thử Mốc Nối thay thế
+        if (!cfg.allowWaypoints) continue;
+        if (p.wpOf.has(st.cell)) continue;
+        const k = st.k;
+        const jj = (p.wpCount[k] || 0) + 1;
+        // Mốc Nối phải thêm theo thứ tự dọc đường đi → chỉ thêm nếu là ô sau các mốc hiện có
+        p.wpOf.set(st.cell, { k, j: jj }); p.wpCount[k] = jj;
+        // mốc cuối buộc là ô cuối → thêm luôn ô cuối làm mốc kế tiếp
+        const last = chain[chain.length - 1];
+        if (last !== st.cell && !p.wpOf.has(last)) { p.wpOf.set(last, { k, j: jj + 1 }); p.wpCount[k] = jj + 1; }
+        added.waypoints++; applied = true; break;
+      } else {
+        const [r1, c1] = p.rc(from), [r2, c2] = p.rc(st.cell);
+        const d = DIRS.findIndex(([dr, dc]) => r1 + dr === r2 && c1 + dc === c2);
+        if (d < 0) continue;
+        p.arrows.set(from, d);
+        added.arrows++; applied = true; break;
+      }
+    }
+    if (!applied) break;
+    const chk = countSolutions(p, 2, 200000);
+    if (chk.aborted || chk.count !== 1) return { ok: false, reason: 'reduce-broke-uniqueness' };
+    const re = tierSolve(p, 5);
+    if (!re.ok) return { ok: false, reason: 'reduce-unsolvable' };
+    rated = re;
+  }
+
+  const uqFinal = countSolutions(p, 2, 250000);
+  if (uqFinal.aborted || uqFinal.count !== 1) return { ok: false, reason: 'final-uniqueness' };
+
+  const ds = dsOf(rated);
+  const cls = classifyDifficulty(ds, rated.maxTier);
+  p.meta = {
+    cls,
+    className: CLASS_INFO[cls].name,
+    ds: +ds.toFixed(2),
+    tier: rated.maxTier,
+    label: TIER_LABEL[rated.maxTier],
+    hist: rated.hist.slice(),
+    steps: rated.steps,
+    openness: +rated.openness.toFixed(2),
+    forcedRatio: +rated.forcedRatio.toFixed(3),
+    validCells: p.validCells().length,
+    walls: p.walls.size,
+    arrows: p.arrows.size,
+    waypoints: p.wpOf.size,
+    obstacles: p.blocked.size,
+    anchorCount: p.anchors.length,
+    legacyD: legacyDifficulty(p, rated.hist[1]),
+    searchNodes: uqFinal.nodes,
+    added
+  };
+  return { ok: true, puzzle: p, rated };
+}
+
+/** Sinh nhiều level, gom theo bậc độ khó thật */
+function generateBatch(cfg, onProgress) {
+  const rng = mulberry32(cfg.seed || 12345);
+  const out = [];
+  const fails = {};
+  const maxAttempts = cfg.maxAttempts || 400;
+  let att = 0;
+  while (out.length < cfg.count && att < maxAttempts) {
+    att++;
+    const r = generateOne(cfg, rng);
+    if (r.ok) {
+      if (!cfg.targetClass || cfg.acceptAnyTier || r.puzzle.meta.cls === cfg.targetClass) out.push(r.puzzle);
+      else {
+        const key = 'lệch hạng (ra ' + r.puzzle.meta.className + ')';
+        fails[key] = (fails[key] || 0) + 1;
+      }
+    } else {
+      fails[r.reason] = (fails[r.reason] || 0) + 1;
+    }
+    if (onProgress) onProgress(att, out.length, maxAttempts);
+  }
+  return { levels: out, attempts: att, fails };
+}
+
+// --------------------------- Export JSON cho Dev ---------------------------
+function toJSON(p, id) {
+  return {
+    id: id || null,
+    grid: { rows: p.R, cols: p.C },
+    blockedCells: [...p.blocked].sort((a, b) => a - b),
+    walls: [...p.walls].map(w => w.split('_').map(Number)),
+    arrows: [...p.arrows].map(([cell, dir]) => ({ cell, dir, glyph: DIRGLYPH[dir] })),
+    anchors: p.anchors.map((a, k) => ({
+      index: k, cell: a.cell, length: a.L,
+      waypoints: [...p.wpOf].filter(([, w]) => w.k === k).sort((x, y) => x[1].j - y[1].j).map(([c, w]) => ({ cell: c, order: w.j }))
+    })),
+    solution: p.solution,
+    difficulty: {
+      class: p.meta.cls, className: p.meta.className, score: p.meta.ds,
+      peakTier: p.meta.tier, peakTechnique: TIER_INFO[p.meta.tier] ? TIER_INFO[p.meta.tier].name : null,
+      tierHistogram: p.meta.hist, openness: p.meta.openness,
+      forcedRatio: p.meta.forcedRatio, steps: p.meta.steps
+    },
+    structural: {
+      validCells: p.meta.validCells, obstacles: p.meta.obstacles,
+      anchors: p.meta.anchorCount, walls: p.meta.walls,
+      arrows: p.meta.arrows, waypoints: p.meta.waypoints,
+      legacyFormulaD: p.meta.legacyD
+    }
+  };
+}
+
+</script>
+
+<script>
+/* ==================================================================
+   UI LAYER
+   ================================================================== */
+const CH = ['var(--ch1)','var(--ch2)','var(--ch3)','var(--ch4)'];
+const CHHEX = ['#2a78d6','#eb6834','#1baf7a','#4a3aa7'];
+const TCOL = ['','var(--t1)','var(--t2)','var(--t3)','var(--t4)','var(--t5)'];
+const SCOL = ['','var(--s1)','var(--s2)','var(--s3)','var(--s4)'];
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let LEVELS = [], CUR = -1, PLAY = null, RECORDS = [];
+let showSol = false, showCoord = false, playMode = false;
+
+/* ---------- tooltip ---------- */
+const tt = $('tt');
+function bindTip(el, html){
+  el.addEventListener('pointerenter', e => { tt.innerHTML = html; tt.style.opacity = 1; move(e); });
+  el.addEventListener('pointermove', move);
+  el.addEventListener('pointerleave', () => { tt.style.opacity = 0; });
+  function move(e){ tt.style.left = (e.clientX + 13) + 'px'; tt.style.top = (e.clientY + 13) + 'px'; }
+}
+
+/* ---------- scoring (dùng SCORING của engine để đồng bộ) ---------- */
+function dsOf(m){ return difficultyScore(m.hist, m.steps, m.openness); }
+function clsOf(m){ return classifyDifficulty(dsOf(m), m.tier); }
+function classBadge(c){
+  return `<span class="badge"><span class="dot" style="background:${SCOL[c]}"></span>${CLASS_INFO[c].name}</span>`;
+}
+
+/* ================= BOARD RENDER ================= */
+function boardSVG(p, o){
+  o = Object.assign({ cs:46, showSolution:false, state:null, coords:false, interactive:false }, o);
+  const cs = o.cs, off = o.coords ? 20 : 0, pad = 10 + off;
+  const W = p.C*cs + pad + 10, H = p.R*cs + pad + 10;
+  const X = i => pad + (i % p.C)*cs, Y = i => pad + Math.floor(i / p.C)*cs;
+  const cx = i => X(i) + cs/2, cy = i => Y(i) + cs/2;
+  const fs = Math.max(8, Math.round(cs*0.30));
+  let s = `<svg class="board" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bàn cờ ${p.R}x${p.C}">
+  <defs><pattern id="htch" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="#a9a89f" stroke-width="2.4"/></pattern></defs>`;
+
+  if (o.coords){
+    for (let c = 0; c < p.C; c++) s += `<text x="${pad + c*cs + cs/2}" y="${pad - 6}" font-size="10" fill="#898781" text-anchor="middle">C${c}</text>`;
+    for (let r = 0; r < p.R; r++) s += `<text x="${pad - 6}" y="${pad + r*cs + cs/2 + 3}" font-size="10" fill="#898781" text-anchor="end">R${r}</text>`;
+  }
+  // ô
+  for (let i = 0; i < p.RC; i++){
+    const bl = p.blocked.has(i);
+    s += `<rect x="${X(i)}" y="${Y(i)}" width="${cs}" height="${cs}" rx="3"
+      fill="${bl ? '#e6e5de' : '#ffffff'}" stroke="${bl ? '#c3c2b7' : '#e1e0d9'}" stroke-width="1"/>`;
+    if (bl) s += `<rect x="${X(i)+1}" y="${Y(i)+1}" width="${cs-2}" height="${cs-2}" rx="2" fill="url(#htch)" opacity="0.55"/>`;
+  }
+  // lời giải (nét đứt, nền)
+  if (o.showSolution && p.solution){
+    p.solution.forEach((path, k) => {
+      const d = path.map(i => `${cx(i)},${cy(i)}`).join(' ');
+      s += `<polyline points="${d}" fill="none" stroke="${CHHEX[k%4]}" stroke-width="${Math.max(2,cs*0.10)}"
+        stroke-dasharray="${cs*0.16} ${cs*0.16}" stroke-linecap="round" opacity="0.55"/>`;
+    });
+  }
+  // dây người chơi đang vẽ
+  if (o.state){
+    o.state.chains.forEach((c, k) => {
+      if (c.path.length < 2) return;
+      const d = c.path.map(i => `${cx(i)},${cy(i)}`).join(' ');
+      s += `<polyline points="${d}" fill="none" stroke="#fcfcfb" stroke-width="${cs*0.34+4}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      s += `<polyline points="${d}" fill="none" stroke="${CHHEX[k%4]}" stroke-width="${cs*0.34}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      const h = c.path[c.path.length-1];
+      if (c.len < c.L) s += `<circle cx="${cx(h)}" cy="${cy(h)}" r="${cs*0.15}" fill="#fcfcfb" stroke="${CHHEX[k%4]}" stroke-width="2.5"/>`;
+    });
+  }
+  // Thanh Chặn
+  for (const w of p.walls){
+    const [a,b] = w.split('_').map(Number);
+    const lo = Math.min(a,b);
+    const th = Math.max(3, cs*0.11);
+    if (Math.abs(a-b) === 1) s += `<line x1="${X(lo)+cs}" y1="${Y(lo)+2}" x2="${X(lo)+cs}" y2="${Y(lo)+cs-2}" stroke="#3f3e3a" stroke-width="${th}" stroke-linecap="round"/>`;
+    else s += `<line x1="${X(lo)+2}" y1="${Y(lo)+cs}" x2="${X(lo)+cs-2}" y2="${Y(lo)+cs}" stroke="#3f3e3a" stroke-width="${th}" stroke-linecap="round"/>`;
+  }
+  // Mũi Tên
+  for (const [cell, d] of p.arrows)
+    s += `<text x="${cx(cell)}" y="${cy(cell)+fs*0.38}" font-size="${fs*1.15}" fill="#52514e" text-anchor="middle" font-weight="700">${DIRGLYPH[d]}</text>`;
+  // Mốc Nối
+  for (const [cell, w] of p.wpOf){
+    s += `<rect x="${cx(cell)-cs*0.21}" y="${cy(cell)-cs*0.21}" width="${cs*0.42}" height="${cs*0.42}" rx="3"
+      fill="#fcfcfb" stroke="${CHHEX[w.k%4]}" stroke-width="2"/>
+      <text x="${cx(cell)}" y="${cy(cell)+fs*0.35}" font-size="${fs*0.85}" fill="${CHHEX[w.k%4]}" text-anchor="middle" font-weight="700">${w.j}</text>`;
+  }
+  // Anchor
+  p.anchors.forEach((a, k) => {
+    const rem = o.state ? (a.L - o.state.chains[k].len) : a.L;
+    s += `<circle cx="${cx(a.cell)}" cy="${cy(a.cell)}" r="${cs*0.35}" fill="${CHHEX[k%4]}"/>
+      <text x="${cx(a.cell)}" y="${cy(a.cell)+fs*0.36}" font-size="${fs}" fill="#fff" text-anchor="middle" font-weight="700">${rem}</text>
+      <text x="${X(a.cell)+3}" y="${Y(a.cell)+Math.max(9,fs*0.72)}" font-size="${Math.max(7,fs*0.60)}" fill="${CHHEX[k%4]}" font-weight="700">A${k+1}</text>`;
+  });
+  // vùng bấm
+  if (o.interactive)
+    for (let i = 0; i < p.RC; i++)
+      if (!p.blocked.has(i))
+        s += `<rect class="hit" data-cell="${i}" x="${X(i)}" y="${Y(i)}" width="${cs}" height="${cs}" fill="transparent" style="cursor:pointer"/>`;
+  return s + '</svg>';
+}
+
+/* ================= GENERATE ================= */
+$('btnGen').onclick = () => {
+  const cfg = {
+    R:+$('fR').value, C:+$('fC').value, obstacles:+$('fO').value,
+    anchors:Math.min(4,+$('fK').value), minLen:+$('fM').value,
+    count:+$('fN').value, seed:+$('fS').value,
+    targetClass:+$('fT').value || null, acceptAnyTier: +$('fT').value === 0,
+    allowArrows: $('fA').value === '1', allowWaypoints: $('fW').value === '1',
+    maxAttempts: 60 * (+$('fN').value) + 200
+  };
+  const V = cfg.R*cfg.C - cfg.obstacles;
+  if (cfg.anchors*cfg.minLen > V){ alert('Không khả thi: số dây × độ dài nhỏ nhất > số ô hợp lệ.'); return; }
+  $('btnGen').disabled = true; $('prog').classList.remove('sec-off');
+  $('progTxt').textContent = 'đang sinh…';
+  setTimeout(() => {
+    const t0 = performance.now();
+    const res = generateBatch(cfg, (att, got, max) => { $('prog').value = Math.min(100, 100*att/max); });
+    const ms = Math.round(performance.now() - t0);
+    LEVELS = res.levels.map((p, i) => { p.meta.id = 'L' + String(i+1).padStart(3,'0'); return p; });
+    $('btnGen').disabled = false; $('prog').classList.add('sec-off');
+    $('progTxt').textContent = `${LEVELS.length} level / ${res.attempts} lượt thử / ${ms}ms`;
+    renderAll(res, ms, cfg);
+    if (LEVELS.length) openLevel(0);
+  }, 30);
+};
+
+function renderAll(res, ms, cfg){
+  ['secSum','secProof','secList','secCalib'].forEach(x => $(x).classList.remove('sec-off'));
+  // tiles
+  const avg = LEVELS.length ? Math.round(ms/LEVELS.length) : 0;
+  $('sumTiles').innerHTML = [
+    ['Level đạt yêu cầu', LEVELS.length],
+    ['Lượt thử', res.attempts],
+    ['Tỷ lệ chấp nhận', res.attempts ? Math.round(100*LEVELS.length/res.attempts) + '%' : '—'],
+    ['Thời gian', ms + ' ms'],
+    ['Bình quân / level', avg + ' ms'],
+    ['Nghiệm duy nhất', LEVELS.length ? '100%' : '—']
+  ].map(([l,v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  // class distribution
+  const cnt = [0,0,0,0,0];
+  LEVELS.forEach(p => cnt[clsOf(p.meta)]++);
+  const mx = Math.max(1, ...cnt.slice(1));
+  $('clsLegend').innerHTML = [1,2,3,4].map(c =>
+    `<span class="chip"><i style="background:${SCOL[c]}"></i>${CLASS_INFO[c].name}</span>`).join('');
+  $('clsBars').innerHTML = [1,2,3,4].map(c => `<div class="bar">
+      <span class="nm">${c} · ${CLASS_INFO[c].name}</span>
+      <span class="tr"><span class="fl" data-tip="${esc(CLASS_INFO[c].desc)}" style="width:${100*cnt[c]/mx}%;background:${SCOL[c]}"></span></span>
+      <span class="ct">${cnt[c]} level</span></div>`).join('');
+  $('clsBars').querySelectorAll('[data-tip]').forEach(el => bindTip(el, el.dataset.tip));
+  const fk = Object.entries(res.fails||{}).sort((a,b) => b[1]-a[1]).slice(0,6);
+  $('sumFails').innerHTML = fk.length ? 'Lý do loại bỏ nhiều nhất: ' + fk.map(([k,v]) => `${esc(k)} ×${v}`).join(' · ') : '';
+  renderProof(); renderList(); renderCalib();
+}
+
+/* ================= PROOF ================= */
+function rank(a){
+  const idx = a.map((v,i) => [v,i]).sort((x,y) => x[0]-y[0]);
+  const r = new Array(a.length);
+  for (let i = 0; i < idx.length;){
+    let j = i; while (j+1 < idx.length && idx[j+1][0] === idx[i][0]) j++;
+    const avg = (i+j)/2 + 1;
+    for (let t = i; t <= j; t++) r[idx[t][1]] = avg;
+    i = j+1;
+  }
+  return r;
+}
+function pearson(x,y){
+  const n = x.length; if (n < 3) return NaN;
+  const mx = x.reduce((a,b)=>a+b,0)/n, my = y.reduce((a,b)=>a+b,0)/n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++){ const dx = x[i]-mx, dy = y[i]-my; sxy += dx*dy; sxx += dx*dx; syy += dy*dy; }
+  return (sxx && syy) ? sxy/Math.sqrt(sxx*syy) : NaN;
+}
+function renderProof(){
+  if (LEVELS.length < 3){ $('secProof').classList.add('sec-off'); return; }
+  $('secProof').classList.remove('sec-off');
+  const rho = pearson(rank(LEVELS.map(p => p.meta.legacyD)), rank(LEVELS.map(p => dsOf(p.meta))));
+  const vv = new Set(LEVELS.map(p => p.meta.validCells)).size;
+  $('proofTiles').innerHTML = [
+    ['Tương quan xếp hạng<br>công thức CŨ — độ khó thật', isNaN(rho) ? '—' : rho.toFixed(2)],
+    ['Số kích cỡ bàn<br>trong loạt này', vv],
+    ['Số ô |V|', LEVELS[0].meta.validCells + (vv > 1 ? ' …' : ' (như nhau)')]
+  ].map(([l,v]) => `<div class="tile" style="min-width:150px"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  let note;
+  if (vv === 1){
+    note = `<b>Đọc kết quả cho đúng:</b> cả loạt này dùng CÙNG một kích cỡ bàn (|V| = ${LEVELS[0].meta.validCells}), nên số hạng <code>w₁·|V|</code> trong công thức cũ là hằng số — công thức cũ lúc này chỉ còn sống nhờ số hạng <code>−w₃·ForcedMoves</code>, mà số nước ép buộc thì đúng là có liên quan tới độ khó. Vì vậy tương quan ${isNaN(rho)?'—':rho.toFixed(2)} ở đây <b>không chứng minh công thức cũ đúng</b>. Chỉ nó vỡ lẽ là khi so các bàn KHÁC kích cỡ nhau — bấm nút quét bên dưới để thấy.`;
+  } else {
+    note = `<b>Loạt này có ${vv} kích cỡ bàn khác nhau.</b> Tương quan ${isNaN(rho)?'—':rho.toFixed(2)} — ${Math.abs(rho) < 0.4 ? 'gần như không liên quan: công thức cũ xếp hạng gần như ngẫu nhiên so với độ khó thật.' : 'vẫn còn theo được phần nào; nên quét thêm để có mẫu rộng hơn.'}`;
+  }
+  $('proofNote').innerHTML = `<div class="note">${note}</div>`;
+
+  const rows = LEVELS.slice().sort((a,b) => b.meta.legacyD - a.meta.legacyD);
+  $('proofTable').innerHTML = `<thead><tr><th>ID</th><th class="n">Điểm công thức CŨ</th><th class="n">Số ô |V|</th>
+    <th class="n">Vật cản</th><th class="n">DS (thật)</th><th>Hạng thật</th><th class="n">% bước ép buộc</th></tr></thead><tbody>` +
+    rows.map(p => `<tr><td>${p.meta.id}</td><td class="n">${p.meta.legacyD}</td><td class="n">${p.meta.validCells}</td>
+      <td class="n">${p.meta.obstacles}</td><td class="n">${dsOf(p.meta).toFixed(2)}</td>
+      <td>${classBadge(clsOf(p.meta))}</td><td class="n">${Math.round(p.meta.forcedRatio*100)}%</td></tr>`).join('') + '</tbody>';
+}
+
+/* ---------- quét đối chứng nhiều kích cỡ bàn ---------- */
+let SWEEP = [];
+$('btnSweep').onclick = () => {
+  const cfgs = [
+    { R:4, C:5, obstacles:0, anchors:2, minLen:5 },
+    { R:5, C:5, obstacles:2, anchors:3, minLen:3 },
+    { R:6, C:6, obstacles:6, anchors:4, minLen:3 },
+    { R:7, C:5, obstacles:4, anchors:3, minLen:4 }
+  ];
+  $('btnSweep').disabled = true; $('sweepTxt').textContent = 'Đang quét…';
+  setTimeout(() => {
+    const t0 = performance.now();
+    let pool = [];
+    cfgs.forEach((c, ix) => {
+      const r = generateBatch({ ...c, count:4, seed:5000 + ix*197, acceptAnyTier:true,
+        allowArrows:false, allowWaypoints:false, maxAttempts:200 });
+      r.levels.forEach((p,i) => { p.meta.id = `S${ix+1}-${i+1}`; });
+      pool = pool.concat(r.levels);
+    });
+    SWEEP = pool;
+    $('btnSweep').disabled = false;
+    $('sweepTxt').textContent = `${pool.length} level trên ${cfgs.length} kích cỡ bàn · ${Math.round(performance.now()-t0)}ms`;
+    renderSweep();
+  }, 30);
+};
+function renderSweep(){
+  if (SWEEP.length < 4){ $('sweepOut').innerHTML = ''; return; }
+  const rhoOld = pearson(rank(SWEEP.map(p => p.meta.legacyD)), rank(SWEEP.map(p => dsOf(p.meta))));
+  const rhoV   = pearson(rank(SWEEP.map(p => p.meta.validCells)), rank(SWEEP.map(p => dsOf(p.meta))));
+  const easy = SWEEP.filter(p => clsOf(p.meta) <= 2).sort((a,b) => b.meta.legacyD - a.meta.legacyD)[0];
+  const hard = SWEEP.filter(p => clsOf(p.meta) >= 3).sort((a,b) => a.meta.legacyD - b.meta.legacyD)[0];
+  let html = `<div class="tiles">` + [
+    ['Tương quan<br>công thức CŨ — thật', isNaN(rhoOld)?'—':rhoOld.toFixed(2)],
+    ['Tương quan<br>số ô |V| — thật', isNaN(rhoV)?'—':rhoV.toFixed(2)],
+    ['Kết luận', Math.abs(rhoOld) < 0.4 ? 'Không dùng được' : (Math.abs(rhoOld) < 0.7 ? 'Yếu' : 'Còn theo được')]
+  ].map(([l,v]) => `<div class="tile" style="min-width:150px"><div class="v" style="font-size:${String(v).length>12?'15px':'19px'}">${v}</div><div class="l">${l}</div></div>`).join('') + `</div>`;
+
+  if (easy && hard && easy.meta.legacyD > hard.meta.legacyD){
+    html += `<div class="note"><b>Phản ví dụ trực tiếp:</b> công thức cũ cho ${easy.meta.id} <b>${easy.meta.legacyD}</b> điểm (cao hơn) nhưng thực chất chỉ là <b>${CLASS_INFO[clsOf(easy.meta)].name}</b>; còn ${hard.meta.id} chỉ <b>${hard.meta.legacyD}</b> điểm mà thực chất là <b>${CLASS_INFO[clsOf(hard.meta)].name}</b>. Nếu xếp thứ tự màn theo công thức cũ, người chơi sẽ gặp màn khó TRƯỚC màn dễ.</div>
+    <div class="row" style="align-items:flex-start;gap:26px;margin-bottom:8px">` +
+      [[easy,'công thức cũ chấm CAO, thực tế dễ'],[hard,'công thức cũ chấm THẤP, thực tế khó']].map(([p,cap]) =>
+        `<div><div class="hint" style="margin-bottom:4px"><b>${p.meta.id}</b> — ${cap}</div>${boardSVG(p,{cs:30})}
+         <div class="hint" style="margin-top:4px">${p.R}×${p.C} · |V|=${p.meta.validCells} · cũ=${p.meta.legacyD} · DS=${dsOf(p.meta).toFixed(2)} · ${CLASS_INFO[clsOf(p.meta)].name}</div></div>`).join('') + `</div>`;
+  }
+  const rows = SWEEP.slice().sort((a,b) => b.meta.legacyD - a.meta.legacyD);
+  html += `<div class="scroll"><table><thead><tr><th>ID</th><th>Bàn</th><th class="n">Điểm CŨ</th><th class="n">|V|</th>
+    <th class="n">DS thật</th><th>Hạng thật</th></tr></thead><tbody>` +
+    rows.map(p => `<tr><td>${p.meta.id}</td><td>${p.R}×${p.C}</td><td class="n">${p.meta.legacyD}</td>
+      <td class="n">${p.meta.validCells}</td><td class="n">${dsOf(p.meta).toFixed(2)}</td>
+      <td>${classBadge(clsOf(p.meta))}</td></tr>`).join('') + `</tbody></table></div>`;
+  $('sweepOut').innerHTML = html;
+}
+
+/* ================= LIST ================= */
+function renderList(){
+  $('lvGrid').innerHTML = LEVELS.map((p,i) => {
+    const c = clsOf(p.meta);
+    return `<button class="lvcard" data-i="${i}" aria-current="${i===CUR}">
+      <div class="hd"><span class="id">${p.meta.id}</span>${classBadge(c)}</div>
+      ${boardSVG(p,{cs:26})}
+      <div class="mt">DS ${dsOf(p.meta).toFixed(2)} · bậc cao nhất T${p.meta.tier}<br>${p.R}×${p.C} · ${p.meta.anchorCount} dây · ${p.meta.obstacles} khóa</div>
+    </button>`;
+  }).join('');
+  $('lvGrid').querySelectorAll('.lvcard').forEach(b => b.onclick = () => openLevel(+b.dataset.i));
+}
+
+/* ================= DETAIL ================= */
+function openLevel(i){
+  CUR = i; playMode = false; showSol = false; PLAY = null;
+  $('btnPlay').setAttribute('aria-pressed','false');
+  $('btnSol').setAttribute('aria-pressed','false');
+  $('secDetail').classList.remove('sec-off');
+  renderList(); renderDetail();
+  $('secDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+$('btnPlay').onclick = () => {
+  playMode = !playMode;
+  $('btnPlay').setAttribute('aria-pressed', playMode);
+  if (playMode){ startPlay(); showSol = false; $('btnSol').setAttribute('aria-pressed','false'); }
+  else PLAY = null;
+  renderDetail();
+};
+$('btnSol').onclick = () => { showSol = !showSol; $('btnSol').setAttribute('aria-pressed', showSol);
+  if (showSol && PLAY) PLAY.peeked = true; renderDetail(); };
+$('btnCoord').onclick = () => { showCoord = !showCoord; $('btnCoord').setAttribute('aria-pressed', showCoord); renderDetail(); };
+$('btnReset').onclick = () => { if (playMode) startPlay(); renderDetail(); };
+
+function startPlay(){
+  const p = LEVELS[CUR];
+  PLAY = { s: initState(p), sel:null, t0:null, drag:false, peeked:false, done:false, moves:0 };
+}
+function truncateTo(p, s, k, cell){
+  const c = s.chains[k], at = c.path.indexOf(cell);
+  if (at < 0) return false;
+  for (let t = c.path.length-1; t > at; t--){ s.owner[c.path[t]] = -1; s.free++; }
+  c.path.length = at+1; c.head = c.path[at]; c.len = c.path.length;
+  c.wp = 0; for (const cc of c.path){ const w = p.wpOf.get(cc); if (w) c.wp = w.j; }
+  return true;
+}
+
+function renderDetail(){
+  const p = LEVELS[CUR]; if (!p) return;
+  const m = p.meta, c = clsOf(m);
+  $('detTitle').innerHTML = `5 · Chi tiết ${m.id} &nbsp; ${classBadge(c)}`;
+  $('boardWrap').innerHTML = boardSVG(p, { cs:46, showSolution:showSol, coords:showCoord, state:PLAY?PLAY.s:null, interactive:playMode });
+  $('chainLegend').innerHTML = p.anchors.map((a,k) =>
+    `<span class="chip"><i style="background:${CHHEX[k%4]}"></i>A${k+1} — dài ${a.L}</span>`).join('')
+    + (p.blocked.size?`<span class="chip"><i style="background:#c3c2b7"></i>Ô Khóa</span>`:'')
+    + (p.walls.size?`<span class="chip"><i style="background:#3f3e3a"></i>Thanh Chặn</span>`:'')
+    + (p.arrows.size?`<span class="chip">→ Mũi Tên</span>`:'')
+    + (p.wpOf.size?`<span class="chip">◆ Mốc Nối (thứ tự)</span>`:'');
+
+  if (playMode) bindPlay(p);
+  renderPlayPanel(p);
+
+  $('detTiles').innerHTML = [
+    ['Điểm độ khó DS', dsOf(m).toFixed(2)],
+    ['Bậc kỹ thuật cao nhất', 'T' + m.tier],
+    ['Số bước suy luận', m.steps],
+    ['Độ mở TB', m.openness],
+    ['% bước ép buộc', Math.round(m.forcedRatio*100) + '%'],
+    ['Số ô |V|', m.validCells],
+    ['Điểm công thức CŨ', m.legacyD],
+    ['Số nghiệm', '1 (đã chứng minh)']
+  ].map(([l,v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+
+  const mx = Math.max(1, ...m.hist.slice(1));
+  $('tierLegend').innerHTML = [1,2,3,4,5].map(t =>
+    `<span class="chip"><i style="background:${TCOL[t]}"></i>T${t} ${TIER_INFO[t].name}</span>`).join('');
+  $('tierBars').innerHTML = [1,2,3,4,5].map(t => {
+    const n = m.hist[t] || 0, w = SCORING.cost[t];
+    return `<div class="bar"><span class="nm">T${t} · ${TIER_INFO[t].name}</span>
+      <span class="tr"><span class="fl" data-tip="${esc(TIER_INFO[t].desc)}<br><b>${n} bước × chi phí ${w} = ${(n*w).toFixed(0)} điểm tải</b>" style="width:${100*n/mx}%;background:${TCOL[t]}"></span></span>
+      <span class="ct">${n} bước</span></div>`;
+  }).join('');
+  $('tierBars').querySelectorAll('[data-tip]').forEach(el => bindTip(el, el.dataset.tip));
+
+  const peak = TIER_INFO[m.tier];
+  let why = `<b>Vì sao hạng ${CLASS_INFO[c].name}:</b> tổng tải suy luận ÷ ${m.steps} bước = DS ${dsOf(m).toFixed(2)}. `;
+  why += `Chỗ khó nhất buộc dùng <b>${peak.name}</b> — ${peak.desc} `;
+  if (m.forcedRatio > 0.85) why += `<b>Cảnh báo:</b> ${Math.round(m.forcedRatio*100)}% số bước chỉ là đi theo đường duy nhất — bàn có thể trông rối nhưng người chơi hầu như không phải nghĩ.`;
+  if (m.arrows || m.waypoints) why += ` Đã thêm ${m.arrows} Mũi Tên / ${m.waypoints} Mốc Nối để Hạ độ khó về đúng hạng mục tiêu.`;
+  $('tierWhy').innerHTML = why;
+
+  const tr = tierSolve(p, 5);
+  $('traceTable').innerHTML = `<thead><tr><th class="n">#</th><th>Dây</th><th>Ô</th><th>Kỹ thuật buộc phải dùng</th><th class="n">Số lựa chọn</th></tr></thead><tbody>` +
+    tr.trace.map((s,ix) => {
+      const [r,cc] = p.rc(s.cell);
+      return `<tr><td class="n">${ix+1}</td><td><span class="chip"><i style="background:${CHHEX[s.k%4]}"></i>A${s.k+1}</span></td>
+        <td>R${r}C${cc}</td><td><span class="tierpill" style="background:${TCOL[s.tier]}">T${s.tier}</span> ${TIER_INFO[s.tier].name}</td>
+        <td class="n">${s.opts}</td></tr>`;
+    }).join('') + '</tbody>';
+
+  $('detJson').textContent = JSON.stringify(toJSON(p, m.id), null, 1);
+}
+
+/* ---------- play interactions ---------- */
+function bindPlay(p){
+  const svg = $('boardWrap').querySelector('svg');
+  const cellAt = ev => {
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    return el && el.classList.contains('hit') ? +el.dataset.cell : null;
+  };
+  const act = cell => {
+    if (cell == null || !PLAY || PLAY.done) return;
+    if (PLAY.t0 == null) PLAY.t0 = performance.now();
+    const s = PLAY.s;
+    if (s.owner[cell] >= 0){ PLAY.sel = s.owner[cell]; truncateTo(p, s, PLAY.sel, cell); }
+    else if (PLAY.sel != null && legalMoves(p, s, PLAY.sel).includes(cell)){ applyMove(p, s, PLAY.sel, cell); PLAY.moves++; }
+    else return;
+    if (s.free === 0 && s.chains.every(c => c.len === c.L)) PLAY.done = true;
+    renderDetail();
+  };
+  svg.addEventListener('pointerdown', e => { PLAY.drag = true; svg.setPointerCapture(e.pointerId); act(cellAt(e)); });
+  svg.addEventListener('pointermove', e => { if (PLAY && PLAY.drag) act(cellAt(e)); });
+  svg.addEventListener('pointerup', () => { if (PLAY) PLAY.drag = false; });
+  svg.addEventListener('pointercancel', () => { if (PLAY) PLAY.drag = false; });
+}
+
+function renderPlayPanel(p){
+  const el = $('playPanel');
+  if (!playMode){ el.innerHTML = `<p class="hint">Bấm <b>Tự chơi thử</b> rồi kéo từ ô số (Anchor) để vẽ dây — chính bạn là người kiểm chứng độ khó, không phải công thức.</p>`; return; }
+  const m = LEVELS[CUR].meta;
+  if (PLAY && PLAY.done){
+    const secs = PLAY.t0 ? (performance.now()-PLAY.t0)/1000 : 0;
+    el.innerHTML = `<div class="win"><b>Xong!</b> ${secs.toFixed(1)} giây · ${PLAY.moves} nước${PLAY.peeked?' · <b>đã xem lời giải</b>':''}.
+      <div style="margin-top:5px">Máy gán hạng <b>${CLASS_INFO[clsOf(m)].name}</b> (DS ${dsOf(m).toFixed(2)}). Bạn thấy thật sự thế nào?</div>
+      <div class="vote">${[1,2,3,4].map(v => `<button class="ghost sm" data-v="${v}">${CLASS_INFO[v].name}</button>`).join('')}</div></div>`;
+    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+      RECORDS.push({ id:m.id, cls:clsOf(m), ds:+dsOf(m).toFixed(2), tier:m.tier, secs:+secs.toFixed(1),
+        moves:PLAY.moves, felt:+b.dataset.v, peeked:PLAY.peeked, hist:m.hist.slice(), steps:m.steps, openness:m.openness });
+      renderCalib();
+      el.innerHTML = `<div class="win">Đã ghi nhận. Xem bảng đối chiếu ở mục 6.</div>`;
+      $('secCalib').scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+    return;
+  }
+  const s = PLAY.s;
+  el.innerHTML = `<p class="hint">Kéo từ ô số để vẽ. Kéo lùi lại để xoá. Còn <b>${s.free}</b> ô trống.
+    ${PLAY.sel!=null?` Đang vẽ <b>A${PLAY.sel+1}</b> (còn ${s.chains[PLAY.sel].L-s.chains[PLAY.sel].len} ô).`:''}</p>`;
+}
+
+/* ================= CALIBRATION ================= */
+$('btnRecalc').onclick = () => {
+  SCORING.cost = [0,+$('w1').value,+$('w2').value,+$('w3').value,+$('w4').value,+$('w5').value];
+  SCORING.openW = +$('wo').value;
+  SCORING.thr = [+$('h1').value,+$('h2').value,+$('h3').value];
+  renderProof(); renderSweep(); renderList(); if (CUR >= 0) renderDetail(); renderCalib();
+};
+function renderCalib(){
+  if (!RECORDS.length){ $('calibEmpty').classList.remove('sec-off'); $('calibWrap').classList.add('sec-off');
+    $('calibActions').classList.add('sec-off'); $('calibVerdict').innerHTML = ''; return; }
+  $('calibEmpty').classList.add('sec-off'); $('calibWrap').classList.remove('sec-off');
+  $('calibActions').classList.remove('sec-off');
+  const rows = RECORDS.map(r => {
+    const cls = classifyDifficulty(difficultyScore(r.hist, r.steps, r.openness), r.tier);
+    const d = Math.abs(cls - r.felt);
+    return { ...r, cls, gap:d, verdict: d === 0 ? 'khớp' : (d === 1 ? 'lệch nhẹ' : 'LỆCH NẶNG') };
+  });
+  $('calibTable').innerHTML = `<thead><tr><th>Level</th><th>Máy gán</th><th class="n">DS</th><th>Người chơi thấy</th>
+    <th class="n">Giây</th><th class="n">Nước</th><th>Xem lời giải?</th><th>Kết luận</th></tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r.id}</td><td>${classBadge(r.cls)}</td><td class="n">${r.ds}</td>
+      <td>${classBadge(r.felt)}</td><td class="n">${r.secs}</td><td class="n">${r.moves}</td>
+      <td>${r.peeked?'có':'không'}</td><td>${r.gap===0?'khớp':`<b style="color:${r.gap>1?'var(--s4)':'var(--s3)'}">${r.verdict}</b>`}</td></tr>`).join('') + '</tbody>';
+
+  const byCls = {}; rows.forEach(r => (byCls[r.cls] = byCls[r.cls] || []).push(r.secs));
+  const means = Object.keys(byCls).sort().map(k => [k, byCls[k].reduce((a,b)=>a+b,0)/byCls[k].length]);
+  const mism = rows.filter(r => r.gap >= 1).length, heavy = rows.filter(r => r.gap >= 2).length;
+  let v = `<div class="note"><b>Chẩn đoán (${rows.length} lượt chơi thật):</b> `;
+  v += `${rows.length-mism} khớp · ${mism-heavy} lệch nhẹ · ${heavy} lệch nặng. `;
+  if (means.length >= 2){
+    v += 'Thời gian giải TB theo hạng máy gán: ' + means.map(([k,m]) => `${CLASS_INFO[k].name} ${m.toFixed(1)}s`).join(' → ') + '. ';
+    let mono = true; for (let i = 1; i < means.length; i++) if (means[i][1] < means[i-1][1]) mono = false;
+    v += mono ? '<b>Thang bậc tăng đúng chiều</b> — dấu hiệu tốt. ' : '<b>Thang bậc CHƯA tăng đúng chiều</b> — hạng cao hơn mà giải nhanh hơn nghĩa là trọng số đang sai. ';
+  }
+  if (rows.length < 5) v += 'Cỡ mẫu còn quá nhỏ để kết luận — cần ít nhất 5-10 lượt/hạng.';
+  else if (mism/rows.length >= 0.3) v += 'Trên 30% lệch — nên chỉnh trọng số (tăng chi phí bậc mà bạn thấy thực sự khó, giảm bậc bạn thấy dễ) rồi bấm Tính lại.';
+  else v += 'Dưới 30% lệch — thang đo đang khớp cảm nhận thật ở mức chấp nhận được.';
+  $('calibVerdict').innerHTML = v + '</div>';
+}
+$('btnCsv').onclick = () => {
+  const head = 'level,may_gan_hang,DS,nguoi_choi_thay,giay,nuoc,xem_loi_giai,lech\n';
+  const body = RECORDS.map(r => {
+    const cls = classifyDifficulty(difficultyScore(r.hist,r.steps,r.openness), r.tier);
+    return [r.id, CLASS_INFO[cls].name, r.ds, CLASS_INFO[r.felt].name, r.secs, r.moves, r.peeked?'co':'khong', Math.abs(cls-r.felt)].join(',');
+  }).join('\n');
+  dl('trapline_hieu_chinh.csv', head + body, 'text/csv');
+};
+$('btnJsonAll').onclick = () => dl('trapline_levels.json',
+  JSON.stringify({ generatedBy:'Trapline Level Forge', scoring:SCORING, levels:LEVELS.map(p => toJSON(p, p.meta.id)) }, null, 2),
+  'application/json');
+function dl(name, text, mime){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type:mime}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+</script>
+</body>
+</html>
