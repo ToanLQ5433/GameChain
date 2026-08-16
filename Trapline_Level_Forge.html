@@ -488,7 +488,7 @@ function analyzeWaypointDeception(p) {
   return { wpDeceptionScore, maxWpLag, totalWp };
 }
 
-// --------------------------- 4 TRỤ CỘT ĐÁNH GIÁ ĐỘ KHÓ NÃO BỘ CON NGƯỜI ---------------------------
+// --------------------------- 4 TRỤ CỘT ĐÁNH GIÁ ĐỘ KHÓ NÃO BỘ CON NGƯỜI THẬT ---------------------------
 function calculateCognitiveMetrics(p, rated, greedy) {
   const K = p.anchors.length;
   const brain = analyzeBrainCognition(p);
@@ -496,71 +496,77 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   const wpData = analyzeWaypointDeception(p);
   const N = Math.max(1, p.validCells().length);
 
-  // 1. Trụ cột 1: Độ Mơ Hồ & Tê Liệt Lựa Chọn (Choice Paralysis) chuẩn hóa theo mỗi bước
-  const ambiguityScore = Math.max(0, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 2.2)) + Math.min(3.0, (brain.falseLeads / N) * 2.5);
+  // Nếu người chơi đi theo trực giác tự nhiên (greedy autopilot) mà THẮNG NGAY KHÔNG BỊ KẸT:
+  // Màn chơi này THỰC TẾ KHÔNG THỂ LÀ "KHÓ" HOẶC "SIÊU KHÓ" ĐƯỢC!
+  const isIntuitiveWin = greedy.greedyWon;
 
-  // 2. Trụ cột 2: Tranh Chấp Không Gian & Đan Xen Topo (K >= 2) HOẶC Ràng Buộc Đơn Tuyến (K = 1)
+  // 1. Trụ cột 1: Độ Mơ Hồ Thực Tế (Chỉ gây khó khi có bẫy dẫn sai đường)
+  let ambiguityScore = Math.max(0, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 1.5));
+  if (brain.falseLeads > 0) ambiguityScore += Math.min(2.2, (brain.falseLeads / N) * 2.0);
+
+  // 2. Trụ cột 2: Độ Phức Tạp Không Gian Topo (Chỉ cao khi có xoắn ốc ôm mỏ neo của nhau)
   let spatialComplexityScore = 0;
   if (K > 1) {
-    spatialComplexityScore = Math.min(3.5, (topo.spatialScore / N) * 4.5 + (K - 1) * 0.5);
+    spatialComplexityScore = (topo.knotScore * 1.2) + Math.min(2.0, (topo.intertwineCount / N) * 2.5);
   } else {
-    const singleChainLen = p.anchors[0] ? p.anchors[0].L : 0;
-    spatialComplexityScore = Math.min(2.5, (singleChainLen / N) * 2.0);
+    spatialComplexityScore = Math.min(1.5, (p.anchors[0] ? (p.anchors[0].L / N) * 1.5 : 0));
   }
 
-  // 3. Trụ cột 3: Độ Sâu Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước (Backtracking Friction)
+  // 3. Trụ cột 3: Bẫy Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước - YẾU TỐ QUYẾT ĐỊNH ĐỘ KHÓ VỚI CON NGƯỜI
   let trapScore = 0;
   let expectedUndos = 0;
   if (greedy.greedyTrapped) {
-    const depthRatio = Math.min(1.0, (greedy.trapDepth || 1) / N);
-    trapScore += 1.8 + depthRatio * SCORING.wDeadEnd * 2.5;
-    expectedUndos = Math.max(1, Math.ceil(depthRatio * 4));
-  }
-  if (rated.maxTier >= 4) {
-    trapScore += 1.2;
-    expectedUndos += 1;
+    const depth = greedy.trapDepth || 1;
+    // Bẫy càng sâu càng gây ức chế cho não bộ vì phải xóa làm lại từ đầu
+    trapScore = 2.5 + (depth / N) * 4.0;
+    expectedUndos = Math.max(1, Math.ceil((depth / N) * 4));
   }
 
-  // 4. Trụ cột 4: Tải Suy Luận Từng Bước (Deductive Tier Load)
-  const hist = rated.hist;
-  const totalCost = (hist[1] * SCORING.cost[1] +
-                     hist[2] * SCORING.cost[2] +
-                     hist[3] * SCORING.cost[3] +
-                     hist[4] * SCORING.cost[4] +
-                     hist[5] * SCORING.cost[5]);
-  const deductiveScore = Math.min(4.5, (totalCost / N) * 2.8);
+  // 4. Trụ cột 4: Bẫy Mật Mã Số (Ảo giác khoảng cách)
+  let wpScore = 0;
+  if (wpData.totalWp > 0) {
+    wpScore = (wpData.wpDeceptionScore * 0.8) + (wpData.maxWpLag * 0.4);
+  }
 
-  // 5. Tải Cơ Chế Động & MẬT MÃ SỐ (Độ lừa thị giác của Waypoints)
-  const wpScore = Math.min(3.0, (wpData.wpDeceptionScore / N) * 3.0 + wpData.totalWp * 0.3);
-  const mechScore = Math.min(3.5, (p.pushRocks.length * SCORING.wPush) +
-                                  (p.switches.length * SCORING.wSwitch) +
-                                  (p.prisms.length * SCORING.wPrism) +
-                                  wpScore);
+  // 5. Cơ chế vật cản
+  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0) + (p.walls.size * 0.3);
 
   // Tổng hợp Human Difficulty Index (HDI)
-  let hdi = 1.0 + ambiguityScore + spatialComplexityScore + trapScore + deductiveScore + mechScore;
+  let hdi = 1.0 + ambiguityScore + spatialComplexityScore + trapScore + wpScore + mechScore;
+
+  // NẾU KHÔNG CÓ BẪY NÀO (Người chơi trực giác đi thắng mượt từ đầu tới cuối):
+  // Giới hạn trần độ khó tối đa là 5.5 (Chỉ ở mức Dễ hoặc Thường)
+  if (isIntuitiveWin && wpData.maxWpLag < 3 && topo.knotScore < 1.0 && p.pushRocks.length === 0) {
+    hdi = Math.min(5.5, hdi);
+  }
+
   hdi = Math.max(1.0, Math.round(hdi * 10) / 10);
 
   // Điểm suy luận thuần (Deductive Score - DS)
-  let ds = Math.max(1.0, Math.round((ambiguityScore * 0.6 + deductiveScore + trapScore * 0.8 + wpScore * 0.4) * 10) / 10);
+  let ds = Math.max(1.0, Math.round((ambiguityScore * 0.6 + trapScore * 0.8 + wpScore * 0.4 + spatialComplexityScore * 0.5) * 10) / 10);
 
   // Phân loại hạng chuẩn theo nhận thức não bộ người chơi thật
   let cls = 1;
-  if (hdi >= SCORING.thr[2]) cls = 4;
-  else if (hdi >= SCORING.thr[1]) cls = 3;
-  else if (hdi >= SCORING.thr[0]) cls = 2;
-  else cls = 1;
+  if (hdi >= 9.5 && (greedy.greedyTrapped || wpData.maxWpLag >= 5 || topo.knotScore >= 2.0)) {
+    cls = 4; // 4 · Siêu Khó
+  } else if (hdi >= 6.5 && (greedy.greedyTrapped || wpData.maxWpLag >= 3 || topo.knotScore >= 1.0 || p.pushRocks.length > 0 || p.walls.size >= 3)) {
+    cls = 3; // 3 · Khó
+  } else if (hdi >= 3.8) {
+    cls = 2; // 2 · Thường
+  } else {
+    cls = 1; // 1 · Dễ
+  }
 
   // Dự đoán thời gian người chơi thật giải màn (Seconds)
-  let solveTimeEst = Math.round(5 + (hdi - 1.0) * 11 + (brain.falseLeads * 8) + (wpData.maxWpLag * 2.5) + (greedy.greedyTrapped ? 18 : 0));
+  let solveTimeEst = Math.round(5 + (hdi - 1.0) * 12 + (brain.falseLeads * 6) + (wpData.maxWpLag * 3) + (greedy.greedyTrapped ? 25 : 0));
   solveTimeEst = Math.max(5, solveTimeEst);
 
   let psychologyTag = 'INTUITIVE_AUTOPILOT';
   if (wpData.maxWpLag >= 5) psychologyTag = 'WAYPOINT_PROXIMITY_TRAP';
-  else if (greedy.greedyTrapped && (rated.maxTier >= 3 || hdi >= 6.8)) psychologyTag = 'AHA_INSIGHT_TRAP';
+  else if (greedy.greedyTrapped && (rated.maxTier >= 3 || hdi >= 6.5)) psychologyTag = 'AHA_INSIGHT_TRAP';
   else if (greedy.greedyTrapped) psychologyTag = 'GREEDY_DEADEND';
   else if (brain.avgBranching >= 1.8) psychologyTag = 'CHOICE_PARALYSIS';
-  else if (K > 1 && contention >= 1.5) psychologyTag = 'INTERLOCKING_CHAINS';
+  else if (K > 1 && topo.knotScore >= 1.5) psychologyTag = 'INTERLOCKING_CHAINS';
   else if (p.pushRocks.length > 0 && p.switches.length > 0) psychologyTag = 'COMBO_INTERACTION';
   else if (p.pushRocks.length > 0) psychologyTag = 'SOKOBAN_LOGIC';
 
