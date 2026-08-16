@@ -141,9 +141,9 @@ progress{width:220px;height:10px}
     <div class="f"><label for="fM">Dây ngắn nhất</label><input id="fM" type="number" min="2" max="12" value="3"></div>
     <div class="f"><label for="fT">Hạng mục tiêu</label>
       <select id="fT">
-        <option value="0">Tất cả (Đo tự do)</option>
+        <option value="0" selected>Tất cả (Đo & Phân loại tự do)</option>
         <option value="1">1 · Dễ (Warm-up · Autopilot 1 nét · ~5-15s)</option>
-        <option value="2" selected>2 · Thường (Flow · Rẽ nhánh nhẹ · ~15-35s)</option>
+        <option value="2">2 · Thường (Flow · Rẽ nhánh nhẹ · ~15-35s)</option>
         <option value="3">3 · Khó (Insight/Trap · Bẫy ngã rẽ sâu · ~35-75s)</option>
         <option value="4">4 · Siêu Khó (Mastery · Quá tải não bộ · ~75-180s+)</option>
       </select></div>
@@ -1520,23 +1520,33 @@ function generateOne(cfg, rng) {
 function generateBatch(cfg, onProgress) {
   const rng = mulberry32(cfg.seed || 12345);
   const out = [];
+  const backups = [];
   const fails = {};
-  const maxAttempts = cfg.maxAttempts || 500;
+  const maxAttempts = cfg.maxAttempts || 300;
   let att = 0;
+
   while (out.length < cfg.count && att < maxAttempts) {
     att++;
     const r = generateOne(cfg, rng);
     if (r.ok) {
-      if (!cfg.targetClass || cfg.acceptAnyTier || r.puzzle.meta.cls === cfg.targetClass) out.push(r.puzzle);
-      else {
+      if (!cfg.targetClass || cfg.acceptAnyTier || r.puzzle.meta.cls === cfg.targetClass) {
+        out.push(r.puzzle);
+      } else {
         const key = 'lệch hạng (' + r.puzzle.meta.className + ')';
         fails[key] = (fails[key] || 0) + 1;
+        backups.push(r.puzzle);
       }
     } else {
       fails[r.reason] = (fails[r.reason] || 0) + 1;
     }
     if (onProgress) onProgress(att, out.length, maxAttempts);
   }
+
+  // Bổ sung các màn hợp lệ gần nhất nếu sau nhiều lần thử chưa đủ số lượng chính xác, không để trống màn hình
+  while (out.length < cfg.count && backups.length > 0) {
+    out.push(backups.shift());
+  }
+
   return { levels: out, attempts: att, fails };
 }
 
