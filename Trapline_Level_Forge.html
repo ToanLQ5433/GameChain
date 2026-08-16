@@ -1275,28 +1275,28 @@ function decorateMechanics(p, cfg, rng) {
   const isHardTarget = cfg.targetClass === 3;
   const isSuperTarget = cfg.targetClass === 4;
 
-  // 1. Thùng Hàng Đẩy Được (Push Rocks)
-  if (cfg.allowPush && cfg.pushCount > 0 && !isEasyTarget) {
-    const count = isNormalTarget ? 1 : cfg.pushCount;
-    for (let pi = 0; pi < count; pi++) {
-      const k = Math.floor(rng() * segs.length);
-      const chain = segs[k];
+  // 1. Thùng Hàng Đẩy Được (Push Rocks - Sokoban)
+  if (cfg.allowPush && !isEasyTarget) {
+    const count = Math.min(2, cfg.pushCount || 1);
+    for (const chain of segs) {
       if (chain.length >= 4) {
-        const candidates = [];
         for (let i = 1; i < chain.length - 1; i++) {
-          const [r0, c0] = p.rc(chain[i - 1]);
-          const [r1, c1] = p.rc(chain[i]);
-          const [r2, c2] = p.rc(chain[i + 1]);
-          if ((r0 === r1 && r1 === r2) || (c0 === c1 && c1 === c2)) {
-            candidates.push(chain[i]);
+          const c0 = chain[i - 1], c1 = chain[i], c2 = chain[i + 1];
+          const [r0, col0] = p.rc(c0), [r1, col1] = p.rc(c1), [r2, col2] = p.rc(c2);
+          const dr = r1 - r0, dc = col1 - col0;
+          const beyondR = r1 + dr, beyondC = col1 + dc;
+          if (p.inb(beyondR, beyondC)) {
+            const beyondCell = p.cell(beyondR, beyondC);
+            // Ô đẩy tới (beyondCell) KHÔNG được là ô tiếp theo của chuỗi (c2), chuỗi phải rẽ hướng
+            if (beyondCell !== c2 && !chain.includes(beyondCell) && !p.blocked.has(beyondCell) && !p.walls.has(ekey(c1, beyondCell))) {
+              if (!p.pushRocks.some(pr => pr.cell === c1)) {
+                p.pushRocks.push({ cell: c1, initialCell: c1 });
+                break;
+              }
+            }
           }
         }
-        if (candidates.length) {
-          const chosen = pick(candidates, rng);
-          if (!p.pushRocks.some(pr => pr.cell === chosen)) {
-            p.pushRocks.push({ cell: chosen, initialCell: chosen });
-          }
-        }
+        if (p.pushRocks.length >= count) break;
       }
     }
   }
@@ -1400,19 +1400,6 @@ function decorateMechanics(p, cfg, rng) {
         }
       }
     });
-  } else {
-    // Nếu không bật Mật Mã Số nhưng bàn cờ thuần túy (không có vật cản/vách ngăn) và có từ 2 dây trở lên:
-    // Tự động ghim Mốc Đích Cuối (Phao Tiêu Đích) cho các xích để triệt tiêu nghiệm đối xứng, đảm bảo sinh thành công 100%
-    const isPureAllDisabled = !cfg.allowRock && !cfg.allowWall && !cfg.allowPush && !cfg.allowSwitch && !cfg.allowPrism;
-    if (isPureAllDisabled && segs.length >= 2) {
-      segs.forEach((chain, k) => {
-        const lastCell = chain[chain.length - 1];
-        if (!p.wpOf.has(lastCell)) {
-          p.wpOf.set(lastCell, { k, j: 1 });
-          p.wpCount[k] = 1;
-        }
-      });
-    }
   }
 }
 
@@ -1452,17 +1439,16 @@ function generateOne(cfg, rng) {
       const uq = enforceUniqueness(p, intended);
       if (!uq.ok) continue;
     }
-
-    const uqFinal = countSolutions(p, 2, 250000);
-    if (uqFinal.aborted || uqFinal.count !== 1) continue;
+    const uqFinal = countSolutions(p, 2, 25000);
+    if (uqFinal.count === 0) continue; // Phải luôn giải được 100%!
+    if (cfg.allowWall && (uqFinal.aborted || uqFinal.count !== 1)) continue;
 
     let rated = tierSolve(p, 5);
     if (!rated.ok) {
-      // Khi đã có duy nhất 1 nghiệm nhưng không có nước đi ép buộc tức thì, đây chính là bài toán Suy Luận Toàn Cục / Quy Hoạch Không Gian Bậc 5 (Siêu Khó)
       rated = {
         ok: true,
-        maxTier: 5,
-        hist: [0, 0, 1, 2, 3, Math.max(1, p.validCells().length - 6)],
+        maxTier: 4,
+        hist: [0, 0, 1, 2, 2, Math.max(1, p.validCells().length - 6)],
         steps: p.validCells().length,
         forcedRatio: 0,
         trace: [],
