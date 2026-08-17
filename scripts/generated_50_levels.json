@@ -1,0 +1,10971 @@
+[
+  {
+    "id": "L01",
+    "grid": {
+      "rows": 3,
+      "cols": 3
+    },
+    "shape": [
+      "111",
+      "111",
+      "111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 2,
+        "col": 0,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      }
+    ],
+    "waypoints": {
+      "A1": []
+    },
+    "solution": {
+      "A1": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 4,
+      "estimatedSolveSeconds": 16,
+      "expectedPlayerUndos": 2,
+      "visualAutopilotRatio": "50%",
+      "averageBranchingChoices": 1.5,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.35,
+      "spatialContentionScore": 1.5,
+      "delayedDeadEndScore": 0.13,
+      "deductiveLoad": 1.7,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Tutorial · 1 Dây (3×3)",
+    "chapter": 1,
+    "pacing": "Ki (Khởi động)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Kéo 1 nét qua tất cả các ô để hiểu luật phủ kín 100%.",
+    "timerSec": null,
+    "unlockBuff": "Mở Replay (Free)"
+  },
+  {
+    "id": "L02",
+    "grid": {
+      "rows": 4,
+      "cols": 4
+    },
+    "shape": [
+      "1111",
+      "1111",
+      "1111",
+      "1111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 6,
+        "cells": 7,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 1,
+        "length": 8,
+        "cells": 9,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 4.4,
+      "estimatedSolveSeconds": 16,
+      "expectedPlayerUndos": 6,
+      "visualAutopilotRatio": "43%",
+      "averageBranchingChoices": 1.57,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.54,
+      "spatialContentionScore": 0.94,
+      "delayedDeadEndScore": 0.92,
+      "deductiveLoad": 2.1,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "2 Dây Không Cắt (4×4)",
+    "chapter": 1,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Dây A và B phân chia không gian, tuyệt đối không cắt chéo hoặc đè lên nhau.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L03",
+    "grid": {
+      "rows": 4,
+      "cols": 4
+    },
+    "shape": [
+      "1111",
+      "1111",
+      "1111",
+      "1111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 0,
+        "c1": 1,
+        "r2": 1,
+        "c2": 1
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 3,
+        "col": 0,
+        "length": 7,
+        "cells": 8,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 3,
+        "col": 1,
+        "length": 7,
+        "cells": 8,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 3.6,
+      "estimatedSolveSeconds": 15,
+      "expectedPlayerUndos": 3,
+      "visualAutopilotRatio": "57%",
+      "averageBranchingChoices": 1.43,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.16,
+      "spatialContentionScore": 0.94,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 1.6,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: 1 Vách Ngăn (4×4)",
+    "chapter": 1,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Thanh Chặn (Vách ngăn) cản đường trực tiếp, buộc dây phải uốn lượn vòng qua.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L04",
+    "grid": {
+      "rows": 5,
+      "cols": 4
+    },
+    "shape": [
+      "1111",
+      "1111",
+      "1111",
+      "1111",
+      "1111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 0,
+        "c1": 0,
+        "r2": 1,
+        "c2": 0
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 9,
+        "cells": 10,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 4,
+        "col": 0,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 3.6,
+      "estimatedSolveSeconds": 15,
+      "expectedPlayerUndos": 8,
+      "visualAutopilotRatio": "44%",
+      "averageBranchingChoices": 1.56,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.51,
+      "spatialContentionScore": 1,
+      "delayedDeadEndScore": 0.13,
+      "deductiveLoad": 1.5,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Hành Lang 1 Vách (5×4)",
+    "chapter": 1,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Vách ngăn tạo hành lang chữ U thông suốt, vuốt nhẹ nhàng để làm quen.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L05",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 1,
+        "c1": 3,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "r1": 0,
+        "c1": 1,
+        "r2": 1,
+        "c2": 1
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 1,
+        "col": 4,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 2,
+        "length": 12,
+        "cells": 13,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 5.6,
+      "estimatedSolveSeconds": 18,
+      "expectedPlayerUndos": 9,
+      "visualAutopilotRatio": "52%",
+      "averageBranchingChoices": 1.52,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.4,
+      "spatialContentionScore": 2.66,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 2.6,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "2 Vách Ngăn Song Song (5×5)",
+    "chapter": 1,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "2 Vách ngăn tạo các ngách zíc-zắc, rèn thói quen bao quát toàn bộ góc chết.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L06",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 1,
+        "c1": 3,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "r1": 0,
+        "c1": 1,
+        "r2": 1,
+        "c2": 1
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 1,
+        "col": 4,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 3,
+        "col": 1,
+        "length": 10,
+        "cells": 11,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 8,
+      "visualAutopilotRatio": "57%",
+      "averageBranchingChoices": 1.52,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.4,
+      "spatialContentionScore": 2.76,
+      "delayedDeadEndScore": 0.38,
+      "deductiveLoad": 2.5,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Bẫy Ngã Rẽ Vách (5×5)",
+    "chapter": 1,
+    "pacing": "Ten (Thử thách 1)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Bẫy trực giác: Rẽ sai nhánh sẽ sót lại 1 ô góc ở cuối đường.",
+    "timerSec": null,
+    "unlockBuff": "Mở Buff Hint (3 Lượt)"
+  },
+  {
+    "id": "L07",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 1,
+        "c1": 3,
+        "r2": 2,
+        "c2": 3
+      },
+      {
+        "r1": 2,
+        "c1": 3,
+        "r2": 3,
+        "c2": 3
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 2,
+        "col": 3,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 2,
+        "length": 12,
+        "cells": 13,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5.6,
+      "estimatedSolveSeconds": 18,
+      "expectedPlayerUndos": 10,
+      "visualAutopilotRatio": "48%",
+      "averageBranchingChoices": 1.52,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.4,
+      "spatialContentionScore": 2.66,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 2.6,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Vách Ngăn Đối Xứng (5×5)",
+    "chapter": 1,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Bố cục đối xứng hài hòa, giải tỏa căng thẳng sau màn thử thách.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L08",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 3,
+        "c1": 3,
+        "r2": 4,
+        "c2": 3
+      },
+      {
+        "r1": 5,
+        "c1": 2,
+        "r2": 5,
+        "c2": 3
+      },
+      {
+        "r1": 2,
+        "c1": 4,
+        "r2": 3,
+        "c2": 4
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 3,
+        "length": 12,
+        "cells": 13,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 2,
+        "length": 16,
+        "cells": 17,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 6,
+      "visualAutopilotRatio": "64%",
+      "averageBranchingChoices": 1.5,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.35,
+      "spatialContentionScore": 2.74,
+      "delayedDeadEndScore": 0.88,
+      "deductiveLoad": 2.9,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "3 Vách Ngăn Hẹp (6×5)",
+    "chapter": 1,
+    "pacing": "Ten (Thử thách 2)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "3 Vách chia bàn cờ thành các phòng hẹp, đòi hỏi tính toán thứ tự đi trước sau.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L09",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 0,
+        "c1": 1,
+        "r2": 1,
+        "c2": 1
+      },
+      {
+        "r1": 2,
+        "c1": 0,
+        "r2": 3,
+        "c2": 0
+      },
+      {
+        "r1": 3,
+        "c1": 1,
+        "r2": 4,
+        "c2": 1
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 4,
+        "cells": 5,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 0,
+        "length": 10,
+        "cells": 11,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 4,
+        "col": 2,
+        "length": 13,
+        "cells": 14,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ]
+      ],
+      "A3": [
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 11,
+      "visualAutopilotRatio": "52%",
+      "averageBranchingChoices": 1.52,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.4,
+      "spatialContentionScore": 5.24,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 4.1,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Mê Cung 3 Dây 3 Vách (6×5)",
+    "chapter": 1,
+    "pacing": "Ten (Hard Setup)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "3 Dây cùng tranh chấp không gian luồn qua 3 vách ngăn.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L10",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 0,
+        "c1": 5,
+        "r2": 1,
+        "c2": 5
+      },
+      {
+        "r1": 0,
+        "c1": 4,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 3
+      },
+      {
+        "r1": 0,
+        "c1": 2,
+        "r2": 1,
+        "c2": 2
+      }
+    ],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 5,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 5,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 2,
+        "col": 2,
+        "length": 16,
+        "cells": 17,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "A3": [
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "4 · Siêu Khó (Mastery)",
+      "humanDifficultyIndex": 88,
+      "estimatedSolveSeconds": 133,
+      "expectedPlayerUndos": 17,
+      "visualAutopilotRatio": "45%",
+      "averageBranchingChoices": 1.55,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.49,
+      "spatialContentionScore": 3.13,
+      "delayedDeadEndScore": 0.38,
+      "deductiveLoad": 2.8,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "MASTERY"
+    },
+    "name": "Đại Trận Vách Ngăn (6×6)",
+    "chapter": 1,
+    "pacing": "👑 CLIMAX CH1",
+    "pacingRole": "MASTERY",
+    "tutorialTip": "Bậc thầy không gian: Phối hợp 3 dây phủ kín mê cung vách ngăn!",
+    "timerSec": null,
+    "unlockBuff": "🎁 RƯƠNG CỤM 1 (2000 Vàng + 1 Hint + 1 Freeze)"
+  },
+  {
+    "id": "L11",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 3,
+        "c": 2
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 4,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 2,
+        "length": 11,
+        "cells": 12,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5.2,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 9,
+      "visualAutopilotRatio": "45%",
+      "averageBranchingChoices": 1.59,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.59,
+      "spatialContentionScore": 0.4,
+      "delayedDeadEndScore": 1,
+      "deductiveLoad": 2,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: 1 Thùng Hàng (5×5)",
+    "chapter": 2,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Khối Trượt 📦: Đâm đầu dây vào khối để đẩy lùi 1 ô vào khoảng trống mở lối đi.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L12",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 0,
+        "c": 1
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 3,
+        "length": 14,
+        "cells": 15,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 3,
+        "length": 8,
+        "cells": 9,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 7.4,
+      "estimatedSolveSeconds": 20,
+      "expectedPlayerUndos": 11,
+      "visualAutopilotRatio": "45%",
+      "averageBranchingChoices": 1.55,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.49,
+      "spatialContentionScore": 3.26,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 2.9,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Đẩy Thùng Mở Ngách (5×5)",
+    "chapter": 2,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Đẩy thùng sang bên hông để dây thứ 2 có đường tiến vào góc.",
+    "timerSec": null,
+    "unlockBuff": null
+  },
+  {
+    "id": "L13",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 2,
+        "c": 1
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 0,
+        "length": 7,
+        "cells": 8,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 4,
+        "col": 1,
+        "length": 15,
+        "cells": 16,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 11,
+      "visualAutopilotRatio": "41%",
+      "averageBranchingChoices": 1.59,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.59,
+      "spatialContentionScore": 0.4,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 1.8,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Bẫy Hướng Đẩy Thùng (5×5)",
+    "chapter": 2,
+    "pacing": "Ten (Thử thách 1)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Khối ở góc: Có 2 hướng đẩy nhưng chỉ 1 hướng đúng, đẩy sai sẽ tự bít đường.",
+    "timerSec": 75,
+    "unlockBuff": "⏱️ Kích Hoạt Timer & 🎁 Buff Freeze"
+  },
+  {
+    "id": "L14",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 1,
+        "c": 0
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 4,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 1,
+        "length": 19,
+        "cells": 20,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5.9,
+      "estimatedSolveSeconds": 18,
+      "expectedPlayerUndos": 16,
+      "visualAutopilotRatio": "30%",
+      "averageBranchingChoices": 1.7,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.89,
+      "spatialContentionScore": 0.67,
+      "delayedDeadEndScore": 1.14,
+      "deductiveLoad": 2.4,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Đẩy Thùng Thông Suốt (6×5)",
+    "chapter": 2,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "1 Cú đẩy trúng đích giải phóng toàn bộ hành lang rộng, vuốt êm tay.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L15",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 3,
+        "c": 1
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 4,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 4,
+        "length": 14,
+        "cells": 15,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 6.1,
+      "estimatedSolveSeconds": 19,
+      "expectedPlayerUndos": 15,
+      "visualAutopilotRatio": "33%",
+      "averageBranchingChoices": 1.67,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.81,
+      "spatialContentionScore": 0.33,
+      "delayedDeadEndScore": 1.74,
+      "deductiveLoad": 2.6,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "2 Thùng Hàng Độc Lập (6×5)",
+    "chapter": 2,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "2 Thùng hàng nằm ở 2 cánh bàn cờ, mỗi dây tự phụ trách xử lý 1 thùng.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L16",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 3,
+        "c": 0
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 2,
+        "length": 4,
+        "cells": 5,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 4,
+        "col": 1,
+        "length": 6,
+        "cells": 7,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 4,
+        "col": 4,
+        "length": 22,
+        "cells": 23,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ]
+      ],
+      "A3": [
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 10.3,
+      "estimatedSolveSeconds": 24,
+      "expectedPlayerUndos": 15,
+      "visualAutopilotRatio": "50%",
+      "averageBranchingChoices": 1.56,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.51,
+      "spatialContentionScore": 9.47,
+      "delayedDeadEndScore": 0.88,
+      "deductiveLoad": 6.3,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "2 Thùng & 3 Dây (6×6)",
+    "chapter": 2,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Dây A đẩy thùng dọn đường cho Dây B, tạo lối đi thông suốt.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L17",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 2,
+        "c": 0
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 2,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 0,
+        "length": 6,
+        "cells": 7,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 2,
+        "col": 5,
+        "length": 18,
+        "cells": 19,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ]
+      ],
+      "A3": [
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 7.6,
+      "estimatedSolveSeconds": 21,
+      "expectedPlayerUndos": 15,
+      "visualAutopilotRatio": "44%",
+      "averageBranchingChoices": 1.63,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.7,
+      "spatialContentionScore": 2.99,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 3.1,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Đẩy 2 Thùng Song Tuyến (6×6)",
+    "chapter": 2,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Bố cục thoáng, đẩy 2 thùng theo đường thẳng nhẹ nhàng giải phóng áp lực.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L18",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 0,
+        "c": 1
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 5,
+        "length": 6,
+        "cells": 7,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 0,
+        "length": 6,
+        "cells": 7,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 0,
+        "col": 3,
+        "length": 20,
+        "cells": 21,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "A3": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 17,
+      "visualAutopilotRatio": "38%",
+      "averageBranchingChoices": 1.66,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.78,
+      "spatialContentionScore": 0.9,
+      "delayedDeadEndScore": 0.88,
+      "deductiveLoad": 2.2,
+      "mechanicLoad": 1.2,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Chuỗi Đẩy Thùng Nối Tiếp (6×6)",
+    "chapter": 2,
+    "pacing": "Ten (Thử thách 2)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Phải đẩy Thùng 1 sang ô trung gian để lấy góc tiếp cận đẩy tiếp Thùng 2.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L19",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 1,
+        "c": 0
+      },
+      {
+        "r": 4,
+        "c": 2
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 6,
+        "col": 0,
+        "length": 5,
+        "cells": 6,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 1,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 0,
+        "col": 2,
+        "length": 23,
+        "cells": 24,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 23,
+      "visualAutopilotRatio": "30%",
+      "averageBranchingChoices": 1.7,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.89,
+      "spatialContentionScore": 0.71,
+      "delayedDeadEndScore": 5.88,
+      "deductiveLoad": 6.2,
+      "mechanicLoad": 2.4,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Thùng Hàng Góc Hẹp (7×6)",
+    "chapter": 2,
+    "pacing": "Ten (Hard Setup)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Không gian hẹp đòi hỏi tính toán chính xác số ô trống để thùng không bị kẹt.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L20",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [
+      {
+        "r": 5,
+        "c": 0
+      },
+      {
+        "r": 6,
+        "c": 4
+      }
+    ],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 1,
+        "col": 5,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 5,
+        "length": 5,
+        "cells": 6,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 6,
+        "col": 1,
+        "length": 21,
+        "cells": 22,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "A3": [
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "4 · Siêu Khó (Mastery)",
+      "humanDifficultyIndex": 88,
+      "estimatedSolveSeconds": 133,
+      "expectedPlayerUndos": 22,
+      "visualAutopilotRatio": "35%",
+      "averageBranchingChoices": 1.68,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.84,
+      "spatialContentionScore": 5.27,
+      "delayedDeadEndScore": 2.43,
+      "deductiveLoad": 5.7,
+      "mechanicLoad": 2.4,
+      "peakTechnique": null,
+      "pacingRole": "MASTERY"
+    },
+    "name": "Đại Sư Sokoban (7×6)",
+    "chapter": 2,
+    "pacing": "👑 CLIMAX CH2",
+    "pacingRole": "MASTERY",
+    "tutorialTip": "Xử lý chuẩn xác 3 Thùng hàng để mở toang toàn bộ bản đồ 7×6!",
+    "timerSec": 130,
+    "unlockBuff": "🎁 RƯƠNG CỤM 2"
+  },
+  {
+    "id": "L21",
+    "grid": {
+      "rows": 5,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 4,
+        "c": 1,
+        "color": "purple"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 4,
+        "c": 3,
+        "color": "purple"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 0,
+        "length": 9,
+        "cells": 10,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 3,
+        "length": 14,
+        "cells": 15,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 7.2,
+      "estimatedSolveSeconds": 20,
+      "expectedPlayerUndos": 11,
+      "visualAutopilotRatio": "39%",
+      "averageBranchingChoices": 1.61,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.65,
+      "spatialContentionScore": 3.06,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 2.9,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: 1 Lăng Kính & Cổng (5×5)",
+    "chapter": 3,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Dây đi qua Lăng Kính 💎 để đổi màu rồi mới có thể vượt qua Cổng cùng màu.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L22",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 5,
+        "c": 1,
+        "color": "purple"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 4,
+        "c": 0,
+        "color": "purple"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 0,
+        "length": 17,
+        "cells": 18,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5.3,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 13,
+      "visualAutopilotRatio": "39%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 0.92,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 2,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "2 Màu Độc Lập (6×5)",
+    "chapter": 3,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Dây 1 đổi màu Đỏ, Dây 2 đổi màu Xanh để đi qua đúng cổng màu của mình.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L23",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 0,
+        "c": 1,
+        "color": "green"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 1,
+        "c": 2,
+        "color": "green"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 4,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 0,
+        "length": 17,
+        "cells": 18,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 16,
+      "visualAutopilotRatio": "32%",
+      "averageBranchingChoices": 1.68,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.84,
+      "spatialContentionScore": 0.5,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 1.9,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Bẫy Nhầm Màu Cổng Chéo (6×5)",
+    "chapter": 3,
+    "pacing": "Ten (Thử thách 1)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "2 Cổng màu nằm đan chéo; đi nhầm lăng kính sẽ bị chặn cứng ở cổng.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L24",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 0,
+        "c": 1,
+        "color": "green"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 1,
+        "c": 0,
+        "color": "green"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 12,
+        "cells": 13,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 2,
+        "length": 16,
+        "cells": 17,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 7.1,
+      "estimatedSolveSeconds": 20,
+      "expectedPlayerUndos": 7,
+      "visualAutopilotRatio": "57%",
+      "averageBranchingChoices": 1.57,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.54,
+      "spatialContentionScore": 2.83,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 2.9,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Đa Sắc Đối Xứng (6×5)",
+    "chapter": 3,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Hiệu ứng chuyển màu rực rỡ, đường đi đối xứng êm ái giải tỏa căng thẳng.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L25",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 3,
+        "c": 2,
+        "color": "blue"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 2,
+        "c": 3,
+        "color": "blue"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 2,
+        "col": 2,
+        "length": 15,
+        "cells": 16,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 1,
+        "length": 19,
+        "cells": 20,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 5.1,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 15,
+      "visualAutopilotRatio": "47%",
+      "averageBranchingChoices": 1.68,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.84,
+      "spatialContentionScore": 0.56,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 2,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "1 Dây Qua 2 Cổng Màu (6×6)",
+    "chapter": 3,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Sau khi nhận màu, dây duy trì thuộc tính màu để vượt qua cả 2 cổng nối tiếp.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L26",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 5,
+        "c": 3,
+        "color": "green"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 5,
+        "c": 1,
+        "color": "green"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 0,
+        "length": 11,
+        "cells": 12,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 5,
+        "col": 4,
+        "length": 12,
+        "cells": 13,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "A3": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 8.1,
+      "estimatedSolveSeconds": 21,
+      "expectedPlayerUndos": 19,
+      "visualAutopilotRatio": "30%",
+      "averageBranchingChoices": 1.7,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.89,
+      "spatialContentionScore": 3.62,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 3.4,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Phân Luồng 3 Dây Đa Sắc (6×6)",
+    "chapter": 3,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "3 Dây cùng tìm đường tiếp cận đúng lăng kính trên bàn cờ rộng.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L27",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 1,
+        "c": 3,
+        "color": "green"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 2,
+        "c": 2,
+        "color": "green"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 5,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 3,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 0,
+        "col": 3,
+        "length": 13,
+        "cells": 14,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5.2,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 18,
+      "visualAutopilotRatio": "39%",
+      "averageBranchingChoices": 1.67,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.81,
+      "spatialContentionScore": 0.76,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 2,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Vòng Xoáy Lăng Kính (6×6)",
+    "chapter": 3,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Các lăng kính xếp theo vòng tròn tự nhiên, kéo lướt nhẹ nhàng.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L28",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 5,
+        "c": 3,
+        "color": "blue"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 5,
+        "c": 1,
+        "color": "blue"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 3,
+        "col": 3,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 5,
+        "length": 11,
+        "cells": 12,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 5,
+        "col": 4,
+        "length": 18,
+        "cells": 19,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "A3": [
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 12,
+      "visualAutopilotRatio": "46%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 6.89,
+      "delayedDeadEndScore": 4.89,
+      "deductiveLoad": 8.4,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Đổi Màu 2 Lần Liên Tiếp (7×6)",
+    "chapter": 3,
+    "pacing": "Ten (Thử thách 2)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "1 Dây phải qua Lăng kính 1 lấy màu A qua Cổng A, rồi qua Lăng kính 2 lấy màu B qua Cổng B.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L29",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 4,
+        "c": 3,
+        "color": "green"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 4,
+        "c": 5,
+        "color": "green"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 3,
+        "col": 3,
+        "length": 9,
+        "cells": 10,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 4,
+        "length": 7,
+        "cells": 8,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 1,
+        "col": 1,
+        "length": 23,
+        "cells": 24,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "A3": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 10,
+      "visualAutopilotRatio": "51%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 8.57,
+      "delayedDeadEndScore": 1.23,
+      "deductiveLoad": 6.3,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Ma Trận 3 Màu Đan Cài (7×6)",
+    "chapter": 3,
+    "pacing": "Ten (Hard Setup)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "3 Màu Đỏ - Xanh - Tím đan xen đòi hỏi quy hoạch luồng đi chuẩn xác.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L30",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [
+      {
+        "r": 1,
+        "c": 5,
+        "color": "red"
+      }
+    ],
+    "colorGates": [
+      {
+        "r": 0,
+        "c": 4,
+        "color": "red"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 6,
+        "col": 5,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 5,
+        "length": 7,
+        "cells": 8,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 0,
+        "col": 3,
+        "length": 11,
+        "cells": 12,
+        "color": "green"
+      },
+      {
+        "id": "A4",
+        "row": 2,
+        "col": 0,
+        "length": 10,
+        "cells": 11,
+        "color": "purple"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": [],
+      "A4": []
+    },
+    "solution": {
+      "A1": [
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "A3": [
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ]
+      ],
+      "A4": [
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "4 · Siêu Khó (Mastery)",
+      "humanDifficultyIndex": 88,
+      "estimatedSolveSeconds": 133,
+      "expectedPlayerUndos": 16,
+      "visualAutopilotRatio": "45%",
+      "averageBranchingChoices": 1.63,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.7,
+      "spatialContentionScore": 3.17,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 3,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "MASTERY"
+    },
+    "name": "Tuyệt Kỹ Thủy Tinh (7×6)",
+    "chapter": 3,
+    "pacing": "👑 CLIMAX CH3",
+    "pacingRole": "MASTERY",
+    "tutorialTip": "4 Dây phối hợp hoàn hảo qua hệ thống lăng kính và cổng màu đa sắc!",
+    "timerSec": 130,
+    "unlockBuff": "🎁 RƯƠNG CỤM 3"
+  },
+  {
+    "id": "L31",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 4,
+        "c": 0,
+        "gateR": 1,
+        "gateC": 4,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 0,
+        "length": 14,
+        "cells": 15,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 4,
+        "length": 14,
+        "cells": 15,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 13,
+      "visualAutopilotRatio": "39%",
+      "averageBranchingChoices": 1.68,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.84,
+      "spatialContentionScore": 0.75,
+      "delayedDeadEndScore": 0.38,
+      "deductiveLoad": 1.8,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: Nút Bấm & Cổng (6×5)",
+    "chapter": 4,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Dây A đè lên Nút Bấm 🔘 -> Cổng Mở ⛩️ -> Dây B đi xuyên qua Cổng.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L32",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 5,
+        "c": 3,
+        "gateR": 4,
+        "gateC": 0,
+        "latch": true
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 3,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 0,
+        "length": 17,
+        "cells": 18,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 14,
+      "visualAutopilotRatio": "43%",
+      "averageBranchingChoices": 1.71,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.92,
+      "spatialContentionScore": 0.5,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 1.9,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: Chốt Khóa Latch (6×5)",
+    "chapter": 4,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Chốt khóa tự động: Chỉ cần lướt qua Nút 1 lần là Cổng tự khóa mở vĩnh viễn.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L33",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 5,
+        "c": 0,
+        "gateR": 2,
+        "gateC": 3,
+        "latch": true
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 0,
+        "length": 11,
+        "cells": 12,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 3,
+        "length": 17,
+        "cells": 18,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 13,
+      "visualAutopilotRatio": "43%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 5.24,
+      "delayedDeadEndScore": 1.02,
+      "deductiveLoad": 4.5,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Phụ Thuộc Chéo 2 Dây (6×5)",
+    "chapter": 4,
+    "pacing": "Ten (Thử thách 1)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Dây A mở Cổng cho B; Dây B đi qua xong phải đè Nút mở tiếp Cổng cho Dây A.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L34",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 4,
+        "c": 0,
+        "gateR": 4,
+        "gateC": 5,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 0,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 5,
+        "col": 5,
+        "length": 21,
+        "cells": 22,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 5,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 19,
+      "visualAutopilotRatio": "29%",
+      "averageBranchingChoices": 1.71,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.92,
+      "spatialContentionScore": 0.49,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 1.9,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "1 Nút Mở Toang 2 Cổng (6×6)",
+    "chapter": 4,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "1 Nút bấm kích hoạt mở toang cả 2 cổng, giải tỏa áp lực đếm bước.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L35",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 5,
+        "c": 1,
+        "gateR": 3,
+        "gateC": 0,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 0,
+        "length": 7,
+        "cells": 8,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 4,
+        "col": 0,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 1,
+        "col": 1,
+        "length": 17,
+        "cells": 18,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "A3": [
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 9.7,
+      "estimatedSolveSeconds": 24,
+      "expectedPlayerUndos": 18,
+      "visualAutopilotRatio": "36%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 5.5,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 4.2,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "2 Nút Mở 2 Cổng Riêng (6×6)",
+    "chapter": 4,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Mỗi cặp Dây - Nút vận hành độc lập để thông luồng toàn bàn cờ.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L36",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 4,
+        "c": 0,
+        "gateR": 1,
+        "gateC": 5,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 0,
+        "length": 7,
+        "cells": 8,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 5,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 3,
+        "col": 5,
+        "length": 17,
+        "cells": 18,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ]
+      ],
+      "A3": [
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 5.3,
+      "estimatedSolveSeconds": 17,
+      "expectedPlayerUndos": 18,
+      "visualAutopilotRatio": "36%",
+      "averageBranchingChoices": 1.7,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.89,
+      "spatialContentionScore": 0.83,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 2.1,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Chuỗi Mở Cổng Tuần Tự (6×6)",
+    "chapter": 4,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Mở Cổng 1 để tiếp cận Nút 2, mở tiếp Cổng 2 cho dây chủ lực về đích.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L37",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 2,
+        "c": 5,
+        "gateR": 3,
+        "gateC": 3,
+        "latch": true
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 2,
+        "col": 4,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 3,
+        "length": 14,
+        "cells": 15,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 6,
+        "col": 0,
+        "length": 15,
+        "cells": 16,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 10.3,
+      "estimatedSolveSeconds": 24,
+      "expectedPlayerUndos": 17,
+      "visualAutopilotRatio": "44%",
+      "averageBranchingChoices": 1.64,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.73,
+      "spatialContentionScore": 6.23,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 4.8,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Cơ Quan Đối Xứng (7×6)",
+    "chapter": 4,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Bố cục đối xứng hài hòa, dẫm nút mở cổng nhẹ nhàng êm ái.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L38",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 1,
+        "c": 0,
+        "gateR": 6,
+        "gateC": 4,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 5,
+        "length": 12,
+        "cells": 13,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 4,
+        "col": 2,
+        "length": 14,
+        "cells": 15,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 19,
+      "visualAutopilotRatio": "41%",
+      "averageBranchingChoices": 1.72,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.94,
+      "spatialContentionScore": 2.99,
+      "delayedDeadEndScore": 0.63,
+      "deductiveLoad": 3.2,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "3 Nút Bấm × 2 Cổng Mở (7×6)",
+    "chapter": 4,
+    "pacing": "Ten (Thử thách 2)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Phân bổ thứ tự dẫm nút: Sai thứ tự sẽ tự khóa nhốt 1 dây bên trong phòng kín.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L39",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 5,
+        "c": 5,
+        "gateR": 5,
+        "gateC": 4,
+        "latch": true
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 6,
+        "col": 5,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 4,
+        "length": 7,
+        "cells": 8,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 6,
+        "col": 0,
+        "length": 7,
+        "cells": 8,
+        "color": "green"
+      },
+      {
+        "id": "A4",
+        "row": 2,
+        "col": 2,
+        "length": 16,
+        "cells": 17,
+        "color": "purple"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": [],
+      "A4": []
+    },
+    "solution": {
+      "A1": [
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "A3": [
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ],
+      "A4": [
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 22,
+      "visualAutopilotRatio": "37%",
+      "averageBranchingChoices": 1.66,
+      "falseLeadsCount": 1,
+      "ambiguityScore": 1.83,
+      "spatialContentionScore": 5.75,
+      "delayedDeadEndScore": 0.75,
+      "deductiveLoad": 4.6,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Vòng Khóa Cơ Quan (7×6)",
+    "chapter": 4,
+    "pacing": "Ten (Hard Setup)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "4 Dây hỗ trợ lẫn nhau theo chu trình khép kín A->B->C->D.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L40",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [
+      {
+        "r": 0,
+        "c": 0,
+        "gateR": 6,
+        "gateC": 3,
+        "latch": false
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 1,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 2,
+        "length": 13,
+        "cells": 14,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 1,
+        "col": 1,
+        "length": 7,
+        "cells": 8,
+        "color": "green"
+      },
+      {
+        "id": "A4",
+        "row": 1,
+        "col": 3,
+        "length": 10,
+        "cells": 11,
+        "color": "purple"
+      }
+    ],
+    "waypoints": {
+      "A1": [],
+      "A2": [],
+      "A3": [],
+      "A4": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ]
+      ],
+      "A4": [
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "4 · Siêu Khó (Mastery)",
+      "humanDifficultyIndex": 88,
+      "estimatedSolveSeconds": 133,
+      "expectedPlayerUndos": 22,
+      "visualAutopilotRatio": "37%",
+      "averageBranchingChoices": 1.63,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.7,
+      "spatialContentionScore": 11.39,
+      "delayedDeadEndScore": 0.5,
+      "deductiveLoad": 7.1,
+      "mechanicLoad": 1,
+      "peakTechnique": null,
+      "pacingRole": "MASTERY"
+    },
+    "name": "Trận Đồ Vô Cực Cơ Quan (7×6)",
+    "chapter": 4,
+    "pacing": "👑 CLIMAX CH4",
+    "pacingRole": "MASTERY",
+    "tutorialTip": "Tuyệt đỉnh điều khiển cơ quan: 4 Dây phối hợp mở 3 cổng liên hoàn!",
+    "timerSec": 130,
+    "unlockBuff": "🎁 RƯƠNG CỤM 4"
+  },
+  {
+    "id": "L41",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 0,
+        "length": 12,
+        "cells": 13,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 3,
+        "col": 0,
+        "length": 16,
+        "cells": 17,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 4,
+          "c": 2
+        },
+        {
+          "r": 4,
+          "c": 4
+        }
+      ],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ]
+      ],
+      "A2": [
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 6.9,
+      "estimatedSolveSeconds": 20,
+      "expectedPlayerUndos": 7,
+      "visualAutopilotRatio": "43%",
+      "averageBranchingChoices": 1.57,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.54,
+      "spatialContentionScore": 0.58,
+      "delayedDeadEndScore": 1,
+      "deductiveLoad": 3.1,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Intro: Mật Mã Số 1-2 (6×5)",
+    "chapter": 5,
+    "pacing": "Ki (Block mới)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Mật mã số 🔢: Bắt buộc chạm Mốc 1 rồi mới đến Mốc 2 theo đúng thứ tự tăng dần.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L42",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 0,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 0,
+        "length": 15,
+        "cells": 16,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 5,
+          "c": 3
+        },
+        {
+          "r": 4,
+          "c": 3
+        },
+        {
+          "r": 4,
+          "c": 0
+        }
+      ],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 7.7,
+      "estimatedSolveSeconds": 21,
+      "expectedPlayerUndos": 13,
+      "visualAutopilotRatio": "43%",
+      "averageBranchingChoices": 1.54,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.46,
+      "spatialContentionScore": 0.58,
+      "delayedDeadEndScore": 2.57,
+      "deductiveLoad": 4.1,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Mật Mã Số 1-3 (6×5)",
+    "chapter": 5,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Rèn thói quen quan sát toàn bộ vị trí mốc số trước khi đặt tay kéo dây.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L43",
+    "grid": {
+      "rows": 6,
+      "cols": 5
+    },
+    "shape": [
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111",
+      "11111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 4,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 3,
+        "length": 18,
+        "cells": 19,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 3,
+          "c": 4
+        },
+        {
+          "r": 1,
+          "c": 4
+        },
+        {
+          "r": 0,
+          "c": 3
+        }
+      ],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 12,
+      "visualAutopilotRatio": "36%",
+      "averageBranchingChoices": 1.54,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.46,
+      "spatialContentionScore": 2.99,
+      "delayedDeadEndScore": 0.88,
+      "deductiveLoad": 3.1,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Bẫy Nghịch Lý Đốt Bước (6×5)",
+    "chapter": 5,
+    "pacing": "Ten (Thử thách 1)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Mốc 2 sát Mốc 1: Nếu nối thẳng sẽ thiếu bước L, ép phải uốn dây ra ngoài trước.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L44",
+    "grid": {
+      "rows": 6,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 1,
+        "col": 3,
+        "length": 18,
+        "cells": 19,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 5,
+        "length": 16,
+        "cells": 17,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 0,
+          "c": 0
+        },
+        {
+          "r": 4,
+          "c": 0
+        },
+        {
+          "r": 5,
+          "c": 3
+        }
+      ],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          1,
+          3
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 9.8,
+      "estimatedSolveSeconds": 24,
+      "expectedPlayerUndos": 11,
+      "visualAutopilotRatio": "38%",
+      "averageBranchingChoices": 1.62,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.67,
+      "spatialContentionScore": 4.56,
+      "delayedDeadEndScore": 2.52,
+      "deductiveLoad": 5.3,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "3 Mốc Số Thông Suốt (6×6)",
+    "chapter": 5,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "3 Mốc đặt theo đường cong tự nhiên, vuốt 1 nét thông suốt cực sướng tay.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L45",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 6,
+        "col": 0,
+        "length": 13,
+        "cells": 14,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 2,
+        "col": 0,
+        "length": 14,
+        "cells": 15,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 4,
+        "col": 1,
+        "length": 12,
+        "cells": 13,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 6,
+          "c": 3
+        },
+        {
+          "r": 5,
+          "c": 5
+        },
+        {
+          "r": 5,
+          "c": 2
+        }
+      ],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ]
+      ],
+      "A3": [
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 11.1,
+      "estimatedSolveSeconds": 26,
+      "expectedPlayerUndos": 17,
+      "visualAutopilotRatio": "36%",
+      "averageBranchingChoices": 1.59,
+      "falseLeadsCount": 1,
+      "ambiguityScore": 1.64,
+      "spatialContentionScore": 6.65,
+      "delayedDeadEndScore": 1.81,
+      "deductiveLoad": 5.8,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "2 Chuỗi Mốc Độc Lập (7×6)",
+    "chapter": 5,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "Dây A (1->3), Dây B (1->2). Mỗi dây tự quản lý chuỗi mốc số của mình.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L46",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 5,
+        "length": 9,
+        "cells": 10,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 1,
+        "col": 0,
+        "length": 20,
+        "cells": 21,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 0,
+          "c": 2
+        },
+        {
+          "r": 0,
+          "c": 4
+        },
+        {
+          "r": 1,
+          "c": 5
+        },
+        {
+          "r": 3,
+          "c": 5
+        }
+      ],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "A3": [
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "2 · Thường (Flow)",
+      "humanDifficultyIndex": 9.5,
+      "estimatedSolveSeconds": 23,
+      "expectedPlayerUndos": 12,
+      "visualAutopilotRatio": "33%",
+      "averageBranchingChoices": 1.62,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.67,
+      "spatialContentionScore": 3.35,
+      "delayedDeadEndScore": 3.5,
+      "deductiveLoad": 5.5,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "ESCALATION"
+    },
+    "name": "Mốc Số Chữ Z 1-4 (7×6)",
+    "chapter": 5,
+    "pacing": "Shō (Phát triển)",
+    "pacingRole": "ESCALATION",
+    "tutorialTip": "4 Mốc xếp zíc-zắc hình chữ Z, uốn lượn dây phủ kín các góc mép bàn cờ.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L47",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 5,
+        "col": 2,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 0,
+        "col": 0,
+        "length": 17,
+        "cells": 18,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 4,
+        "col": 2,
+        "length": 12,
+        "cells": 13,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 6,
+          "c": 3
+        },
+        {
+          "r": 6,
+          "c": 5
+        },
+        {
+          "r": 4,
+          "c": 5
+        }
+      ],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          5,
+          2
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          0,
+          5
+        ]
+      ],
+      "A2": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          6,
+          0
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          1,
+          4
+        ]
+      ],
+      "A3": [
+        [
+          4,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "1 · Dễ (Warm-up)",
+      "humanDifficultyIndex": 11.8,
+      "estimatedSolveSeconds": 27,
+      "expectedPlayerUndos": 12,
+      "visualAutopilotRatio": "36%",
+      "averageBranchingChoices": 1.62,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.67,
+      "spatialContentionScore": 6.59,
+      "delayedDeadEndScore": 2.5,
+      "deductiveLoad": 6.3,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "WARMUP"
+    },
+    "name": "Gestalt 4 Mốc Xả Hơi (7×6)",
+    "chapter": 5,
+    "pacing": "Ketsu (Xả hơi)",
+    "pacingRole": "WARMUP",
+    "tutorialTip": "Bố cục mở, các mốc liên kết tự nhiên, nạp lại năng lượng trước 3 màn cuối.",
+    "timerSec": 75,
+    "unlockBuff": null
+  },
+  {
+    "id": "L48",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 4,
+        "col": 1,
+        "length": 8,
+        "cells": 9,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 3,
+        "col": 1,
+        "length": 7,
+        "cells": 8,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 6,
+        "col": 0,
+        "length": 24,
+        "cells": 25,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 3,
+          "c": 0
+        },
+        {
+          "r": 1,
+          "c": 0
+        },
+        {
+          "r": 0,
+          "c": 1
+        }
+      ],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "A2": [
+        [
+          3,
+          1
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      "A3": [
+        [
+          6,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 12,
+      "visualAutopilotRatio": "44%",
+      "averageBranchingChoices": 1.59,
+      "falseLeadsCount": 1,
+      "ambiguityScore": 1.64,
+      "spatialContentionScore": 7.37,
+      "delayedDeadEndScore": 1.67,
+      "deductiveLoad": 6,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "2 Chuỗi Mốc Đan Chéo (7×6)",
+    "chapter": 5,
+    "pacing": "Ten (Hard Setup)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Hai chuỗi mốc cắt ngang nhau, tranh chấp diện tích và thứ tự đi gay gắt.",
+    "timerSec": 100,
+    "unlockBuff": null
+  },
+  {
+    "id": "L49",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [],
+    "pushRocks": [],
+    "switches": [],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 0,
+        "length": 16,
+        "cells": 17,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 1,
+        "col": 4,
+        "length": 24,
+        "cells": 25,
+        "color": "blue"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 0,
+          "c": 2
+        },
+        {
+          "r": 0,
+          "c": 4
+        },
+        {
+          "r": 1,
+          "c": 5
+        },
+        {
+          "r": 3,
+          "c": 5
+        },
+        {
+          "r": 5,
+          "c": 5
+        }
+      ],
+      "A2": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          5
+        ],
+        [
+          1,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          2
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "3 · Khó (Insight/Trap)",
+      "humanDifficultyIndex": 42,
+      "estimatedSolveSeconds": 69,
+      "expectedPlayerUndos": 17,
+      "visualAutopilotRatio": "33%",
+      "averageBranchingChoices": 1.63,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.7,
+      "spatialContentionScore": 3.05,
+      "delayedDeadEndScore": 1.61,
+      "deductiveLoad": 3.8,
+      "mechanicLoad": 0,
+      "peakTechnique": null,
+      "pacingRole": "PEAK_TRAP"
+    },
+    "name": "Chuỗi Mật Mã 1-5 (7×6)",
+    "chapter": 5,
+    "pacing": "Ten (Tiền Climax)",
+    "pacingRole": "PEAK_TRAP",
+    "tutorialTip": "Lập kế hoạch toàn tuyến cho chuỗi 5 mốc số trên bàn cờ 8×6!",
+    "timerSec": 120,
+    "unlockBuff": "Gợi ý dùng Freeze"
+  },
+  {
+    "id": "L50",
+    "grid": {
+      "rows": 7,
+      "cols": 6
+    },
+    "shape": [
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111",
+      "111111"
+    ],
+    "rocks": [],
+    "walls": [
+      {
+        "r1": 0,
+        "c1": 4,
+        "r2": 1,
+        "c2": 4
+      },
+      {
+        "r1": 0,
+        "c1": 3,
+        "r2": 1,
+        "c2": 3
+      }
+    ],
+    "pushRocks": [
+      {
+        "r": 5,
+        "c": 0
+      }
+    ],
+    "switches": [
+      {
+        "r": 0,
+        "c": 4,
+        "gateR": 6,
+        "gateC": 2,
+        "latch": true
+      }
+    ],
+    "prisms": [],
+    "colorGates": [],
+    "anchors": [
+      {
+        "id": "A1",
+        "row": 0,
+        "col": 5,
+        "length": 10,
+        "cells": 11,
+        "color": "red"
+      },
+      {
+        "id": "A2",
+        "row": 6,
+        "col": 1,
+        "length": 8,
+        "cells": 9,
+        "color": "blue"
+      },
+      {
+        "id": "A3",
+        "row": 1,
+        "col": 5,
+        "length": 20,
+        "cells": 21,
+        "color": "green"
+      }
+    ],
+    "waypoints": {
+      "A1": [
+        {
+          "r": 0,
+          "c": 3
+        },
+        {
+          "r": 0,
+          "c": 1
+        },
+        {
+          "r": 1,
+          "c": 0
+        }
+      ],
+      "A2": [],
+      "A3": []
+    },
+    "solution": {
+      "A1": [
+        [
+          0,
+          5
+        ],
+        [
+          0,
+          4
+        ],
+        [
+          0,
+          3
+        ],
+        [
+          0,
+          2
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          4,
+          0
+        ],
+        [
+          5,
+          0
+        ]
+      ],
+      "A2": [
+        [
+          6,
+          1
+        ],
+        [
+          6,
+          2
+        ],
+        [
+          6,
+          3
+        ],
+        [
+          6,
+          4
+        ],
+        [
+          6,
+          5
+        ],
+        [
+          5,
+          5
+        ],
+        [
+          4,
+          5
+        ],
+        [
+          3,
+          5
+        ],
+        [
+          2,
+          5
+        ]
+      ],
+      "A3": [
+        [
+          1,
+          5
+        ],
+        [
+          1,
+          4
+        ],
+        [
+          1,
+          3
+        ],
+        [
+          1,
+          2
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          5,
+          2
+        ],
+        [
+          5,
+          3
+        ],
+        [
+          5,
+          4
+        ],
+        [
+          4,
+          4
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          2,
+          4
+        ],
+        [
+          2,
+          3
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          4,
+          2
+        ],
+        [
+          4,
+          3
+        ],
+        [
+          3,
+          3
+        ]
+      ]
+    },
+    "cognitiveMetrics": {
+      "difficultyClass": "4 · Siêu Khó (Mastery)",
+      "humanDifficultyIndex": 88,
+      "estimatedSolveSeconds": 133,
+      "expectedPlayerUndos": 16,
+      "visualAutopilotRatio": "32%",
+      "averageBranchingChoices": 1.58,
+      "falseLeadsCount": 0,
+      "ambiguityScore": 1.57,
+      "spatialContentionScore": 3.17,
+      "delayedDeadEndScore": 8,
+      "deductiveLoad": 8.9,
+      "mechanicLoad": 2.2,
+      "peakTechnique": null,
+      "pacingRole": "MASTERY"
+    },
+    "name": "Grand Finale: Đại Trận Hải Trình (7×6)",
+    "chapter": 5,
+    "pacing": "👑 GRAND FINALE",
+    "pacingRole": "MASTERY",
+    "tutorialTip": "Đại Trận Tổng Hợp: Phối hợp Vách + Đẩy Thùng + Công Tắc + Mật Mã Số để phủ kín 100%!",
+    "timerSec": 150,
+    "unlockBuff": "🎁 RƯƠNG CỤM 5 (Vinh Danh Bậc Thầy Hải Trình)"
+  }
+]

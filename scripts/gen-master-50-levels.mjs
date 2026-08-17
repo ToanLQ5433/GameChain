@@ -1,0 +1,317 @@
+import fs from 'fs';
+
+// Master 50-Level Specs matching the user's detailed Sawtooth Pacing Specification
+const MASTER_SPECS = [
+  // ================= CHƯƠNG 1 (L01–L10): VỊNH SAN HÔ (MEC-01 — Không Gian, Vách Ngăn & Khối Trượt Sokoban) =================
+  {
+    id: "L01", chapter: 1, pacing: "Ki (Khởi động)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Tutorial · 1 Dây (4×4)", R: 4, C: 4, K: 1, minLen: 16,
+    rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: "Mở Replay (Free)", tip: "Kéo 1 nét thông suốt qua tất cả ô để hiểu luật phủ kín 100%."
+  },
+  {
+    id: "L02", chapter: 1, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "2 Dây Song Tuyến (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Dây xanh và cam không được cắt chéo hoặc đè lên nhau."
+  },
+  {
+    id: "L03", chapter: 1, pacing: "Ten (Thử thách 1)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Bẫy Ngã Rẽ Trực Giác (5×5)", R: 5, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: "Mở Buff Hint (3 Lượt)", tip: "Nghịch lý đốt bước: Đi thẳng sẽ thiếu 1 ô; dùng Hint để thấy đường uốn bắt buộc."
+  },
+  {
+    id: "L04", chapter: 1, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Bàn Cờ Gestalt (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    shapeMode: "diamond", rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Đường đi rộng thoáng, vuốt mượt mà để xả căng thẳng sau màn Hard."
+  },
+  {
+    id: "L05", chapter: 1, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: 1 Đá Tảng (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    rocks: 1, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Ô Khóa (Đá tảng 🪨) bị chặn vĩnh viễn, bắt buộc phải luồn dây đi vòng."
+  },
+  {
+    id: "L06", chapter: 1, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: 1 Thanh Chặn Vách (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Thanh Chặn (Vách ngăn) cản lối đi thẳng, buộc dây uốn lượn zíc-zắc."
+  },
+  {
+    id: "L07", chapter: 1, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: 1 Khối Trượt Sokoban (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    rocks: 0, wallBudget: 0, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Khối Trượt 📦: Đâm đầu dây vào khối để đẩy lùi 1 ô vào khoảng trống mở đường."
+  },
+  {
+    id: "L08", chapter: 1, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Đảo Đôi Cầu Hẹp (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "bridge", rocks: 0, wallBudget: 1, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Đẩy 1 khối trượt qua cầu hẹp, giải phóng không gian đảo đối diện."
+  },
+  {
+    id: "L09", chapter: 1, pacing: "Ten (Hard Setup)", difficulty: "3 · Khó (Insight/Trap)", role: "ESCALATION",
+    name: "Bẫy Hướng Đẩy Khối (6×5)", R: 6, C: 5, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Khối trượt góc hẹp: Có 2 hướng đẩy nhưng chỉ 1 hướng đúng, đẩy sai sẽ tự kẹt đường."
+  },
+  {
+    id: "L10", chapter: 1, pacing: "👑 CLIMAX CH1", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
+    name: "Sokoban Master Climax (6×6)", R: 6, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 2, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: 130, buff: "🎁 RƯƠNG CỤM 1 (2000 Vàng + 1 Hint + 1 Freeze)", tip: "Đẩy khối A dọn đường để đẩy khối B."
+  },
+
+  // ================= CHƯƠNG 2 (L11–L20): KHO BÁU THỦY TINH (MEC-02 — Lăng Kính & Sắc Tố Dây × Khối Trượt) =================
+  {
+    id: "L11", chapter: 2, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: 1 Lăng Kính & Cổng Màu (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "Dây đi qua Lăng Kính 💎 để đổi màu rồi mới có thể đi qua Cổng cùng màu."
+  },
+  {
+    id: "L12", chapter: 2, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "2 Màu Độc Lập Thập Tự (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "cross", rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: null, buff: null, tip: "2 Dây tự tìm đúng lăng kính của mình trên bàn cờ Thập Tự."
+  },
+  {
+    id: "L13", chapter: 2, pacing: "Ten (Thử thách 1)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Bẫy Nhầm Màu Ngõ Hẹp (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 75, buff: "⏱️ Mở Timer & 🎁 Buff Freeze (Đóng băng 15s)", tip: "Cổng màu chặn lối; bấm Freeze để dừng thời gian 15s tính nước."
+  },
+  {
+    id: "L14", chapter: 2, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Vành Đai San Hô (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "ring", rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Bàn cờ vòng nhẫn, hiệu ứng chuyển màu rực rỡ giải tỏa áp lực đếm ngược."
+  },
+  {
+    id: "L15", chapter: 2, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "Khối Trượt Chắn Lăng Kính (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 1, pushCount: 1, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Đẩy Khối Trượt ra khoảng trống bên cạnh để lấy lối chạm vào Lăng Kính đổi màu."
+  },
+  {
+    id: "L16", chapter: 2, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "Đổi Màu + Thanh Chặn (6×6)", R: 6, C: 6, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Đổi màu xong phải luồn lách qua hệ thống vách ngăn hẹp để vào cổng."
+  },
+  {
+    id: "L17", chapter: 2, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Gestalt Đa Sắc (6×6)", R: 6, C: 6, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Thao tác vuốt đổi màu thông suốt, củng cố cảm giác làm chủ hệ màu."
+  },
+  {
+    id: "L18", chapter: 2, pacing: "Ten (Thử thách 2)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Đổi Màu 2 Lần Liên Tiếp (6×6)", R: 6, C: 6, K: 3, minLen: 9,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 100, buff: null, tip: "1 Dây phải đi qua 2 Lăng Kính liên tiếp để qua 2 Cổng màu nối nhau."
+  },
+  {
+    id: "L19", chapter: 2, pacing: "Ten (Hard Setup)", difficulty: "3 · Khó (Insight/Trap)", role: "ESCALATION",
+    name: "3 Cổng Màu × Khối Trượt (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 100, buff: null, tip: "Dây A đẩy khối dọn đường cho Dây B lấy màu, rồi Dây B mới mở đường thoát cho Dây A."
+  },
+  {
+    id: "L20", chapter: 2, pacing: "👑 CLIMAX CH2", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
+    name: "Thập Tự Đa Sắc Matrix (7×6)", R: 7, C: 6, K: 4, minLen: 8,
+    shapeMode: "cross", rocks: 0, wallBudget: 2, pushCount: 2, switches: false, prisms: true, waypoints: false, bombs: 0,
+    timer: 130, buff: "🎁 RƯƠNG CỤM 2", tip: "Phân bổ không gian 4 góc cực gắt."
+  },
+
+  // ================= CHƯƠNG 3 (L21–L30): MẬT MÃ HẢI VƯƠNG (MEC-03 — Mật Mã Số × Khối Trượt) =================
+  {
+    id: "L21", chapter: 3, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: Mốc Nối 1-2 (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "Mật mã số 🔢: Chạm Mốc 1 rồi mới đến Mốc 2 theo đúng thứ tự tăng dần."
+  },
+  {
+    id: "L22", chapter: 3, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Mốc Nối 1-3 Diamond (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "diamond", rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "Quan sát toàn bộ vị trí mốc số trước khi đặt tay kéo."
+  },
+  {
+    id: "L23", chapter: 3, pacing: "Ten (Thử thách 1)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Bẫy Mốc Số Ngược Hướng (6×5)", R: 6, C: 5, K: 2, minLen: 12,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 100, buff: null, tip: "Mốc 2 sát Mốc 1: Nếu nối thẳng sẽ thiếu bước L, ép phải uốn dây ra ngoài trước."
+  },
+  {
+    id: "L24", chapter: 3, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Mốc Nối Trái Tim (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "heart", rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "3 Mốc đặt theo đường cong tự nhiên của trái tim, vuốt 1 nét thông suốt."
+  },
+  {
+    id: "L25", chapter: 3, pacing: "Ki (Kỹ thuật mới)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "Mốc Nối Chữ Z 1-4 (6×6)", R: 6, C: 6, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "4 Mốc xếp so le hình chữ Z, uốn lượn dây phủ kín các góc mép bàn cờ."
+  },
+  {
+    id: "L26", chapter: 3, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "Khối Trượt Che Mốc Số (6×6)", R: 6, C: 6, K: 3, minLen: 9,
+    rocks: 0, wallBudget: 1, pushCount: 1, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "Mốc 2 bị Khối Trượt đè lên; phải dùng dây đẩy khối ra trước mới chạm được Mốc 2."
+  },
+  {
+    id: "L27", chapter: 3, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Gestalt 4 Mốc (6×6)", R: 6, C: 6, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 75, buff: null, tip: "Bố cục mở, các mốc liên kết tự nhiên, giải phóng áp lực tính toán."
+  },
+  {
+    id: "L28", chapter: 3, pacing: "Ten (Thử thách 2)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "2 Chuỗi Mốc Đan Chéo (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 100, buff: null, tip: "Dây A (1->3), Dây B (1->2). Hai chuỗi mốc cắt ngang nhau, tranh chấp diện tích gay gắt."
+  },
+  {
+    id: "L29", chapter: 3, pacing: "Ten (Hard Setup)", difficulty: "3 · Khó (Insight/Trap)", role: "ESCALATION",
+    name: "Khối Trượt Làm Cầu Mốc (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 100, buff: null, tip: "Đẩy Khối Trượt vào đúng điểm khuyết để tạo mặt phẳng nối từ Mốc 2 sang Mốc 3."
+  },
+  {
+    id: "L30", chapter: 3, pacing: "👑 CLIMAX CH3", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
+    name: "Mastery Mật Mã Số (7×6)", R: 7, C: 6, K: 3, minLen: 12,
+    rocks: 0, wallBudget: 3, pushCount: 2, switches: false, prisms: false, waypoints: true, bombs: 0,
+    timer: 130, buff: "🎁 RƯƠNG CỤM 3", tip: "Chuỗi Mốc 1->5 kết hợp 2 Khối trượt và 3 Vách ngăn."
+  },
+
+  // ================= CHƯƠNG 4 (L31–L40): CƠ QUAN CỔ ĐẠI (MEC-04 — Công Tắc, Cổng Mở & Khối Trượt Đè Nút) =================
+  {
+    id: "L31", chapter: 4, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: Nút Bấm & Cổng Mở (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 0, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Dây A đè lên Nút Bấm 🔘 -> Cổng Mở ⛩️ -> Dây B đi xuyên qua Cổng."
+  },
+  {
+    id: "L32", chapter: 4, pacing: "Ki (Block mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: Chốt Khóa Latch (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 1, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Chốt khóa tự động: Chỉ cần lướt qua Nút 1 lần là Cổng tự khóa mở vĩnh viễn."
+  },
+  {
+    id: "L33", chapter: 4, pacing: "Ten (Thử thách 1)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Khóa Chéo 2 Dây (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 100, buff: null, tip: "Dây A mở Cổng cho Dây B; Dây B đi qua xong phải đè Nút mở Cổng cho Dây A đi tiếp."
+  },
+  {
+    id: "L34", chapter: 4, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Đồng Hồ Cát 2 Khoang (6×6)", R: 6, C: 6, K: 2, minLen: 12,
+    shapeMode: "hourglass", rocks: 0, wallBudget: 1, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Đè 1 nút mở toang cả 2 khoang đồng hồ cát, giải tỏa căng thẳng nhận thức."
+  },
+  {
+    id: "L35", chapter: 4, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "2 Nút -> 1 Cổng Chung (6×6)", R: 6, C: 6, K: 3, minLen: 8,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Cổng lớn chỉ mở khi cả 2 Nút Bấm đều có thân dây đè lên cùng lúc."
+  },
+  {
+    id: "L36", chapter: 4, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "Công Tắc + Vách Ngăn (6×6)", R: 6, C: 6, K: 3, minLen: 9,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Mở Cổng dẫn vào mê cung hẹp tạo bởi các Thanh Chặn."
+  },
+  {
+    id: "L37", chapter: 4, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Mỏ Neo Cơ Quan (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    shapeMode: "anchor", rocks: 0, wallBudget: 1, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Bố cục thoáng, thao tác đè nút mở cổng nhẹ nhàng."
+  },
+  {
+    id: "L38", chapter: 4, pacing: "Ten (Thử thách 2)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "3 Nút Bấm × 2 Cổng Mở (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 100, buff: null, tip: "Phân bổ thứ tự dẫm nút: Sai thứ tự sẽ tự khóa nhốt 1 dây bên trong phòng kín."
+  },
+  {
+    id: "L39", chapter: 4, pacing: "Ten (Hard Setup)", difficulty: "3 · Khó (Insight/Trap)", role: "ESCALATION",
+    name: "💡 Khối Trượt Đè Nút (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 100, buff: null, tip: "Dây không đủ độ dài L để giữ nút; ép người chơi phát hiện mẹo đẩy Khối đè lên Nút!"
+  },
+  {
+    id: "L40", chapter: 4, pacing: "👑 CLIMAX CH4", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
+    name: "Trận Đồ Vô Cực Cơ Quan (7×6)", R: 7, C: 6, K: 4, minLen: 8,
+    rocks: 0, wallBudget: 3, pushCount: 2, switches: true, prisms: false, waypoints: false, bombs: 0,
+    timer: 130, buff: "🎁 RƯƠNG CỤM 4", tip: "Phụ thuộc vòng tròn 4 bước giữa 4 dây và 2 khối trượt."
+  },
+
+  // ================= CHƯƠNG 5 (L41–L50): BOM BIỂN SÂU (MEC-05 — Bom Bẫy Trap & Đại Trận All-Star) =================
+  {
+    id: "L41", chapter: 5, pacing: "Ki (Trap mới)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Intro: Bom Biển Sâu (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 0, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 1,
+    timer: 75, buff: null, tip: "Bom Bẫy 💣: Tự chạm Bom = Thua ngay; Đẩy Khối Trượt 📦 vào Bom = Cả 2 cùng nổ biến mất!"
+  },
+  {
+    id: "L42", chapter: 5, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Đẩy Khối Qua Cầu Phá Bom (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    shapeMode: "bridge", rocks: 0, wallBudget: 1, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 1,
+    timer: 75, buff: null, tip: "Đẩy Khối Trượt qua bên kia cầu để kích nổ quả Bom chắn đường."
+  },
+  {
+    id: "L43", chapter: 5, pacing: "Ten (Thử thách 1)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Đánh Lừa Góc Tiếp Cận Khối (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 1,
+    timer: 100, buff: null, tip: "Có 2 hướng tiếp cận Khối, đi sai hướng sẽ làm Khối trượt lệch quỹ đạo va vào Bom."
+  },
+  {
+    id: "L44", chapter: 5, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Nổ Bom Trái Tim (6×6)", R: 6, C: 6, K: 2, minLen: 12,
+    shapeMode: "heart", rocks: 0, wallBudget: 0, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 1,
+    timer: 75, buff: null, tip: "1 Cú đẩy trúng Bom tạo chuỗi nổ haptic rung chuyển, giải phóng toàn bộ bàn cờ."
+  },
+  {
+    id: "L45", chapter: 5, pacing: "Shō (Phát triển)", difficulty: "2 · Thường (Flow)", role: "ESCALATION",
+    name: "2 Bom + 2 Khối Trượt (7×6)", R: 7, C: 6, K: 3, minLen: 9,
+    rocks: 0, wallBudget: 1, pushCount: 2, switches: false, prisms: false, waypoints: false, bombs: 2,
+    timer: 75, buff: null, tip: "2 Cặp Bom - Khối độc lập ở 2 góc bàn cờ, dọn đường cho 3 dây."
+  },
+  {
+    id: "L46", chapter: 5, pacing: "Ten (Thử thách 2)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Thứ Tự Kích Nổ 2 Bom (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 2, switches: false, prisms: false, waypoints: false, bombs: 2,
+    timer: 100, buff: null, tip: "Phải phá Bom A để mở đường tiếp cận đẩy Khối B vào Bom B; làm ngược lại sẽ tắc đường."
+  },
+  {
+    id: "L47", chapter: 5, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
+    name: "Vành Đai San Hô Xả Hơi (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    shapeMode: "ring", rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
+    timer: 75, buff: null, tip: "Màn xả hơi chiến lược, nạp lại năng lượng trước 3 màn quyết định cuối."
+  },
+  {
+    id: "L48", chapter: 5, pacing: "Ten (Hard Setup)", difficulty: "3 · Khó (Insight/Trap)", role: "ESCALATION",
+    name: "Bom Nằm Sau Cổng Mở (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    rocks: 0, wallBudget: 2, pushCount: 1, switches: true, prisms: false, waypoints: false, bombs: 1,
+    timer: 100, buff: null, tip: "Đè Nút mở Cổng -> Đẩy Khối Trượt xuyên Cổng phá Bom -> Dây mới an toàn đi qua."
+  },
+  {
+    id: "L49", chapter: 5, pacing: "Ten (Tiền Climax)", difficulty: "3 · Khó (Insight/Trap)", role: "PEAK_TRAP",
+    name: "Tứ Đại Trận Đồ (8×6)", R: 8, C: 6, K: 4, minLen: 8,
+    rocks: 0, wallBudget: 2, pushCount: 2, switches: true, prisms: false, waypoints: false, bombs: 2,
+    timer: 100, buff: "Gợi ý dùng Freeze", tip: "4 Dây, 2 Bom, 2 Khối, 2 Cổng Mở. Áp lực Timer siết chặt."
+  },
+  {
+    id: "L50", chapter: 5, pacing: "👑 GRAND FINALE", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
+    name: "All-Star Master Climax (8×6)", R: 8, C: 6, K: 4, minLen: 10,
+    rocks: 0, wallBudget: 3, pushCount: 2, switches: true, prisms: true, waypoints: true, bombs: 1,
+    timer: 150, buff: "🎁 RƯƠNG CỤM 5 (Vinh danh Master Toàn Hải Trình)", tip: "Đẩy Khối dọn Bom -> Mở Cổng -> Đổi Màu -> Chạy Mốc -> Phủ kín 100% bàn cờ!"
+  }
+];
+
+fs.writeFileSync('scripts/master_50_specs.json', JSON.stringify(MASTER_SPECS, null, 2));
+console.log('Saved 50 Master Level Specs to scripts/master_50_specs.json!');

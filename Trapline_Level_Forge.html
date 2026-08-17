@@ -119,6 +119,22 @@ progress{width:220px;height:10px}
 
 .neuro-box{background:#fefce8;border:1.5px solid #facc15;border-radius:10px;padding:14px;margin:12px 0}
 .ai-learning-banner{background:#eef2ff;border:1.5px solid #6366f1;border-radius:10px;padding:12px 16px;margin:10px 0;display:flex;justify-content:space-between;align-items:center}
+
+/* Interactive Shape Painter & Board Frame Styling (Matches GameScene output) */
+.shape-box{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:14px;margin:12px 0}
+.painter-board-frame{display:inline-block;background:#b9814a;border:2.5px solid #6b4423;border-radius:14px;padding:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.25), 0 4px 10px rgba(0,0,0,0.12)}
+.painter-grid{display:inline-grid;gap:3px;user-select:none;touch-action:none}
+.p-cell{width:36px;height:36px;border-radius:6px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;transition:transform .1s ease, background .15s ease}
+.p-cell.active{background:#ffffff;border:1.5px solid #d6e2fb;box-shadow:0 2px 4px rgba(0,0,0,0.15), inset 0 1px 0 #ffffff;color:#475569}
+.p-cell.void{background:rgba(0,0,0,0.28);border:1px dashed rgba(255,255,255,0.25);box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);color:rgba(255,255,255,0.35);opacity:0.65}
+.p-cell:hover{transform:scale(1.08);z-index:2}
+.p-cell.active:hover{background:#f1f5f9}
+.p-cell.void:hover{background:rgba(255,255,255,0.18);opacity:0.95}
+.p-cell.deg1{outline:2.5px solid #ef4444;outline-offset:-1px}
+.p-cell.deg1::after{content:'';position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:#ef4444}
+.painter-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 8px;border-radius:6px;background:#fff;border:1px solid #cbd5e1}
+.painter-badge.ok{background:#f0fdf4;border-color:#86efac;color:#166534}
+.painter-badge.warn{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
 </style>
 </head>
 <body>
@@ -131,14 +147,29 @@ progress{width:220px;height:10px}
 
 <main>
 
-<!-- ============ 1. CONFIG ============ -->
-<section class="card">
-  <h2>1 · Cấu hình Bàn Cờ & Tham Số Sinh</h2>
+<!-- ============ 1. LEVEL GENERATOR & COGNITIVE ANALYZER ============ -->
+<section class="card" id="secGen">
+  <h2>1 · Tạo Lập & Phân Tích Độ Khó Não Bộ (Cognitive Level Generator)</h2>
   <div class="row">
     <div class="f"><label for="fR">Số hàng</label><input id="fR" type="number" min="3" max="9" value="5"></div>
     <div class="f"><label for="fC">Số cột</label><input id="fC" type="number" min="3" max="8" value="5"></div>
     <div class="f"><label for="fK">Số Mỏ Neo (Dây)</label><input id="fK" type="number" min="1" max="4" value="2"></div>
     <div class="f"><label for="fM">Dây ngắn nhất</label><input id="fM" type="number" min="2" max="12" value="3"></div>
+    <div class="f wide"><label for="fShape">Hình dạng Bàn Cờ</label>
+      <select id="fShape">
+        <option value="auto_gestalt" selected>🎲 Tự động hình đẹp & đối xứng (Gestalt)</option>
+        <option value="heart">💖 Trái Tim (Heart Island)</option>
+        <option value="skull">🏴‍☠️ Đầu Lâu Cướp Biển (Pirate Skull)</option>
+        <option value="anchor">⚓ Mỏ Neo Thép (Iron Anchor)</option>
+        <option value="diamond">💎 Kim Cương San Hô (Diamond)</option>
+        <option value="bridge">🌉 Đảo Song Sinh & Cầu Hẹp (Twin Islands)</option>
+        <option value="ring">🏝️ Đầm San Hô Vòng Tròn (Ring Atoll)</option>
+        <option value="cross">✝️ Thập Tự Corsair (Cross)</option>
+        <option value="hourglass">⏳ Đồng Hồ Cát Vô Cực (Hourglass)</option>
+        <option value="custom">✏️ Tự vẽ / Khoét map trực tiếp (Interactive)</option>
+        <option value="rect">⬛ Chữ nhật truyền thống (M×N)</option>
+      </select>
+    </div>
     <div class="f"><label for="fT">Hạng mục tiêu</label>
       <select id="fT">
         <option value="0" selected>Tất cả (Đo & Phân loại tự do)</option>
@@ -154,6 +185,42 @@ progress{width:220px;height:10px}
     <div class="f"><progress id="prog" value="0" max="100" class="sec-off"></progress><span class="hint" id="progTxt"></span></div>
   </div>
 
+  <!-- INTERACTIVE SHAPE PAINTER (Ẩn mặc định, hiện khi tick chọn ở ô cơ chế) -->
+  <div class="shape-box sec-off" id="boxPainter">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+      <div>
+        <label style="font-weight:700;font-size:12px;text-transform:uppercase;color:#334155">🎨 Công Cụ Vẽ & Khoét Map Trực Tiếp (Interactive Shape Painter):</label>
+        <span class="hint" style="margin-left:6px">Nhấp / Kéo chuột để bật (ô đất chơi) hoặc khoét bỏ (ô rỗng)</span>
+      </div>
+      <div class="row" style="gap:6px">
+        <button class="ai-btn sm" id="btnP_Random" title="Tự động vẽ một hình mới đối xứng chuẩn tâm lý Gestalt">🎲 Random Tự Vẽ</button>
+        <button class="ghost sm" id="btnP_Undo" title="Hoàn tác (Ctrl+Z)">↩️ Undo</button>
+        <button class="ghost sm" id="btnP_Redo" title="Làm lại (Ctrl+Y)">↪️ Redo</button>
+        <button class="ghost sm" id="btnP_MirrorX" title="Đối xứng trục dọc">🪞 Đối Xứng Dọc</button>
+        <button class="ghost sm" id="btnP_MirrorY" title="Đối xứng trục ngang">↕️ Đối Xứng Ngang</button>
+        <button class="ghost sm" id="btnP_Fill" title="Đổ đầy tất cả ô">⬛ Đầy</button>
+        <button class="ghost sm" id="btnP_Clear" title="Xoá sạch">⬜ Rỗng</button>
+        <button class="ghost sm" id="btnP_Invert" title="Đảo ngược ô">🔄 Đảo</button>
+      </div>
+    </div>
+    
+    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:10px">
+      <div class="painter-board-frame"><div class="painter-grid" id="painterGridContainer"></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span class="painter-badge" id="badgeCells">Tổng ô: <b>25</b></span>
+          <span class="painter-badge" id="badgeChainLen">Độ dài TB/dây: <b>12.5 ô</b></span>
+          <span class="painter-badge ok" id="badgeConn">🟢 Liền mạch 100%</span>
+          <span class="painter-badge ok" id="badgeParity">⚖️ Parity: Cân bằng</span>
+          <span class="painter-badge" id="badgeDeg1">Góc 1 lối: <b>0</b></span>
+        </div>
+        <div class="hint" style="font-size:11.5px;max-width:550px">
+          💡 <b>Chuẩn sản phẩm đầu ra:</b> Bản vẽ mô phỏng chính xác khung gỗ và các ô bàn cờ trắng như trong game. Ô viền đỏ là <i>Góc chết 1 lối (Degree-1)</i> — Generator tự động ép làm Anchor xuất phát hoặc Đích đến của xích để đảm bảo 100% giải được.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="mech-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <label style="font-weight:700;font-size:12px;text-transform:uppercase;color:#334155">🛠️ Bật / Tắt Các Cơ Chế & Trap / Blocker Trong Màn:</label>
@@ -166,6 +233,7 @@ progress{width:220px;height:10px}
       <div class="f chk"><input type="checkbox" id="chkSwitch"><label for="chkSwitch">🔘 <b>Công Tắc & Cổng</b> (Gates)</label></div>
       <div class="f chk"><input type="checkbox" id="chkPrism"><label for="chkPrism">💎 <b>Lăng Kính & Cổng Màu</b></label></div>
       <div class="f chk"><input type="checkbox" id="chkWp"><label for="chkWp">🔢 <b>Mật Mã Số</b> (Waypoints)</label></div>
+      <div class="f chk" style="background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:6px;padding:3px 6px"><input type="checkbox" id="chkShapePainter"><label for="chkShapePainter">🎨 <b>Bảng Vẽ Map Bất Kỳ</b></label></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div class="f"><label for="fO">Số Đá Tảng tối đa</label><input id="fO" type="number" min="0" max="10" value="2"></div>
@@ -874,10 +942,168 @@ function shuffle(arr, rng) {
 }
 const ekey = (a, b) => (a < b ? a + '_' + b : b + '_' + a);
 
+// --------------------------- THƯ VIỆN HÌNH DẠNG BIỂU TƯỢNG HẢI TẶC & GESTALT ---------------------------
+const SHAPE_PRESETS = {
+  heart: (R, C) => {
+    const rows = [];
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        const nr = r / Math.max(1, R - 1);
+        const nc = (c - (C - 1) / 2) / Math.max(1, (C - 1) / 2);
+        let inHeart = false;
+        if (nr <= 0.35) inHeart = (Math.abs(nc) >= 0.15 && Math.abs(nc) <= 0.88);
+        else if (nr <= 0.70) inHeart = (Math.abs(nc) <= 1.0 - (nr - 0.35) * 0.45);
+        else inHeart = (Math.abs(nc) <= (1.0 - nr) * 2.2);
+        row += inHeart ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  skull: (R, C) => {
+    const rows = [];
+    const midC = (C - 1) / 2;
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        const distC = Math.abs(c - midC);
+        let active = true;
+        if (r === 0 && (c === 0 || c === C - 1)) active = false; // bo góc trên
+        if (r >= R - 2 && distC > midC * 0.58) active = false;    // cằm thắt hẹp
+        const eyeRow = Math.max(1, Math.floor(R * 0.38));
+        if (r === eyeRow && (Math.abs(distC - midC * 0.5) < 0.6)) active = false; // hốc mắt rỗng
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  anchor: (R, C) => {
+    const rows = [];
+    const midC = Math.floor((C - 1) / 2);
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        let active = false;
+        const isCenter = Math.abs(c - midC) <= 0.6 || (C % 2 === 0 && Math.abs(c - (midC + 0.5)) <= 0.6);
+        if (r === 0) active = (Math.abs(c - midC) <= 1.2);
+        else if (r === 1) active = (c >= 1 && c <= C - 2);
+        else if (r > 1 && r < R - 2) active = isCenter;
+        else if (r >= R - 2) active = (c >= 1 && c <= C - 2);
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  diamond: (R, C) => {
+    const rows = [];
+    const midR = (R - 1) / 2, midC = (C - 1) / 2;
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        const inD = (Math.abs(r - midR) / midR + Math.abs(c - midC) / midC) <= 1.05;
+        row += inD ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  bridge: (R, C) => {
+    const rows = [];
+    const midR = Math.floor((R - 1) / 2), midC = Math.floor((C - 1) / 2);
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        let active = true;
+        if (c === midC) {
+          active = (r === midR); // cây cầu 1 ô độc đạo nối 2 đảo
+        } else {
+          if ((r === 0 || r === R - 1) && (c === 0 || c === C - 1)) active = false;
+        }
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  ring: (R, C) => {
+    const rows = [];
+    const midR = (R - 1) / 2, midC = (C - 1) / 2;
+    const holeR = Math.max(0.8, (R - 3) / 2);
+    const holeC = Math.max(0.8, (C - 3) / 2);
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        let active = true;
+        if (Math.abs(r - midR) < holeR && Math.abs(c - midC) < holeC) active = false; // đầm rỗng ở giữa
+        if ((r === 0 || r === R - 1) && (c === 0 || c === C - 1)) active = false;
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  cross: (R, C) => {
+    const armW = Math.max(1, Math.floor(C / 3));
+    const armH = Math.max(1, Math.floor(R / 3));
+    const loC = Math.floor((C - armW) / 2), hiC = loC + armW - 1;
+    const loR = Math.floor((R - armH) / 2), hiR = loR + armH - 1;
+    const rows = [];
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        const active = (c >= loC && c <= hiC) || (r >= loR && r <= hiR);
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  },
+  hourglass: (R, C) => {
+    const rows = [];
+    const midR = Math.floor((R - 1) / 2);
+    const midC = Math.floor((C - 1) / 2);
+    for (let r = 0; r < R; r++) {
+      let row = '';
+      for (let c = 0; c < C; c++) {
+        let active = true;
+        if (r === midR || (R % 2 === 0 && r === midR + 1)) {
+          active = (c >= 1 && c <= C - 2);
+        }
+        row += active ? '1' : '0';
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+};
+
+function generateGestaltShape(R, C, rng) {
+  const keys = ['heart', 'diamond', 'skull', 'bridge', 'ring', 'cross', 'hourglass', 'anchor'];
+  if (rng() < 0.70) {
+    const key = pick(keys, rng);
+    return SHAPE_PRESETS[key](R, C);
+  }
+  // Sinh hình đối xứng hữu cơ ngẫu nhiên
+  const grid = Array.from({ length: R }, () => Array(C).fill(1));
+  const midC = Math.floor(C / 2);
+  const cutCount = Math.floor(1 + rng() * 3);
+  for (let k = 0; k < cutCount; k++) {
+    const cr = Math.floor(rng() * R);
+    const cc = Math.floor(rng() * (midC + 1));
+    grid[cr][cc] = 0;
+    grid[cr][C - 1 - cc] = 0; // Đối xứng gương dọc
+  }
+  return grid.map(row => row.join(''));
+}
+
 // --------------------------- Puzzle Data Model ---------------------------
 class Puzzle {
-  constructor(R, C) {
+  constructor(R, C, shape = null) {
     this.R = R; this.C = C;
+    this.shape = shape ? shape.slice() : null; // Array of strings '1'/'0'
     this.blocked = new Set();
     this.walls = new Set();
     this.pushRocks = [];
@@ -892,6 +1118,12 @@ class Puzzle {
   }
   get RC() { return this.R * this.C; }
   inb(r, c) { return r >= 0 && r < this.R && c >= 0 && c < this.C; }
+  isVoid(r, c) {
+    if (r < 0 || r >= this.R || c < 0 || c >= this.C) return true;
+    if (!this.shape) return false;
+    const row = this.shape[r];
+    return !row || row[c] === '0';
+  }
   rc(i) { return [Math.floor(i / this.C), i % this.C]; }
   cell(r, c) { return r * this.C + c; }
   color(i) { const [r, c] = this.rc(i); return (r + c) & 1; }
@@ -899,9 +1131,10 @@ class Puzzle {
   nbrs(i) {
     const out = [];
     const [r, c] = this.rc(i);
+    if (this.isVoid(r, c)) return out;
     for (const [dr, dc] of DIRS) {
       const nr = r + dr, nc = c + dc;
-      if (!this.inb(nr, nc)) continue;
+      if (this.isVoid(nr, nc)) continue;
       const j = nr * this.C + nc;
       if (this.blocked.has(j)) continue;
       if (this.walls.has(ekey(i, j))) continue;
@@ -911,11 +1144,14 @@ class Puzzle {
   }
   validCells() {
     const v = [];
-    for (let i = 0; i < this.RC; i++) if (!this.blocked.has(i)) v.push(i);
+    for (let i = 0; i < this.RC; i++) {
+      const [r, c] = this.rc(i);
+      if (!this.isVoid(r, c) && !this.blocked.has(i)) v.push(i);
+    }
     return v;
   }
   clone() {
-    const p = new Puzzle(this.R, this.C);
+    const p = new Puzzle(this.R, this.C, this.shape);
     p.blocked = new Set(this.blocked);
     p.walls = new Set(this.walls);
     p.pushRocks = this.pushRocks.map(pr => ({ ...pr }));
@@ -934,6 +1170,10 @@ class Puzzle {
 // --------------------------- Puzzle Simulation State ---------------------------
 function initState(p) {
   const owner = new Int16Array(p.RC).fill(-1);
+  for (let i = 0; i < p.RC; i++) {
+    const [r, c] = p.rc(i);
+    if (p.isVoid(r, c)) owner[i] = -2; // Khoét ô trống
+  }
   for (const b of p.blocked) owner[b] = -2;
   const pushRockPos = p.pushRocks.map(pr => pr.cell);
   const latchedGates = new Set();
@@ -1592,14 +1832,18 @@ function simulateGreedyPlayer(p) {
   return { greedyWon, greedyTrapped: !greedyWon, trapDepth };
 }
 
-// --------------------------- Advanced Generator ---------------------------
-function placeObstacles(R, C, count, rng, maxTry = 60) {
+// --------------------------- Advanced Generator Với 3 Chốt An Toàn ---------------------------
+function placeObstacles(R, C, count, rng, shape = null, maxTry = 60) {
   for (let t = 0; t < maxTry; t++) {
-    const p = new Puzzle(R, C);
-    const all = shuffle([...Array(R * C).keys()], rng);
-    for (let i = 0; i < count; i++) p.blocked.add(all[i]);
+    const p = new Puzzle(R, C, shape);
+    const valid = p.validCells();
+    if (valid.length < 6) continue;
+    const all = shuffle(valid.slice(), rng);
+    const placeCount = Math.min(count, Math.max(0, valid.length - 8));
+    for (let i = 0; i < placeCount; i++) p.blocked.add(all[i]);
     const v = p.validCells();
     if (v.length < 6) continue;
+    // Kiểm tra tính liên thông Flood-Fill
     const seen = new Set([v[0]]); const q = [v[0]];
     while (q.length) { const x = q.pop(); for (const y of p.nbrs(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
     if (seen.size !== v.length) continue;
@@ -1609,13 +1853,27 @@ function placeObstacles(R, C, count, rng, maxTry = 60) {
   return null;
 }
 
-function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
+function partitionIntoPaths(p, K, minLen, rng, budget = 15000) {
   const cells = p.validCells();
   const N = cells.length;
   if (K * minLen > N) return null;
-  // Mỗi màn bốc 1 "PHONG CÁCH ĐI DÂY" ngẫu nhiên. Nếu chỉ dùng Warnsdorff thuần
-  // (luôn chọn ô ít lối ra nhất) thì trên bàn trống nó LUÔN đẻ ra đúng một hình rắn bò
-  // → 10 màn sinh ra giống nhau tới 65% số cạnh. Ba tham số dưới đây phá vỡ khuôn đó.
+
+  // CHỐT AN TOÀN 2: Kiểm tra cân bằng Parity Chẵn - Lẻ (Bipartite Grid Parity)
+  // Mỗi bước di chuyển luôn đổi màu ô: (r + c) % 2. Độ lệch tối đa cho K path là K.
+  let black = 0, white = 0;
+  for (const c of cells) {
+    if (p.color(c) === 0) black++; else white++;
+  }
+  if (Math.abs(black - white) > K) {
+    return null; // Vi phạm parity: Đồ thị không thể phủ kín hoàn toàn bằng K đường đi
+  }
+
+  // CHỐT AN TOÀN 1: Phát hiện ô góc chết 1 lối (Degree-1 Cells)
+  const deg1 = cells.filter(x => p.nbrs(x).length === 1);
+  if (deg1.length > 2 * K) {
+    return null; // Số góc chết vượt quá tổng số điểm đầu/cuối của K dây
+  }
+
   const styleNoise = 0.6 + rng() * 2.8;          // độ nhiễu: càng cao đường càng khó đoán
   const turnPref = (rng() < 0.5 ? -1 : 1) * (0.3 + rng() * 1.4); // thích rẽ (+) hay thích đi thẳng (−)
   const lenSpread = 0.45 + rng() * 0.9;          // độ chênh lệch độ dài giữa các dây
@@ -1646,24 +1904,42 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
       if (cur && cur.length >= minLen) { closeSeg(); if (segs.length === K) { done = true; return true; } cur = segs.pop(); return false; }
       return false;
     }
+    // CHỐT AN TOÀN 3: Cầu hẹp (Bridge / Articulation check) — số thành phần liên thông không vượt quá số dây còn lại
     if (compCount() > K - segs.length) return false;
+
+    // Kiểm tra xem có ô nào bị cô lập (degree 0) hoặc quá nhiều ô degree 1 chưa thăm
+    let unvisitedDeg1 = 0;
+    for (const x of cells) {
+      if (!visited[x]) {
+        const d = degOf(x);
+        if (d === 0 && !(cur && p.nbrs(cur[cur.length - 1]).includes(x) && left === 1)) return false;
+        if (d === 1) unvisitedDeg1++;
+      }
+    }
+    const remPaths = K - segs.length;
+    if (unvisitedDeg1 > remPaths * 2 + 1) return false;
 
     if (cur) {
       const cand = p.nbrs(cur[cur.length - 1]).filter(x => !visited[x]);
+      if (!cand.length) return false;
       shuffle(cand, rng);
-      // điểm chọn ô = Warnsdorff + nhiễu theo phong cách + thiên hướng rẽ/thẳng
+
       const hd = cur[cur.length - 1];
       const pv = cur.length >= 2 ? cur[cur.length - 2] : null;
       const scoreOf = x => {
-        let sc = degOf(x) + rng() * styleNoise;
+        const d = degOf(x);
+        let sc = d * 3.0 + rng() * styleNoise;
+        // Ưu tiên cực cao dọn ngay ô bậc 1 (Degree-1) trước khi bị kẹt!
+        if (d === 1) sc -= 100.0;
         if (pv !== null) {
           const [pr, pc] = p.rc(pv), [hr2, hc2] = p.rc(hd), [xr, xc] = p.rc(x);
           const straight = (hr2 - pr === xr - hr2 && hc2 - pc === xc - hc2);
-          sc += straight ? turnPref : -turnPref;   // đảo dấu → màn thì ngoằn ngoèo, màn thì đi dài
+          sc += straight ? turnPref : -turnPref;
         }
         return sc;
       };
       cand.sort((a, b) => scoreOf(a) - scoreOf(b));
+
       const wantClose = cur.length >= minLen && segs.length + 1 < K &&
         (cur.length >= target * (1.0 - lenSpread / 2 + rng() * lenSpread) || cand.length === 0);
 
@@ -1680,8 +1956,15 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
         const saved = cur;
         closeSeg();
         if (segs.length < K) {
-          const uv = shuffle(unvisited(), rng).sort((a, b) => degOf(a) - degOf(b));
-          for (const st of uv.slice(0, 6)) {
+          const uv = unvisited();
+          const uvDeg1 = uv.filter(x => degOf(x) <= 1);
+          let nextStarts;
+          if (uvDeg1.length > 0) {
+            nextStarts = shuffle(uvDeg1, rng);
+          } else {
+            nextStarts = shuffle(uv, rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 6);
+          }
+          for (const st of nextStarts) {
             visited[st] = 1; cur = [st];
             if (search()) return true;
             cur = null; visited[st] = 0;
@@ -1694,8 +1977,11 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
       else { if (tryContinue()) return true; if (tryClose()) return true; }
       return false;
     }
-    const uv = shuffle(unvisited(), rng).sort((a, b) => degOf(a) - degOf(b));
-    for (const st of uv.slice(0, 8)) {
+
+    const uv = unvisited();
+    const uvDeg1 = uv.filter(x => degOf(x) <= 1);
+    let pool = uvDeg1.length > 0 ? shuffle(uvDeg1, rng) : shuffle(uv, rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 8);
+    for (const st of pool) {
       visited[st] = 1; cur = [st];
       if (search()) return true;
       cur = null; visited[st] = 0;
@@ -1703,11 +1989,15 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
     return false;
   }
 
-  // Trước đây chỉ lấy 3 ô có bậc thấp nhất → gần như luôn xuất phát từ góc.
-  // Trộn: một nửa ứng viên là ô "an toàn" (bậc thấp), một nửa là ô ngẫu nhiên bất kỳ.
-  const safeStarts = cells.slice().sort((a, b) => degOf(a) - degOf(b)).slice(0, 4);
-  const wildStarts = shuffle(cells.slice(), rng).slice(0, 4);
-  const firstPool = shuffle([...new Set([...safeStarts, ...wildStarts])], rng).slice(0, 6);
+  // Khởi động phân rã: Ưu tiên bắt đầu từ ô bậc 1 nếu có
+  let firstPool;
+  if (deg1.length > 0) {
+    firstPool = shuffle(deg1.slice(), rng);
+  } else {
+    const safeStarts = cells.slice().sort((a, b) => degOf(a) - degOf(b)).slice(0, 4);
+    const wildStarts = shuffle(cells.slice(), rng).slice(0, 4);
+    firstPool = shuffle([...new Set([...safeStarts, ...wildStarts])], rng).slice(0, 6);
+  }
   for (const s0 of firstPool) {
     visited.fill(0); segs.length = 0; cur = null; nodes = 0; done = false;
     startSeg(s0);
@@ -1743,7 +2033,6 @@ function enforceUniqueness(p, intendedEdges, maxWalls = 40, nodeCap = 25000) {
 function decorateMechanics(p, cfg, rng) {
   const segs = p.solution;
   if (!segs || !segs.length) return;
-  // Chế độ sinh quyết định CƠ CHẾ NÀO được phép xuất hiện (trước đây cfg.mode không được dùng ở đâu cả)
   const M = cfg.mode || 'auto';
   if (M !== 'auto') {
     cfg = Object.assign({}, cfg, {
@@ -1758,10 +2047,6 @@ function decorateMechanics(p, cfg, rng) {
   const isSuperTarget = cfg.targetClass === 4;
 
   // 1. Thùng Hàng Đẩy Được (Push Rocks - Sokoban)
-  // BẤT BIẾN BẮT BUỘC: mỗi thùng hàng chiếm 1 ô nên tổng độ dài các dây phải giảm đúng 1.
-  // Cách đặt an toàn: thùng dừng ở ĐÚNG ô cuối của 1 dây, dây đó rút ngắn 1 ô.
-  //   ... a → b → X   (X là ô cuối cũ)
-  //   thành: dây kết thúc ở b, thùng đặt sẵn tại b bị đẩy sang X khi dây bước a→b.
   if (cfg.allowPush && !isEasyTarget) {
     const want = Math.min(2, cfg.pushCount || 1);
     for (let k = 0; k < segs.length && p.pushRocks.length < want; k++) {
@@ -1812,21 +2097,18 @@ function decorateMechanics(p, cfg, rng) {
     }
   }
 
-  // 4. MẬT MÃ SỐ / PHAO TIÊU (WAYPOINTS - THIẾT KẾ BẪY NAM CHÂM THỊ GIÁC ĐỈNH CAO)
+  // 4. MẬT MÃ SỐ / PHAO TIÊU (WAYPOINTS - THIẾT KẾ BẪY NAM CHÂM THỊ GIÁC)
   if (cfg.allowWaypoints) {
     segs.forEach((chain, k) => {
       const L = chain.length;
       if (L < 4) return;
 
-      // Số lượng mốc: 1 dây dài có thể đặt từ 2 đến 6 mốc
       let desiredCount = 2;
       if (isEasyTarget) desiredCount = 1;
       else if (isNormalTarget) desiredCount = Math.min(3, Math.floor(L / 5));
       else if (isHardTarget) desiredCount = Math.min(4, Math.floor(L / 4));
       else if (isSuperTarget || cfg.targetClass === 0) desiredCount = Math.min(5, Math.floor(L / 3.5));
 
-      // Chiến thuật tìm ô tạo BẪY KHOẢNG CÁCH (Proximity Trap):
-      // Chọn các ô mà khoảng cách Manhattan từ ô trước đó nhỏ (<= 2), nhưng số bước dọc theo xích lớn (>= 5)
       const chosenIndices = [];
       let lastIdx = 0;
 
@@ -1839,7 +2121,6 @@ function decorateMechanics(p, cfg, rng) {
         let bestCand = minNextIdx;
         let bestDeception = -1;
 
-        // Quét các vị trí tiềm năng
         for (let idx = minNextIdx; idx <= maxNextIdx; idx++) {
           const [r1, c1] = p.rc(chain[lastIdx]);
           const [r2, c2] = p.rc(chain[idx]);
@@ -1847,7 +2128,6 @@ function decorateMechanics(p, cfg, rng) {
           const pathDist = idx - lastIdx;
           const deception = pathDist - manhattan;
 
-          // Nếu mục tiêu là Khó/Siêu Khó: ưu tiên điểm có độ lừa thị giác cao nhất
           if ((isHardTarget || isSuperTarget) && deception > bestDeception && manhattan <= 2) {
             bestDeception = deception;
             bestCand = idx;
@@ -1860,7 +2140,6 @@ function decorateMechanics(p, cfg, rng) {
         lastIdx = bestCand;
       }
 
-      // Đặt các mốc số 1, 2, 3...
       let num = 1;
       chosenIndices.forEach(idx => {
         const cell = chain[idx];
@@ -1869,7 +2148,6 @@ function decorateMechanics(p, cfg, rng) {
         }
       });
 
-      // Mốc cuối cùng ở đuôi xích
       if (num > 1) {
         const lastCell = chain[L - 1];
         if (!p.wpOf.has(lastCell)) {
@@ -1886,14 +2164,23 @@ function decorateMechanics(p, cfg, rng) {
 function pick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
 
 function generateOne(cfg, rng) {
+  // Lấy shape mask theo cấu hình
+  let shape = null;
+  if (cfg.shapeMode === 'custom') {
+    shape = getPainterShape();
+  } else if (cfg.shapeMode && cfg.shapeMode !== 'rect' && SHAPE_PRESETS[cfg.shapeMode]) {
+    shape = SHAPE_PRESETS[cfg.shapeMode](cfg.R, cfg.C);
+  } else if (cfg.shapeMode === 'auto_gestalt') {
+    shape = generateGestaltShape(cfg.R, cfg.C, rng);
+  }
+
   const obstacleCount = cfg.allowRock ? cfg.obstacles : 0;
-  const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng);
+  const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng, shape);
   if (!p0) return { ok: false, reason: 'obstacle-layout' };
 
   const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng);
   if (!segsRaw) return { ok: false, reason: 'no-partition' };
 
-  // Thử nghiệm các tổ hợp chiều mỏ neo để tìm thế cờ có nghiệm duy nhất & độ khó chuẩn nhất
   const K = segsRaw.length;
   const orientationCombos = [];
   if (K === 1) {
@@ -2121,6 +2408,7 @@ function toJSON(p, id) {
   return {
     id: id || p.meta.id || null,
     grid: { rows: p.R, cols: p.C },
+    shape: p.shape ? p.shape.slice() : Array(p.R).fill('1'.repeat(p.C)),
     rocks: [...p.blocked].map(c => ({ r: Math.floor(c / p.C), c: c % p.C })),
     walls: [...p.walls].map(w => {
       const [a, b] = w.split('_').map(Number);
@@ -2226,30 +2514,36 @@ function updateAIStatus() {
 }
 updateAIStatus();
 
-/* ================= BOARD SVG RENDER (FULL MECHANICS) ================= */
+/* ================= BOARD SVG RENDER (FULL MECHANICS & SHAPES) ================= */
 function boardSVG(p, o) {
   o = Object.assign({ cs: 46, showSolution: false, state: null, coords: false, interactive: false }, o);
-  const cs = o.cs, off = o.coords ? 20 : 0, pad = 10 + off;
-  const W = p.C * cs + pad + 10, H = p.R * cs + pad + 10;
+  const cs = o.cs, off = o.coords ? 20 : 0, pad = 12 + off;
+  const W = p.C * cs + pad * 2, H = p.R * cs + pad * 2;
   const X = i => pad + (i % p.C) * cs, Y = i => pad + Math.floor(i / p.C) * cs;
   const cx = i => X(i) + cs / 2, cy = i => Y(i) + cs / 2;
   const fs = Math.max(8, Math.round(cs * 0.30));
 
   let s = `<svg class="board" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bàn cờ ${p.R}x${p.C}">
   <defs>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-opacity="0.2"/></filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25"/></filter>
   </defs>`;
 
+  // 0. Khung Gỗ Bàn Cờ (Wooden Frame chuẩn style game)
+  s += `<rect x="${pad - 6}" y="${pad - 6}" width="${p.C * cs + 12}" height="${p.R * cs + 12}" rx="12"
+    fill="#b9814a" stroke="#6b4423" stroke-width="2.5" filter="url(#shadow)"/>`;
+
   if (o.coords) {
-    for (let c = 0; c < p.C; c++) s += `<text x="${pad + c * cs + cs / 2}" y="${pad - 6}" font-size="10" fill="#898781" text-anchor="middle">C${c}</text>`;
-    for (let r = 0; r < p.R; r++) s += `<text x="${pad - 6}" y="${pad + r * cs + cs / 2 + 3}" font-size="10" fill="#898781" text-anchor="end">R${r}</text>`;
+    for (let c = 0; c < p.C; c++) s += `<text x="${pad + c * cs + cs / 2}" y="${pad - 8}" font-size="10" fill="#fef3c7" font-weight="700" text-anchor="middle">C${c}</text>`;
+    for (let r = 0; r < p.R; r++) s += `<text x="${pad - 8}" y="${pad + r * cs + cs / 2 + 3}" font-size="10" fill="#fef3c7" font-weight="700" text-anchor="end">R${r}</text>`;
   }
 
-  // 1. Ô nền & Đá Tảng (Rocks)
+  // 1. Ô nền & Đá Tảng (Rocks) — Ẩn các ô khoét rỗng (Void)
   for (let i = 0; i < p.RC; i++) {
+    const [r, c] = p.rc(i);
+    if (p.isVoid(r, c)) continue; // Không vẽ ô void
     const bl = p.blocked.has(i);
-    s += `<rect x="${X(i)}" y="${Y(i)}" width="${cs}" height="${cs}" rx="4"
-      fill="${bl ? '#cbd5e1' : '#ffffff'}" stroke="${bl ? '#94a3b8' : '#e2e8f0'}" stroke-width="1"/>`;
+    s += `<rect x="${X(i) + 1.5}" y="${Y(i) + 1.5}" width="${cs - 3}" height="${cs - 3}" rx="6"
+      fill="${bl ? '#9aa3b8' : '#ffffff'}" stroke="${bl ? '#6b7280' : '#d6e2fb'}" stroke-width="1.5"/>`;
     if (bl) {
       s += `<text x="${cx(i)}" y="${cy(i) + fs * 0.38}" font-size="${fs * 1.1}" text-anchor="middle">🪨</text>`;
     }
@@ -2319,6 +2613,8 @@ function boardSVG(p, o) {
   // 9. Vách Ngăn (Walls)
   for (const w of p.walls) {
     const [a, b] = w.split('_').map(Number);
+    const [ra, ca] = p.rc(a), [rb, cb] = p.rc(b);
+    if (p.isVoid(ra, ca) || p.isVoid(rb, cb)) continue;
     const lo = Math.min(a, b);
     const th = Math.max(3.5, cs * 0.14);
     if (Math.abs(a - b) === 1) {
@@ -2328,9 +2624,7 @@ function boardSVG(p, o) {
     }
   }
 
-  // 10. Phao Tiêu / Mật Mã Số (Waypoints) — tô viền + số theo màu của chính dây sở hữu nó,
-  // vì số thứ tự (w.j) được đánh LẠI TỪ 1 cho mỗi dây. Không tô theo màu dây thì 2+ Mỏ Neo
-  // có mốc số sẽ hiện trùng số (hai số "1", hai số "2"...) trông như rải bừa không liên quan.
+  // 10. Phao Tiêu / Mật Mã Số (Waypoints)
   for (const [cell, w] of p.wpOf) {
     const wc = CHHEX[w.k % 4];
     s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="${wc}" stroke-width="2.5"/>
@@ -2349,7 +2643,8 @@ function boardSVG(p, o) {
   // 12. Vùng bấm tương tác
   if (o.interactive) {
     for (let i = 0; i < p.RC; i++) {
-      if (!p.blocked.has(i)) {
+      const [r, c] = p.rc(i);
+      if (!p.isVoid(r, c) && !p.blocked.has(i)) {
         s += `<rect class="hit" data-cell="${i}" x="${X(i)}" y="${Y(i)}" width="${cs}" height="${cs}" fill="transparent" style="cursor:pointer"/>`;
       }
     }
@@ -2357,9 +2652,249 @@ function boardSVG(p, o) {
   return s + '</svg>';
 }
 
+/* ================= INTERACTIVE SHAPE PAINTER MODULE ================= */
+let PAINTER_R = 5, PAINTER_C = 5;
+let PAINTER_GRID = []; // 2D array of booleans (true = land '1', false = void '0')
+let PAINTER_UNDO_STACK = [];
+let PAINTER_REDO_STACK = [];
+let isPaintingMouseDown = false;
+let paintTargetVal = true;
+
+function initPainter(R, C, presetKey = 'auto_gestalt') {
+  PAINTER_R = R; PAINTER_C = C;
+  PAINTER_UNDO_STACK = [];
+  PAINTER_REDO_STACK = [];
+  
+  if (presetKey !== 'custom' && presetKey !== 'rect' && SHAPE_PRESETS[presetKey]) {
+    const shapeStrs = SHAPE_PRESETS[presetKey](R, C);
+    PAINTER_GRID = shapeStrs.map(row => row.split('').map(ch => ch === '1'));
+  } else if (presetKey === 'auto_gestalt') {
+    const shapeStrs = generateGestaltShape(R, C, mulberry32(Date.now()));
+    PAINTER_GRID = shapeStrs.map(row => row.split('').map(ch => ch === '1'));
+  } else {
+    PAINTER_GRID = Array.from({ length: R }, () => Array(C).fill(true));
+  }
+  renderPainterUI();
+}
+
+function pushPainterHistory() {
+  PAINTER_UNDO_STACK.push(PAINTER_GRID.map(r => r.slice()));
+  if (PAINTER_UNDO_STACK.length > 30) PAINTER_UNDO_STACK.shift();
+  PAINTER_REDO_STACK = [];
+}
+
+function undoPainter() {
+  if (!PAINTER_UNDO_STACK.length) return;
+  PAINTER_REDO_STACK.push(PAINTER_GRID.map(r => r.slice()));
+  PAINTER_GRID = PAINTER_UNDO_STACK.pop();
+  renderPainterUI();
+}
+
+function redoPainter() {
+  if (!PAINTER_REDO_STACK.length) return;
+  PAINTER_UNDO_STACK.push(PAINTER_GRID.map(r => r.slice()));
+  PAINTER_GRID = PAINTER_REDO_STACK.pop();
+  renderPainterUI();
+}
+
+function getPainterShape() {
+  return PAINTER_GRID.map(row => row.map(v => (v ? '1' : '0')).join(''));
+}
+
+function updatePainterStats() {
+  const R = PAINTER_R, C = PAINTER_C;
+  const K = Math.min(4, +$('fK').value);
+  let activeCells = 0, black = 0, white = 0;
+  
+  for (let r = 0; r < R; r++) {
+    for (let c = 0; c < C; c++) {
+      if (PAINTER_GRID[r][c]) {
+        activeCells++;
+        if (((r + c) & 1) === 0) black++; else white++;
+      }
+    }
+  }
+  
+  // Flood-fill connectivity check:
+  let components = 0;
+  const seen = Array.from({ length: R }, () => Array(C).fill(false));
+  const deg1List = [];
+  
+  for (let r = 0; r < R; r++) {
+    for (let c = 0; c < C; c++) {
+      if (!PAINTER_GRID[r][c] || seen[r][c]) continue;
+      components++;
+      const q = [[r, c]];
+      seen[r][c] = true;
+      while (q.length) {
+        const [cr, cc] = q.pop();
+        let deg = 0;
+        for (const [dr, dc] of DIRS) {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nr < R && nc >= 0 && nc < C && PAINTER_GRID[nr][nc]) {
+            deg++;
+            if (!seen[nr][nc]) { seen[nr][nc] = true; q.push([nr, nc]); }
+          }
+        }
+        if (deg === 1) deg1List.push([cr, cc]);
+      }
+    }
+  }
+
+  $('badgeCells').innerHTML = `Tổng ô: <b>${activeCells}</b>`;
+  $('badgeChainLen').innerHTML = `Độ dài TB/dây: <b>${(activeCells / K).toFixed(1)} ô</b>`;
+  
+  const isConn = components === 1 && activeCells >= K * 2;
+  const badgeConn = $('badgeConn');
+  badgeConn.className = 'painter-badge ' + (isConn ? 'ok' : 'warn');
+  badgeConn.innerHTML = isConn ? '🟢 Liền mạch 100%' : `🔴 Bị chia ${components} đảo`;
+
+  const parityDiff = Math.abs(black - white);
+  const badgeParity = $('badgeParity');
+  const parityOk = parityDiff <= K;
+  badgeParity.className = 'painter-badge ' + (parityOk ? 'ok' : 'warn');
+  badgeParity.innerHTML = parityOk ? `⚖️ Parity: Cân bằng (Δ=${parityDiff})` : `⚠️ Parity lệch cao (Δ=${parityDiff})`;
+
+  const badgeDeg1 = $('badgeDeg1');
+  badgeDeg1.innerHTML = `Góc 1 lối: <b>${deg1List.length}</b>`;
+  
+  return { activeCells, components, deg1List, parityOk };
+}
+
+function renderPainterUI() {
+  const container = $('painterGridContainer');
+  if (!container) return;
+  const stats = updatePainterStats();
+  const deg1Set = new Set(stats.deg1List.map(([r, c]) => `${r}_${c}`));
+  
+  container.style.gridTemplateColumns = `repeat(${PAINTER_C}, 36px)`;
+  let html = '';
+  for (let r = 0; r < PAINTER_R; r++) {
+    for (let c = 0; c < PAINTER_C; c++) {
+      const active = PAINTER_GRID[r][c];
+      const isDeg1 = active && deg1Set.has(`${r}_${c}`);
+      html += `<div class="p-cell ${active ? 'active' : 'void'} ${isDeg1 ? 'deg1' : ''}" 
+        data-r="${r}" data-c="${c}" title="Ô [${r}, ${c}] ${active ? '(Đất hợp lệ)' : '(Khoét rỗng)'} ${isDeg1 ? '· Góc chết 1 lối' : ''}">
+        ${active ? `<span style="opacity:0.45;font-size:9px">${r},${c}</span>` : `<span style="font-size:11px;opacity:0.3">✕</span>`}
+      </div>`;
+    }
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.p-cell').forEach(cell => {
+    const r = +cell.dataset.r, c = +cell.dataset.c;
+    cell.onmousedown = (e) => {
+      e.preventDefault();
+      pushPainterHistory();
+      isPaintingMouseDown = true;
+      paintTargetVal = !PAINTER_GRID[r][c];
+      PAINTER_GRID[r][c] = paintTargetVal;
+      renderPainterUI();
+    };
+    cell.onmouseenter = () => {
+      if (isPaintingMouseDown) {
+        if (PAINTER_GRID[r][c] !== paintTargetVal) {
+          PAINTER_GRID[r][c] = paintTargetVal;
+          renderPainterUI();
+        }
+      }
+    };
+  });
+}
+
+document.addEventListener('mouseup', () => { isPaintingMouseDown = false; });
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+    if (e.shiftKey) redoPainter(); else undoPainter();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+    redoPainter();
+  }
+});
+
+$('btnP_Random').onclick = () => {
+  pushPainterHistory();
+  const shapeStrs = generateGestaltShape(PAINTER_R, PAINTER_C, mulberry32(Date.now() + Math.floor(Math.random() * 100000)));
+  PAINTER_GRID = shapeStrs.map(row => row.split('').map(ch => ch === '1'));
+  renderPainterUI();
+};
+
+$('btnP_Undo').onclick = undoPainter;
+$('btnP_Redo').onclick = redoPainter;
+
+$('btnP_MirrorX').onclick = () => {
+  pushPainterHistory();
+  const midC = Math.floor(PAINTER_C / 2);
+  for (let r = 0; r < PAINTER_R; r++) {
+    for (let c = 0; c < midC; c++) {
+      PAINTER_GRID[r][PAINTER_C - 1 - c] = PAINTER_GRID[r][c];
+    }
+  }
+  renderPainterUI();
+};
+
+$('btnP_MirrorY').onclick = () => {
+  pushPainterHistory();
+  const midR = Math.floor(PAINTER_R / 2);
+  for (let r = 0; r < midR; r++) {
+    for (let c = 0; c < PAINTER_C; c++) {
+      PAINTER_GRID[PAINTER_R - 1 - r][c] = PAINTER_GRID[r][c];
+    }
+  }
+  renderPainterUI();
+};
+
+$('btnP_Fill').onclick = () => {
+  pushPainterHistory();
+  PAINTER_GRID = Array.from({ length: PAINTER_R }, () => Array(PAINTER_C).fill(true));
+  renderPainterUI();
+};
+
+$('btnP_Clear').onclick = () => {
+  pushPainterHistory();
+  PAINTER_GRID = Array.from({ length: PAINTER_R }, () => Array(PAINTER_C).fill(false));
+  renderPainterUI();
+};
+
+$('btnP_Invert').onclick = () => {
+  pushPainterHistory();
+  for (let r = 0; r < PAINTER_R; r++) {
+    for (let c = 0; c < PAINTER_C; c++) {
+      PAINTER_GRID[r][c] = !PAINTER_GRID[r][c];
+    }
+  }
+  renderPainterUI();
+};
+
+$('chkShapePainter').addEventListener('change', () => {
+  if ($('chkShapePainter').checked) {
+    $('boxPainter').classList.remove('sec-off');
+    renderPainterUI();
+  } else {
+    $('boxPainter').classList.add('sec-off');
+  }
+});
+
+$('fShape').onchange = () => {
+  const key = $('fShape').value;
+  if (key !== 'rect') {
+    $('chkShapePainter').checked = true;
+    $('boxPainter').classList.remove('sec-off');
+  }
+  initPainter(+$('fR').value, +$('fC').value, key);
+};
+
+$('fR').addEventListener('change', () => {
+  initPainter(+$('fR').value, +$('fC').value, $('fShape').value);
+});
+$('fC').addEventListener('change', () => {
+  initPainter(+$('fR').value, +$('fC').value, $('fShape').value);
+});
+$('fK').addEventListener('change', updatePainterStats);
+
+// Khởi tạo ban đầu
+initPainter(+$('fR').value, +$('fC').value, $('fShape').value);
+
 /* ================= GENERATE ACTION ================= */
-// Đổi "Chế độ sinh" → tự tick ô cơ chế tương ứng NGAY TRÊN GIAO DIỆN để người dùng nhìn thấy
-// và có thể bỏ tick. Không bao giờ bật ngầm lúc sinh.
 $('fMode').addEventListener('change', () => {
   const m = $('fMode').value;
   if (m === 'sokoban') $('chkPush').checked = true;
@@ -2373,6 +2908,7 @@ $('btnGen').onclick = () => {
     R: +$('fR').value, C: +$('fC').value, obstacles: +$('fO').value,
     anchors: Math.min(4, +$('fK').value), minLen: +$('fM').value,
     count: +$('fN').value, seed: +$('fS').value,
+    shapeMode: $('fShape').value,
     targetClass: +$('fT').value || null, acceptAnyTier: +$('fT').value === 0,
     allowRock: $('chkRock').checked,
     allowWall: $('chkWall').checked,
@@ -2385,12 +2921,18 @@ $('btnGen').onclick = () => {
     wallBudget: +$('fWallBudget').value,
     maxAttempts: 60 * (+$('fN').value) + 250
   };
-  // TÔN TRỌNG TUYỆT ĐỐI lựa chọn trên UI: không tự ý bật cơ chế mà người dùng đã bỏ tick.
-  // (Việc gợi ý bật cơ chế theo chế độ được làm ở sự kiện đổi dropdown — có tick hiện rõ trên màn hình.)
   if (cfg.mode === 'sokoban' && cfg.allowPush && !cfg.pushCount) cfg.pushCount = 1;
 
-  const V = cfg.R * cfg.C - (cfg.allowRock ? cfg.obstacles : 0);
-  if (cfg.anchors * cfg.minLen > V) { alert('Không khả thi: số dây × độ dài nhỏ nhất > số ô hợp lệ.'); return; }
+  let validCellCount = cfg.R * cfg.C - (cfg.allowRock ? cfg.obstacles : 0);
+  if (cfg.shapeMode === 'custom') {
+    const stats = updatePainterStats();
+    validCellCount = stats.activeCells - (cfg.allowRock ? cfg.obstacles : 0);
+    if (!stats.components || stats.components > 1) {
+      alert('Cảnh báo: Bàn cờ đang bị phân mảnh (nhiều hơn 1 đảo) hoặc quá ít ô. Hãy dùng công cụ vẽ để kết nối liền mạch trước khi sinh.');
+      return;
+    }
+  }
+  if (cfg.anchors * cfg.minLen > validCellCount) { alert('Không khả thi: số dây × độ dài nhỏ nhất > số ô hợp lệ.'); return; }
   
   $('btnGen').disabled = true; $('prog').classList.remove('sec-off');
   $('progTxt').textContent = 'đang sinh & phân tích não bộ…';
