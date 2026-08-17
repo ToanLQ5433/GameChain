@@ -148,6 +148,7 @@ progress{width:220px;height:10px}
         <option value="4">4 · Siêu Khó (Mastery · Quá tải não bộ · ~75-180s+)</option>
       </select></div>
     <div class="f"><label for="fN">Số level cần sinh</label><input id="fN" type="number" min="1" max="50" value="12"></div>
+    <div class="f"><label for="fWallBudget" title="Giới hạn số Vách Ngăn được phép đắp — đây là tham số NỘI DUNG (bàn cờ trông thoáng hay rối), giống như số Đá Tảng. Đắp càng nhiều thì đường đi càng bị ép cứng nên màn càng DỄ.">Trần Vách Ngăn</label><input id="fWallBudget" type="number" min="0" max="40" value="3"></div>
     <div class="f"><label for="fS">Seed</label><input id="fS" type="number" value="2026" title="Hạt giống sinh ngẫu nhiên tái lập"></div>
     <div class="f"><button class="primary" id="btnGen">⚡ Sinh & Phân Tích Não Bộ</button></div>
     <div class="f"><progress id="prog" value="0" max="100" class="sec-off"></progress><span class="hint" id="progTxt"></span></div>
@@ -325,16 +326,26 @@ const DEFAULT_SCORING = {
   wSwitch: 1.6,
   wPrism: 1.3,
   wAmbiguity: 1.8,
-  wDeadEnd: 0.35
+  wDeadEnd: 0.35,
+  // Ngưỡng phân hạng theo HDI — hiệu chỉnh theo phân bố ĐO ĐƯỢC trên 80 level
+  // (min 5.5 · trung vị ~12.6 · max ~18). Bộ cũ 3.8/6.8/9.8 nằm dưới cả trung vị.
+  hdiThr: [10.3, 12.9, 16.8]
 };
 
 let SCORING = JSON.parse(JSON.stringify(DEFAULT_SCORING));
 
 // Tự động khôi phục dữ liệu đã học từ localStorage
 try {
-  const savedWeights = localStorage.getItem('pirate_trails_learned_weights');
-  if (savedWeights) SCORING = JSON.parse(savedWeights);
-} catch (e) {}
+  const savedWeights = (typeof localStorage !== 'undefined') && localStorage.getItem('pirate_trails_learned_weights');
+  if (savedWeights) {
+    // HỢP NHẤT chứ không ghi đè: bản đã học từ phiên bản cũ thiếu khoá mới (vd hdiThr)
+    // sẽ khiến toàn bộ phép so sánh trả về false và mọi màn rơi về hạng 1.
+    const saved = JSON.parse(savedWeights);
+    SCORING = Object.assign({}, DEFAULT_SCORING, saved);
+    if (!Array.isArray(SCORING.hdiThr) || SCORING.hdiThr.length !== 3) SCORING.hdiThr = DEFAULT_SCORING.hdiThr.slice();
+    if (!Array.isArray(SCORING.cost) || SCORING.cost.length !== DEFAULT_SCORING.cost.length) SCORING.cost = DEFAULT_SCORING.cost.slice();
+  }
+} catch (e) { SCORING = JSON.parse(JSON.stringify(DEFAULT_SCORING)); }
 
 const CLASS_INFO = [
   null,
@@ -347,6 +358,90 @@ const CLASS_INFO = [
 const TIER_LABEL = [null, 'Rất Dễ', 'Dễ', 'Thường', 'Khó', 'Siêu Khó'];
 
 // --------------------------- PHÂN TÍCH NHẬN THỨC NÃO BỘ (NEUROSCIENCE & GESTALT) ---------------------------
+
+/* ===== SUY LUẬN THEO CẶP CƠ CHẾ — thứ người chơi nhìn phát là thấy =====
+   Người thật không dò từng ô: họ nhìn cái cổng đang đóng rồi truy ngược
+   "muốn qua cổng này thì phải có dây nằm trên nút kia trước".
+   Solver cũ không có khái niệm này nên phải mò qua nhiều bậc, dẫn tới ~50%
+   màn có Công Tắc/Lăng Kính bị bỏ trống không đo được độ khó.
+   Hai hàm dưới đây kiểm tra tính khả thi của từng CẶP, dùng làm phép cắt tỉa. */
+
+/** Các ô còn trống mà muốn tới được thì BẮT BUỘC phải đi xuyên qua ô `gate` */
+function cellsBehindGate(p, s, gateCell) {
+  const seen = new Uint8Array(p.RC);
+  const q = [];
+  for (const c of s.chains) if (c.len < c.L) { if (!seen[c.head]) { seen[c.head] = 1; q.push(c.head); } }
+  while (q.length) {
+    const x = q.pop();
+    for (const y of p.nbrs(x)) {
+      if (seen[y] || y === gateCell) continue;             // không đi xuyên cổng
+      if (p.blocked.has(y)) continue;
+      if (s.owner[y] >= 0 && y !== gateCell) { seen[y] = 1; continue; }
+      seen[y] = 1; q.push(y);
+    }
+  }
+  let behind = 0;
+  for (let i = 0; i < p.RC; i++)
+    if (s.owner[i] === -1 && !s.pushRockPos.includes(i) && i !== gateCell && !seen[i]) behind++;
+  return behind;
+}
+
+/** Cặp Nút Bấm → Cổng Mở còn khả thi không */
+function switchPairOK(p, s) {
+  for (const sw of p.switches) {
+    if (isGateOpen(p, s, sw.gateCell)) continue;            // cổng đang mở → không cần lo
+    if (s.owner[sw.gateCell] >= 0) continue;                // cổng đã bị chiếm rồi
+    // Nếu sau cổng vẫn còn ô chưa phủ thì BẮT BUỘC phải mở được cổng
+    if (cellsBehindGate(p, s, sw.gateCell) === 0) continue;
+    // Muốn mở thì nút phải còn có thể bị chiếm: hoặc đang trống, hoặc đã có dây/thùng nằm trên
+    const swFree = s.owner[sw.swCell] === -1 && !p.blocked.has(sw.swCell);
+    const swHeld = s.owner[sw.swCell] >= 0 || s.pushRockPos.includes(sw.swCell);
+    if (!swFree && !swHeld) return false;                   // nút vĩnh viễn không chạm được → bế tắc
+    if (swFree) {
+      // còn ít nhất 1 dây tới được nút trong số bước còn lại
+      let reachable = false;
+      for (const c of s.chains) {
+        if (c.len >= c.L) continue;
+        const rem = c.L - c.len;
+        const dist = new Int16Array(p.RC).fill(-1); dist[c.head] = 0;
+        const q = [c.head];
+        for (let qi = 0; qi < q.length && !reachable; qi++) {
+          const x = q[qi]; if (dist[x] >= rem) continue;
+          for (const y of p.nbrs(x)) {
+            if (dist[y] >= 0 || p.blocked.has(y) || s.owner[y] >= 0) continue;
+            dist[y] = dist[x] + 1; q.push(y);
+            if (y === sw.swCell) { reachable = true; break; }
+          }
+        }
+        if (reachable) break;
+      }
+      if (!reachable) return false;
+    }
+  }
+  return true;
+}
+
+/** Cặp Lăng Kính → Cổng Màu còn khả thi không */
+function prismPairOK(p, s) {
+  for (const g of p.colorGates) {
+    if (s.owner[g.cell] >= 0) continue;
+    if (cellsBehindGate(p, s, g.cell) === 0 && s.owner[g.cell] === -1) {
+      // cổng màu vẫn là 1 ô cần phủ → vẫn phải có dây đúng màu đi vào
+    }
+    let someoneCan = false;
+    for (const c of s.chains) {
+      if (c.len >= c.L) continue;
+      if (c.colorTag === g.color) { someoneCan = true; break; }
+      // chưa đúng màu thì phải còn Lăng Kính cùng màu chưa bị dùng để đi qua trước
+      const hasPrism = p.prisms.some(pr => pr.color === g.color && s.owner[pr.cell] === -1);
+      if (hasPrism) { someoneCan = true; break; }
+    }
+    if (!someoneCan) return false;
+  }
+  return true;
+}
+const mechanicPairOK = (p, s) => switchPairOK(p, s) && prismPairOK(p, s);
+
 function analyzeBrainCognition(p) {
   const s = initState(p);
   let totalForks = 0;
@@ -359,19 +454,33 @@ function analyzeBrainCognition(p) {
     for (let k = 0; k < p.solution.length; k++) {
       const path = p.solution[k];
       for (let i = 0; i < path.length - 1; i++) {
-        const ms = legalMoves(p, s, k);
+        let ms = legalMoves(p, s, k);
+        // ĐẾM ĐÚNG: chỉ tính những nước mà MẮT NGƯỜI còn phải cân nhắc.
+        // Bản cũ đếm thô mọi nước hợp lệ → thổi phồng độ rẽ nhánh một cách hệ thống.
+        if (ms.length > 1) {
+          const f = ms.filter(m => { const u = applyMove(p, s, k, m); const ok = reachOK(p, s) && mechanicPairOK(p, s); undoMove(p, s, u); return ok; });
+          if (f.length) ms = f;
+        }
         steps++;
         totalOptions += ms.length;
         if (ms.length === 1) {
           forcedCorridors++;
         } else if (ms.length > 1) {
           totalForks++;
-          const wrongMoves = ms.filter(m => m !== path[i + 1]);
-          wrongMoves.forEach(wm => {
+          // BẪY THẬT = nước sai mà đi được SÂU mới lộ. Bản cũ tính là bẫy chỉ cần
+          // nước sai còn đi tiếp được 1 bước — gần như lúc nào cũng đúng, nên vô nghĩa.
+          ms.filter(m => m !== path[i + 1]).forEach(wm => {
             const u = applyMove(p, s, k, wm);
-            const nextMoves = legalMoves(p, s, k);
-            if (nextMoves.length > 0) falseLeads++;
+            let depth = 1;
+            const extra = [];
+            while (depth < 8 && reachOK(p, s) && mechanicPairOK(p, s)) {
+              const nx = legalMoves(p, s, k);
+              if (nx.length !== 1) break;
+              extra.push(applyMove(p, s, k, nx[0])); depth++;
+            }
+            for (let z = extra.length - 1; z >= 0; z--) undoMove(p, s, extra[z]);
             undoMove(p, s, u);
+            if (depth >= 4) falseLeads++;       // đi được >=4 nước mới lộ mới đáng gọi là bẫy
           });
         }
         applyMove(p, s, k, path[i + 1]);
@@ -489,7 +598,10 @@ function analyzeWaypointDeception(p) {
 }
 
 // --------------------------- 4 TRỤ CỘT ĐÁNH GIÁ ĐỘ KHÓ NÃO BỘ CON NGƯỜI THẬT ---------------------------
-function calculateCognitiveMetrics(p, rated, greedy) {
+const T_EASY_CAP = 10.3;    // trần HDI khi >=6/8 lối chơi tự nhiên thắng ngay  → tối đa hạng Dễ
+const T_NORMAL_CAP = 12.9;  // trần HDI khi >=4/8 lối chơi tự nhiên thắng ngay  → tối đa hạng Thường
+
+function calculateCognitiveMetrics(p, rated, greedy, solInfo) {
   const K = p.anchors.length;
   const brain = analyzeBrainCognition(p);
   const topo = analyzeSpatialTopology(p);
@@ -513,14 +625,13 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   }
 
   // 3. Trụ cột 3: Bẫy Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước - YẾU TỐ QUYẾT ĐỊNH ĐỘ KHÓ VỚI CON NGƯỜI
-  let trapScore = 0;
-  let expectedUndos = 0;
-  if (greedy.greedyTrapped) {
-    const depth = greedy.trapDepth || 1;
-    // Bẫy càng sâu càng gây ức chế cho não bộ vì phải xóa làm lại từ đầu
-    trapScore = 2.5 + (depth / N) * 4.0;
-    expectedUndos = Math.max(1, Math.ceil((depth / N) * 4));
-  }
+  // Chấm theo HỘI ĐỒNG NGƯỜI CHƠI thay vì 1 lối greedy duy nhất.
+  // Càng ít lối chơi tự nhiên thắng được thì màn càng khó thật với người.
+  const panel = simulateHumanPanel(p);
+  const eff = analyzePlayerEffort(p);
+  // trapScore giờ tính bằng CÔNG SỨC PHẢI BỎ RA, không phải "bot có trượt hay không".
+  let trapScore = Math.min(7.0, eff.effort) + (1 - panel.winRate) * 1.0;
+  let expectedUndos = Math.max(0, eff.choicePoints - eff.earlyChoices);
 
   // 4. Trụ cột 4: Bẫy Mật Mã Số (Ảo giác khoảng cách)
   let wpScore = 0;
@@ -529,7 +640,9 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   }
 
   // 5. Cơ chế vật cản
-  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0) + (p.walls.size * 0.3);
+  // Lưu ý: KHÔNG tính p.walls.size vào đây. Thanh Chặn được thêm vào để ép nghiệm duy nhất,
+  // càng nhiều thì đường đi càng bị ép buộc → level DỄ đi hơn, không phải khó hơn.
+  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0);
 
   // Tổng hợp Human Difficulty Index (HDI)
   let hdi = 1.0 + ambiguityScore + spatialComplexityScore + trapScore + wpScore + mechScore;
@@ -539,6 +652,34 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   if (isIntuitiveWin && wpData.maxWpLag < 3 && topo.knotScore < 1.0 && p.pushRocks.length === 0) {
     hdi = Math.min(5.5, hdi);
   }
+  // LUẬT CHẶN THEO NGƯỜI CHƠI THẬT — quan trọng hơn mọi công thức phía trên:
+  // nếu đa số lối chơi tự nhiên đều thắng NGAY LẦN ĐẦU thì màn đó không thể khó,
+  // vì trong game này hoàn tác miễn phí nên người chơi chỉ cần thử là ra.
+  if (panel.winRate >= 0.75) hdi = Math.min(hdi, T_EASY_CAP);
+  else if (panel.winRate >= 0.5) hdi = Math.min(hdi, T_NORMAL_CAP);
+
+  // HAI LUẬT CHẶN QUAN TRỌNG NHẤT, viết ra từ việc soi bàn cờ thật:
+  // (1) Bàn tự chạy: nếu >=80% số bước chỉ có đúng 1 đường đi thì người chơi
+  //     hầu như không phải nghĩ — không thể gọi là Khó dù công thức nói gì.
+  if (eff.forcedRatio >= 0.80) hdi = Math.min(hdi, T_EASY_CAP);
+  else if (eff.forcedRatio >= 0.70) hdi = Math.min(hdi, T_NORMAL_CAP);
+  // (2) Sai là biết ngay: nếu mọi nước sai đều lộ trong <=3 nước thì xoá lại gần như
+  //     không tốn gì, người chơi thử vài lần là qua.
+  if (eff.maxRefuteDepth <= 3) hdi = Math.min(hdi, T_EASY_CAP);
+  // (3) Ngã rẽ chỉ nằm ở mấy bước đầu → xoá lại rẻ, cũng không thể là Khó.
+  if (eff.choicePoints > 0 && eff.earlyChoices === eff.choicePoints) hdi = Math.min(hdi, T_NORMAL_CAP);
+
+  // (4) SỐ LỜI GIẢI — tín hiệu do chính người chơi phát hiện, đã kiểm chứng bằng số liệu:
+  //     công sức trung bình theo nhóm: 2-3 nghiệm → 9.1 · 4-10 → 7.5 · 11-50 → 6.0 · >50 → 4.9
+  //     Càng nhiều cách giải thì càng dễ mò trúng.
+  //     NHƯNG chỉ áp khi màn KHÔNG bị đắp nhiều Vách Ngăn: nghiệm duy nhất có được nhờ
+  //     đắp tường thì đường đi bị ép cứng, thực tế lại DỄ (đo được: công sức chỉ 1.3).
+  if (solInfo) {
+    const manyWalls = p.walls.size >= 4;
+    if (solInfo.capped || solInfo.count > 40) hdi = Math.min(hdi, T_EASY_CAP);
+    else if (solInfo.count > 10) hdi = Math.min(hdi, T_NORMAL_CAP);
+    if (solInfo.count === 1 && manyWalls) hdi = Math.min(hdi, T_NORMAL_CAP);   // duy nhất "giả tạo"
+  }
 
   hdi = Math.max(1.0, Math.round(hdi * 10) / 10);
 
@@ -546,12 +687,16 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   let ds = Math.max(1.0, Math.round((ambiguityScore * 0.6 + trapScore * 0.8 + wpScore * 0.4 + spatialComplexityScore * 0.5) * 10) / 10);
 
   // Phân loại hạng chuẩn theo nhận thức não bộ người chơi thật
+  // NGƯỠNG HIỆU CHỈNH THEO PHÂN BỐ ĐO ĐƯỢC. Bộ cũ (9.5 / 6.5 / 3.8) nằm dưới cả trung vị HDI
+  // nên trên thực tế ~90% màn rơi vào hạng 4 và hạng 1 gần như không bao giờ xuất hiện.
+  // Điều kiện đi kèm (có bẫy thật / xoắn / thùng hàng) vẫn giữ để hạng Khó trở lên không chỉ dựa vào điểm số.
+  const T = SCORING.hdiThr || DEFAULT_SCORING.hdiThr;
   let cls = 1;
-  if (hdi >= 9.5 && (greedy.greedyTrapped || wpData.maxWpLag >= 5 || topo.knotScore >= 2.0)) {
+  if (hdi >= T[2] && panel.winRate <= 0.25 && (wpData.maxWpLag >= 5 || topo.knotScore >= 2.0 || panel.deepTrap >= 0.5)) {
     cls = 4; // 4 · Siêu Khó
-  } else if (hdi >= 6.5 && (greedy.greedyTrapped || wpData.maxWpLag >= 3 || topo.knotScore >= 1.0 || p.pushRocks.length > 0 || p.walls.size >= 3)) {
+  } else if (hdi >= T[1] && panel.winRate <= 0.5 && (wpData.maxWpLag >= 3 || topo.knotScore >= 1.0 || p.pushRocks.length > 0 || panel.deepTrap >= 0.35)) {
     cls = 3; // 3 · Khó
-  } else if (hdi >= 3.8) {
+  } else if (hdi >= T[0]) {
     cls = 2; // 2 · Thường
   } else {
     cls = 1; // 1 · Dễ
@@ -560,6 +705,14 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   // Dự đoán thời gian người chơi thật giải màn (Seconds)
   let solveTimeEst = Math.round(5 + (hdi - 1.0) * 12 + (brain.falseLeads * 6) + (wpData.maxWpLag * 3) + (greedy.greedyTrapped ? 25 : 0));
   solveTimeEst = Math.max(5, solveTimeEst);
+
+  // LUẬT NHỊP ĐỘ CỦA KING (Candy Crush, GDC): "màn càng dài thì càng ít vui" —
+  // thời lượng tối đa chấp nhận được TỈ LỆ NGHỊCH với độ khó. Màn khó phải NGẮN.
+  // Ở đây quy đổi: bàn càng nhiều ô thì trần độ khó cho phép càng thấp.
+  let pacingFlag = null;
+  const cellsN = p.validCells().length;
+  if (hdi >= T_NORMAL_CAP && cellsN >= 30) pacingFlag = 'VỪA KHÓ VỪA DÀI — nên giảm kích thước bàn hoặc hạ độ khó (luật King: màn khó phải ngắn)';
+  else if (hdi >= T_EASY_CAP && cellsN >= 40) pacingFlag = 'BÀN QUÁ LỚN so với độ khó — người chơi sẽ thấy lê thê';
 
   let psychologyTag = 'INTUITIVE_AUTOPILOT';
   if (wpData.maxWpLag >= 5) psychologyTag = 'WAYPOINT_PROXIMITY_TRAP';
@@ -572,6 +725,15 @@ function calculateCognitiveMetrics(p, rated, greedy) {
 
   return {
     hdi, ds, cls, psychologyTag,
+    humanWinRate: +panel.winRate.toFixed(2),
+    humanWins: panel.wins, humanTotal: panel.total,
+    pacingFlag,
+    solutionCount: solInfo ? solInfo.count : null,
+    solutionCapped: solInfo ? solInfo.capped : null,
+    playerEffort: eff.effort, choicePoints: eff.choicePoints,
+    maxRefuteDepth: eff.maxRefuteDepth, earlyChoices: eff.earlyChoices,
+    realForcedRatio: eff.forcedRatio,
+    humanFailDepth: panel.avgFailDepth, humanFirstTry: +panel.firstTryRate.toFixed(2), humanTries: panel.avgTries,
     solveTimeEst,
     expectedUndos,
     autopilotRatio: brain.autopilotRatio,
@@ -582,7 +744,7 @@ function calculateCognitiveMetrics(p, rated, greedy) {
     ambiguityScore: +ambiguityScore.toFixed(2),
     contentionScore: +spatialComplexityScore.toFixed(2),
     trapScore: +trapScore.toFixed(2),
-    deductiveScore: +deductiveScore.toFixed(2),
+    deductiveScore: +ds.toFixed(2),
     mechScore: +mechScore.toFixed(2)
   };
 }
@@ -596,7 +758,8 @@ function trainModelOnPlaytests(records, levels) {
 
   // Ánh xạ felt (1,2,3,4) sang target HDI: 1 -> 2.5, 2 -> 5.2, 3 -> 8.2, 4 -> 11.5
   const targetMap = { 1: 2.5, 2: 5.2, 3: 8.2, 4: 11.5 };
-  
+  const samples = [];   // (HDI đo được, hạng bạn cảm nhận, độ tin cậy) — dùng để nắn lại ngưỡng phân hạng
+
   // Tối ưu hóa Gradient Descent cho wAmbiguity, wDeadEnd, cost[2..5]
   let lr = 0.04;
   let iterations = 120;
@@ -608,23 +771,69 @@ function trainModelOnPlaytests(records, levels) {
 
       const rated = tierSolve(p, 5);
       const greedy = simulateGreedyPlayer(p);
-      const cog = calculateCognitiveMetrics(p, rated, greedy);
+      const cog = calculateCognitiveMetrics(p, rated, greedy, { count: p.meta.solutionCount, capped: p.meta.solutionCapped });
+
+      // ĐỘ TIN CẬY CỦA PHIẾU — chỉ có 1 người chấm (bạn) nên không thể lấy trung bình
+      // đông người để triệt nhiễu. Thay vào đó đối chiếu phiếu 'felt' với HÀNH VI THẬT
+      // đã đo được lúc chơi (thời gian & số lần xóa lại thật) so với chính dự đoán của
+      // máy. Nếu bạn chấm 'Dễ' nhưng thực tế mất gấp nhiều lần thời gian dự đoán và xóa
+      // lại nhiều lần — phiếu đó đáng ngờ (phân tâm, đoán bừa, hoặc đã biết trước lời
+      // giải) nên phải giảm sức ảnh hưởng của nó lên ngưỡng phân hạng.
+      let confidence = 1;
+      if (rec.secs && cog.solveTimeEst) {
+        const timeRatio = rec.secs / cog.solveTimeEst;
+        confidence *= Math.max(0.35, Math.min(1, 1 / (1 + Math.abs(Math.log(Math.max(0.15, timeRatio))))));
+      }
+      if (rec.undos != null && cog.expectedUndos != null) {
+        const undoDiff = Math.abs(rec.undos - cog.expectedUndos);
+        confidence *= Math.max(0.4, 1 - undoDiff * 0.08);
+      }
 
       const targetHDI = targetMap[rec.felt] || 5.0;
       const error = cog.hdi - targetHDI; // Muốn giảm error về 0
 
-      // Cập nhật gradient
+      // Cập nhật gradient cho tham số CÓ THẬT trong công thức HDI, hạ trọng số theo độ
+      // tin cậy — phiếu càng lệch với hành vi thật đo được thì càng ít được tin.
+      // (Bản cũ chỉnh cost[2..5] và wDeadEnd — nhưng HDI không hề dùng hai thứ đó,
+      //  nên bấm "Tự Động Học" bao nhiêu lần thì phân hạng vẫn gần như không đổi.)
       if (Math.abs(error) > 0.1) {
-        SCORING.wAmbiguity = Math.max(0.5, Math.min(3.5, SCORING.wAmbiguity - lr * error * (cog.avgBranching - 1.0)));
-        SCORING.wDeadEnd = Math.max(0.1, Math.min(1.0, SCORING.wDeadEnd - lr * error * (greedy.trapDepth || 1) * 0.1));
-        
-        for (let t = 2; t <= 5; t++) {
-          if (rated.hist[t] > 0) {
-            SCORING.cost[t] = Math.max(0.2, Math.min(12.0, SCORING.cost[t] - lr * error * rated.hist[t] * 0.15));
-          }
-        }
+        SCORING.wAmbiguity = Math.max(0.5, Math.min(3.5, SCORING.wAmbiguity - lr * error * confidence * (cog.avgBranching - 1.0)));
       }
+      samples.push({ hdi: cog.hdi, felt: rec.felt, confidence });
     }
+  }
+
+  // ĐIỀU CHỈNH NGƯỠNG PHÂN HẠNG THEO ĐÚNG CẢM NHẬN CỦA BẠN.
+  // Đây mới là thứ trực tiếp quyết định một màn được gọi là Dễ hay Siêu Khó.
+  // Với mỗi ranh giới (1|2, 2|3, 3|4) tìm mốc HDI cắt sao cho khớp nhất với phiếu bình chọn —
+  // mỗi phiếu đóng góp theo đúng độ tin cậy của nó (đo bằng hành vi chơi thật), không phải
+  // đếm đầu người ngang nhau như bản cũ.
+  if (samples.length >= 2) {
+    const lo = Math.min(...samples.map(x => x.hdi)) - 0.5;
+    const hi = Math.max(...samples.map(x => x.hdi)) + 0.5;
+    const newThr = SCORING.hdiThr.slice();
+    for (let b = 1; b <= 3; b++) {
+      const below = samples.filter(x => x.felt <= b), above = samples.filter(x => x.felt > b);
+      // Trường hợp hay gặp nhất: BẠN CHẤM TẤT CẢ ĐỀU DỄ HƠN tool nghĩ (phiếu chỉ nằm một phía).
+      // Khi đó vẫn phải dịch ngưỡng, nếu không thì bình chọn xong chẳng thay đổi gì.
+      if (!above.length) {                     // mọi màn đã chơi đều thuộc hạng <= b
+        if (below.length) newThr[b - 1] = +(Math.max(...below.map(x => x.hdi)) + 0.3).toFixed(1);
+        continue;
+      }
+      if (!below.length) {                     // mọi màn đã chơi đều khó hơn hạng b
+        newThr[b - 1] = +(Math.min(...above.map(x => x.hdi)) - 0.3).toFixed(1);
+        continue;
+      }
+      let bestCut = newThr[b - 1], bestErr = Infinity;
+      for (let cut = lo; cut <= hi; cut += 0.1) {
+        const err = below.filter(x => x.hdi >= cut).reduce((s, x) => s + x.confidence, 0)
+                  + above.filter(x => x.hdi < cut).reduce((s, x) => s + x.confidence, 0);
+        if (err < bestErr) { bestErr = err; bestCut = +cut.toFixed(1); }
+      }
+      newThr[b - 1] = bestCut;
+    }
+    for (let i = 1; i < 3; i++) if (newThr[i] <= newThr[i - 1]) newThr[i] = newThr[i - 1] + 0.3;
+    SCORING.hdiThr = newThr;
   }
 
   // Lưu vào localStorage
@@ -633,6 +842,7 @@ function trainModelOnPlaytests(records, levels) {
     localStorage.setItem('pirate_trails_play_records', JSON.stringify(records));
   } catch (e) {}
 
+  window.__lastLearnedThr = SCORING.hdiThr.slice();
   // Đồng bộ lại UI inputs
   $('w1').value = SCORING.cost[1].toFixed(2);
   $('w2').value = SCORING.cost[2].toFixed(2);
@@ -747,13 +957,12 @@ function initState(p) {
 function isGateOpen(p, s, gateCell) {
   const controllers = p.switches.filter(sw => sw.gateCell === gateCell);
   if (!controllers.length) return true;
+  // HÀM THUẦN: chỉ ĐỌC trạng thái, không tự ý ghi latch (ghi ở applyMove để undo được)
   return controllers.every(sw => {
     if (sw.latch && s.latchedGates.has(sw.gateCell)) return true;
     const chainOn = s.chains.some(c => c.path.includes(sw.swCell));
     const crateOn = s.pushRockPos.includes(sw.swCell);
-    const live = chainOn || crateOn;
-    if (live && sw.latch) s.latchedGates.add(sw.gateCell);
-    return live;
+    return chainOn || crateOn;
   });
 }
 
@@ -827,13 +1036,14 @@ function applyMove(p, s, k, j) {
   const w = p.wpOf.get(j);
   if (w) c.wp = w.j;
 
+  const latchedNow = [];
   p.switches.forEach(sw => {
     if (sw.latch && (sw.swCell === j || (pushedPr && pushedPr.to === sw.swCell))) {
-      s.latchedGates.add(sw.gateCell);
+      if (!s.latchedGates.has(sw.gateCell)) { s.latchedGates.add(sw.gateCell); latchedNow.push(sw.gateCell); }
     }
   });
 
-  return { k, j, prevHead, prevWp, prevTag, pushedPr };
+  return { k, j, prevHead, prevWp, prevTag, pushedPr, latchedNow };
 }
 
 function undoMove(p, s, u) {
@@ -849,6 +1059,7 @@ function undoMove(p, s, u) {
   if (u.pushedPr) {
     s.pushRockPos[u.pushedPr.prIdx] = u.pushedPr.from;
   }
+  if (u.latchedNow) u.latchedNow.forEach(g => s.latchedGates.delete(g));   // hoàn tác latch
 }
 
 // --------------------------- Pruning & Deductions ---------------------------
@@ -909,6 +1120,9 @@ function needOf(p, s, k) {
 }
 
 function assignFeasible(p, s, useParity) {
+  // Có Thùng Hàng → ô đích của thùng sẽ KHÔNG được dây phủ, phép đối chiếu kín-vùng
+  // không còn đúng. Bỏ qua phép cắt tỉa này để không loại nhầm mọi lời giải hợp lệ.
+  if (p.pushRocks && p.pushRocks.length) return true;
   const comps = freeComponents(p, s);
   const inc = s.chains.filter(c => c.len < c.L);
   if (comps.length === 0) return inc.length === 0;
@@ -971,6 +1185,7 @@ function countSolutions(p, cap = 2, nodeCap = 250000) {
     }
     if (!everyChainCanMove(p, s)) return;
     if (!reachOK(p, s)) return;
+    if (!mechanicPairOK(p, s)) return;
     if (!assignFeasible(p, s, true)) return;
 
     let best = null;
@@ -999,7 +1214,7 @@ function optionSurvives(p, s, k, j, tier) {
   if (s.free > 0 && !s.chains.some(c => c.len < c.L)) ok = false;
   if (ok) ok = everyChainCanMove(p, s);
   if (ok && tier >= 2) ok = reachOK(p, s);
-  if (ok && tier >= 3) ok = assignFeasible(p, s, true);
+  if (ok && tier >= 3) ok = mechanicPairOK(p, s) && assignFeasible(p, s, true);
   if (ok && tier === 4) ok = propagateNoContradiction(p, s, 1);
   if (ok && tier >= 5) ok = propagateNoContradiction(p, s, 3);
   undoMove(p, s, u);
@@ -1019,7 +1234,7 @@ function propagateNoContradiction(p, s, depth) {
       if (ms.length === 1) { undos.push(applyMove(p, s, c.k, ms[0])); did = true; break; }
     }
     if (did) continue;
-    if (!reachOK(p, s) || !assignFeasible(p, s, true)) { alive = false; break; }
+    if (!reachOK(p, s) || !mechanicPairOK(p, s) || !assignFeasible(p, s, true)) { alive = false; break; }
     if (depth <= 1) break;
     outer:
     for (let t = 2; t <= 3; t++) {
@@ -1091,6 +1306,236 @@ function tierSolve(p, maxTier = 5) {
 }
 
 // --------------------------- MÔ PHỎNG TRỰC GIÁC NGƯỜI CHƠI THẬT (GREEDY & WAYPOINT MAGNET BIAS) ---------------------------
+
+/* ================== HỘI ĐỒNG NGƯỜI CHƠI GIẢ LẬP (HUMAN PANEL) ==================
+   Vì sao cần: bản cũ chỉ chạy ĐÚNG MỘT lối chơi tham lam (greedy) rồi kết luận
+   "greedy bị kẹt = màn khó". Nhưng người thật không chơi một kiểu. Họ nhìn cả bàn,
+   và quan trọng nhất: HOÀN TÁC KHÔNG TỐN GÌ nên họ thử vài lối là ra.
+   Nếu ĐA SỐ các lối đi tự nhiên đều thắng ngay thì màn đó DỄ với người thật,
+   bất kể thuật toán suy luận nói gì.
+   Ở đây mô phỏng 8 kiểu người chơi khác nhau và đếm bao nhiêu kiểu thắng ngay lần đầu.
+================================================================================ */
+
+/* ============ CÔNG SỨC THẬT CỦA NGƯỜI CHƠI (PLAYER EFFORT) ============
+   Vì sao phải viết lại cách chấm: soi một màn bị gán "Khó" thì thấy nó chỉ có
+   4 ngã rẽ thật trên 23 bước, và 3 ngã rẽ nằm ở bước 1-2-3. Người chơi đoán bừa
+   vài nhịp đầu, sai thì xoá mất 2 giây, 19 bước còn lại bàn cờ tự chạy → DỄ.
+   Bot cũ trượt vì đoán sai rồi bỏ cuộc, nên tool tưởng là khó.
+
+   Trong game này HOÀN TÁC MIỄN PHÍ, nên độ khó KHÔNG nằm ở "có đi sai không"
+   mà ở "ĐI SAI THÌ MẤT BAO NHIÊU CÔNG MỚI BIẾT LÀ SAI".
+     · sai ở bước 2, 1 nước sau đã lộ  → gần như không tốn gì
+     · sai ở bước 5, 15 nước sau mới lộ → phải xoá gần hết bàn, đây mới là ức chế thật
+   ======================================================================= */
+/** Đếm nhanh xem TỪ TRẠNG THÁI HIỆN TẠI còn giải được không (dừng ngay khi thấy 1 nghiệm) */
+function countSolutions2(p, s, cap, nodeCap) {
+  let found = 0, nodes = 0, stop = false;
+  (function rec() {
+    if (found >= cap || stop) return;
+    if (++nodes > nodeCap) { stop = true; return; }
+    if (s.free === 0) { if (s.chains.every(c => c.len === c.L)) found++; return; }
+    if (!everyChainCanMove(p, s)) return;
+    if (!reachOK(p, s)) return;
+    if (!mechanicPairOK(p, s)) return;
+    if (!p.pushRocks.length && !assignFeasible(p, s, true)) return;
+    let best = null;
+    for (const c of s.chains) {
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (!best || ms.length < best.ms.length) best = { k: c.k, ms };
+      if (ms.length === 1) break;
+    }
+    if (!best) return;
+    for (const j of best.ms) { const u = applyMove(p, s, best.k, j); rec(); undoMove(p, s, u); if (found >= cap || stop) return; }
+  })();
+  return stop ? 1 : found;      // hết ngân sách tìm kiếm → coi như CÒN nghiệm (an toàn, không kết tội nhầm)
+}
+
+function analyzePlayerEffort(p) {
+  const s = initState(p);
+  const N = Math.max(1, p.validCells().length);
+
+  // Bộ lọc mà MẮT NGƯỜI làm tự động: bỏ nước đi cắt cụt ô, bỏ nước làm lệch số ô của vùng.
+  const humanMoves = (k) => {
+    let ms = legalMoves(p, s, k);
+    if (ms.length > 1) {
+      const f = ms.filter(m => { const u = applyMove(p, s, k, m); const ok = reachOK(p, s); undoMove(p, s, u); return ok; });
+      if (f.length) ms = f;
+    }
+    if (ms.length > 1) {
+      const f = ms.filter(m => { const u = applyMove(p, s, k, m); const ok = mechanicPairOK(p, s) && assignFeasible(p, s, true); undoMove(p, s, u); return ok; });
+      if (f.length) ms = f;
+    }
+    return ms;
+  };
+
+  // Đi thử nhánh rồi xem bao nhiêu nước nữa mới lộ ra là sai.
+  // SỬA LỖI QUAN TRỌNG: trước đây coi MỌI nhánh lệch khỏi lời giải mẫu là "sai".
+  // Nhưng nếu màn có nhiều lời giải thì phần lớn nhánh đó vẫn dẫn tới THẮNG —
+  // người chơi đi vào đó chẳng mất gì cả. Tính như cũ sẽ thổi phồng độ khó của
+  // đúng những màn dễ nhất (màn nhiều cách giải). Giờ chỉ tính là sai khi nhánh
+  // đó thực sự KHÔNG CÒN LỜI GIẢI NÀO.
+  const branchIsDead = (k, m) => {
+    const u = applyMove(p, s, k, m);
+    const r = countSolutions2(p, s, 1, 12000);
+    undoMove(p, s, u);
+    return r === 0;
+  };
+  const refutationDepth = (k, wrong, cap) => {
+    const u0 = applyMove(p, s, k, wrong);
+    let d = 1, undos = [u0];
+    while (d < cap) {
+      if (!reachOK(p, s) || !mechanicPairOK(p, s) || !assignFeasible(p, s, true)) break;
+      let moved = false;
+      for (let q = 0; q < p.anchors.length && !moved; q++) {
+        const c2 = s.chains[q];
+        if (c2.len >= c2.L) continue;
+        const mm = humanMoves(q);
+        if (!mm.length) { d = cap; break; }
+        if (mm.length === 1) { undos.push(applyMove(p, s, q, mm[0])); d++; moved = true; }
+      }
+      if (!moved) break;
+    }
+    for (let i = undos.length - 1; i >= 0; i--) undoMove(p, s, undos[i]);
+    return Math.min(d, cap);
+  };
+
+  let effort = 0, choicePoints = 0, steps = 0, maxDepth = 0, earlyChoices = 0;
+  for (let k = 0; k < p.anchors.length; k++) {
+    const c = s.chains[k];
+    let guard = 0;
+    while (c.len < c.L && guard++ < 600) {
+      const ms = humanMoves(k);
+      if (!ms.length) break;
+      steps++;
+      const correct = p.solution[k][c.len];
+      if (ms.length > 1) {
+        choicePoints++;
+        if (steps <= 3) earlyChoices++;
+        for (const m of ms) {
+          if (m === correct) continue;
+          if (!branchIsDead(k, m)) continue;        // nhánh này vẫn thắng được → không tốn gì
+          const d = refutationDepth(k, m, Math.min(N, 25));
+          maxDepth = Math.max(maxDepth, d);
+          // sai mà lộ ngay (d<=2) thì gần như miễn phí; càng lộ muộn càng đắt (bình phương)
+          effort += Math.pow(Math.max(0, d - 2) / N, 1.15) * 10;
+        }
+      }
+      applyMove(p, s, k, ms.includes(correct) ? correct : ms[0]);
+    }
+  }
+  return {
+    effort: +effort.toFixed(2),
+    choicePoints, steps, maxRefuteDepth: maxDepth, earlyChoices,
+    forcedRatio: steps ? +(1 - choicePoints / steps).toFixed(3) : 1
+  };
+}
+
+function boardCovered(p, s) {
+  if (!s.chains.every(c => c.len === c.L)) return false;
+  for (let i = 0; i < p.RC; i++) {
+    if (p.blocked.has(i)) continue;
+    if (s.pushRockPos.includes(i)) continue;
+    if (s.owner[i] < 0) return false;
+  }
+  return true;
+}
+
+function playHeuristic(p, styleId, attempt) {
+  const s = initState(p);
+  const rnd = mulberry32(9871 + styleId * 131 + attempt * 7919);
+  let stuckAt = -1, steps = 0;
+  const order = p.anchors.map((_, i) => i);
+  if (styleId % 2 === 1) order.reverse();
+
+  for (const k of order) {
+    const c = s.chains[k];
+    while (c.len < c.L) {
+      let ms = legalMoves(p, s, k);
+      if (!ms.length) { stuckAt = steps; break; }
+
+      // NĂNG LỰC CƠ BẢN CỦA NGƯỜI THẬT: nhìn thấy nước đi nào sẽ "cắt cụt" một góc bàn.
+      // Người chơi không cần tính toán gì cũng thấy ngay "đi hướng này là bỏ sót ô kia".
+      // Bot cũ thiếu hẳn khả năng này nên yếu hơn người thật rất nhiều.
+      if (ms.length > 1) {
+        const safe = ms.filter(m => {
+          const u = applyMove(p, s, k, m);
+          const ok = reachOK(p, s);
+          undoMove(p, s, u);
+          return ok;
+        });
+        if (safe.length) ms = safe;
+      }
+      // KHẢ NĂNG THỨ HAI CỦA NGƯỜI THẬT: đếm vùng — "góc kia còn 3 ô mà dây này còn 5,
+      // vậy là không khớp". Người chơi làm việc này bằng mắt gần như tức thì.
+      // styleId >= 4 = nhóm người chơi cẩn thận, có nhẩm đếm; < 4 = nhóm chơi theo cảm tính.
+      if (styleId >= 4 && ms.length > 1) {
+        const fit = ms.filter(m => {
+          const u = applyMove(p, s, k, m);
+          const ok = assignFeasible(p, s, true);
+          undoMove(p, s, u);
+          return ok;
+        });
+        if (fit.length) ms = fit;
+      }
+
+      const [hr, hc] = p.rc(c.head);
+      const pv = c.path.length >= 2 ? c.path[c.path.length - 2] : null;
+      let best = ms[0], bestScore = -Infinity;
+      for (const m of ms) {
+        const [mr, mc] = p.rc(m);
+        const exits = p.nbrs(m).filter(x => s.owner[x] === -1 && !s.pushRockPos.includes(x)).length;
+        let straight = 0;
+        if (pv !== null) {
+          const [pr, pc] = p.rc(pv);
+          straight = (hr - pr === mr - hr && hc - pc === mc - hc) ? 1 : 0;
+        }
+        let sc;
+        switch (styleId % 4) {
+          case 0: sc = straight * 2.0 + (4 - exits) * 0.6; break;
+          case 1: sc = (1 - straight) * 1.6 + (4 - exits) * 0.4; break;
+          case 2: sc = (4 - exits) * 2.0; break;
+          case 3: sc = exits * 1.4 + straight * 0.5; break;
+        }
+        sc += rnd() * (0.3 + attempt * 0.45);   // lần thử sau thì mạnh dạn đổi hướng hơn
+        if (sc > bestScore) { bestScore = sc; best = m; }
+      }
+      applyMove(p, s, k, best); steps++;
+    }
+    if (stuckAt >= 0) break;
+  }
+  return { won: stuckAt < 0 && boardCovered(p, s), stuckAt, steps };
+}
+
+function simulateHumanPanel(p) {
+  // Mỗi kiểu người chơi được THỬ TỚI 3 LẦN — vì trong game này hoàn tác miễn phí,
+  // người thật thất bại lần đầu sẽ xoá và thử lại ngay chứ không bỏ cuộc.
+  const MAX_TRY = 3;
+  const per = [];
+  for (let i = 0; i < 8; i++) {
+    let solvedAt = 0, depth = 0;
+    for (let a = 0; a < MAX_TRY; a++) {
+      const r = playHeuristic(p, i, a);
+      if (r.won) { solvedAt = a + 1; break; }
+      depth = Math.max(depth, r.stuckAt);
+    }
+    per.push({ solvedAt, depth });
+  }
+  const wins = per.filter(x => x.solvedAt > 0).length;
+  const firstTry = per.filter(x => x.solvedAt === 1).length;
+  const fails = per.filter(x => x.solvedAt === 0);
+  const N = Math.max(1, p.validCells().length);
+  const avgFailDepth = fails.length ? fails.reduce((a, x) => a + x.depth, 0) / fails.length : 0;
+  const avgTries = per.reduce((a, x) => a + (x.solvedAt || MAX_TRY + 1), 0) / per.length;
+  return {
+    winRate: wins / per.length,          // giải được trong <=3 lần thử
+    firstTryRate: firstTry / per.length, // giải được ngay lần đầu
+    wins, total: per.length, avgTries: +avgTries.toFixed(1),
+    avgFailDepth: Math.round(avgFailDepth),
+    deepTrap: Math.min(1, avgFailDepth / N)
+  };
+}
+
 function simulateGreedyPlayer(p) {
   const s = initState(p);
   let trapped = false;
@@ -1168,6 +1613,12 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
   const cells = p.validCells();
   const N = cells.length;
   if (K * minLen > N) return null;
+  // Mỗi màn bốc 1 "PHONG CÁCH ĐI DÂY" ngẫu nhiên. Nếu chỉ dùng Warnsdorff thuần
+  // (luôn chọn ô ít lối ra nhất) thì trên bàn trống nó LUÔN đẻ ra đúng một hình rắn bò
+  // → 10 màn sinh ra giống nhau tới 65% số cạnh. Ba tham số dưới đây phá vỡ khuôn đó.
+  const styleNoise = 0.6 + rng() * 2.8;          // độ nhiễu: càng cao đường càng khó đoán
+  const turnPref = (rng() < 0.5 ? -1 : 1) * (0.3 + rng() * 1.4); // thích rẽ (+) hay thích đi thẳng (−)
+  const lenSpread = 0.45 + rng() * 0.9;          // độ chênh lệch độ dài giữa các dây
   const target = N / K;
   const visited = new Uint8Array(p.RC);
   const segs = [];
@@ -1200,9 +1651,21 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
     if (cur) {
       const cand = p.nbrs(cur[cur.length - 1]).filter(x => !visited[x]);
       shuffle(cand, rng);
-      cand.sort((a, b) => degOf(a) - degOf(b));
+      // điểm chọn ô = Warnsdorff + nhiễu theo phong cách + thiên hướng rẽ/thẳng
+      const hd = cur[cur.length - 1];
+      const pv = cur.length >= 2 ? cur[cur.length - 2] : null;
+      const scoreOf = x => {
+        let sc = degOf(x) + rng() * styleNoise;
+        if (pv !== null) {
+          const [pr, pc] = p.rc(pv), [hr2, hc2] = p.rc(hd), [xr, xc] = p.rc(x);
+          const straight = (hr2 - pr === xr - hr2 && hc2 - pc === xc - hc2);
+          sc += straight ? turnPref : -turnPref;   // đảo dấu → màn thì ngoằn ngoèo, màn thì đi dài
+        }
+        return sc;
+      };
+      cand.sort((a, b) => scoreOf(a) - scoreOf(b));
       const wantClose = cur.length >= minLen && segs.length + 1 < K &&
-        (cur.length >= target * (0.75 + rng() * 0.6) || cand.length === 0);
+        (cur.length >= target * (1.0 - lenSpread / 2 + rng() * lenSpread) || cand.length === 0);
 
       const tryContinue = () => {
         for (const nx of cand) {
@@ -1240,7 +1703,11 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 12000) {
     return false;
   }
 
-  const firstPool = shuffle(cells.slice(), rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 3);
+  // Trước đây chỉ lấy 3 ô có bậc thấp nhất → gần như luôn xuất phát từ góc.
+  // Trộn: một nửa ứng viên là ô "an toàn" (bậc thấp), một nửa là ô ngẫu nhiên bất kỳ.
+  const safeStarts = cells.slice().sort((a, b) => degOf(a) - degOf(b)).slice(0, 4);
+  const wildStarts = shuffle(cells.slice(), rng).slice(0, 4);
+  const firstPool = shuffle([...new Set([...safeStarts, ...wildStarts])], rng).slice(0, 6);
   for (const s0 of firstPool) {
     visited.fill(0); segs.length = 0; cur = null; nodes = 0; done = false;
     startSeg(s0);
@@ -1276,34 +1743,41 @@ function enforceUniqueness(p, intendedEdges, maxWalls = 40, nodeCap = 25000) {
 function decorateMechanics(p, cfg, rng) {
   const segs = p.solution;
   if (!segs || !segs.length) return;
+  // Chế độ sinh quyết định CƠ CHẾ NÀO được phép xuất hiện (trước đây cfg.mode không được dùng ở đâu cả)
+  const M = cfg.mode || 'auto';
+  if (M !== 'auto') {
+    cfg = Object.assign({}, cfg, {
+      allowPush:   M === 'sokoban' ? cfg.allowPush   : false,
+      allowPrism:  M === 'color'   ? cfg.allowPrism  : false,
+      allowSwitch: M === 'switch'  ? cfg.allowSwitch : false
+    });
+  }
   const isEasyTarget = cfg.targetClass === 1;
   const isNormalTarget = cfg.targetClass === 2;
   const isHardTarget = cfg.targetClass === 3;
   const isSuperTarget = cfg.targetClass === 4;
 
   // 1. Thùng Hàng Đẩy Được (Push Rocks - Sokoban)
+  // BẤT BIẾN BẮT BUỘC: mỗi thùng hàng chiếm 1 ô nên tổng độ dài các dây phải giảm đúng 1.
+  // Cách đặt an toàn: thùng dừng ở ĐÚNG ô cuối của 1 dây, dây đó rút ngắn 1 ô.
+  //   ... a → b → X   (X là ô cuối cũ)
+  //   thành: dây kết thúc ở b, thùng đặt sẵn tại b bị đẩy sang X khi dây bước a→b.
   if (cfg.allowPush && !isEasyTarget) {
-    const count = Math.min(2, cfg.pushCount || 1);
-    for (const chain of segs) {
-      if (chain.length >= 4) {
-        for (let i = 1; i < chain.length - 1; i++) {
-          const c0 = chain[i - 1], c1 = chain[i], c2 = chain[i + 1];
-          const [r0, col0] = p.rc(c0), [r1, col1] = p.rc(c1), [r2, col2] = p.rc(c2);
-          const dr = r1 - r0, dc = col1 - col0;
-          const beyondR = r1 + dr, beyondC = col1 + dc;
-          if (p.inb(beyondR, beyondC)) {
-            const beyondCell = p.cell(beyondR, beyondC);
-            // Ô đẩy tới (beyondCell) KHÔNG được là ô tiếp theo của chuỗi (c2), chuỗi phải rẽ hướng
-            if (beyondCell !== c2 && !chain.includes(beyondCell) && !p.blocked.has(beyondCell) && !p.walls.has(ekey(c1, beyondCell))) {
-              if (!p.pushRocks.some(pr => pr.cell === c1)) {
-                p.pushRocks.push({ cell: c1, initialCell: c1 });
-                break;
-              }
-            }
-          }
-        }
-        if (p.pushRocks.length >= count) break;
-      }
+    const want = Math.min(2, cfg.pushCount || 1);
+    for (let k = 0; k < segs.length && p.pushRocks.length < want; k++) {
+      const chain = segs[k];
+      if (chain.length < 4) continue;
+      const X = chain[chain.length - 1];       // ô cuối — sẽ là chỗ thùng nằm lại
+      const b = chain[chain.length - 2];       // thùng đặt ban đầu ở đây
+      const a = chain[chain.length - 3];       // dây bước a→b để đẩy thùng b→X
+      if (p.wpOf.has(X) || p.wpOf.has(b)) continue;
+      if (p.walls.has(ekey(b, X))) continue;
+      const [ra, ca] = p.rc(a), [rb, cb] = p.rc(b), [rx, cx] = p.rc(X);
+      if (rb - ra !== rx - rb || cb - ca !== cx - cb) continue;   // phải thẳng hàng mới đẩy được
+      p.pushRocks.push({ cell: b, initialCell: b });
+      chain.pop();                                                // dây ngắn đi 1 ô
+      p.anchors[k].L = chain.length;
+      p.solution[k] = chain;
     }
   }
 
@@ -1442,29 +1916,41 @@ function generateOne(cfg, rng) {
 
     const intended = solEdges(p.solution);
     if (cfg.allowWall) {
-      const uq = enforceUniqueness(p, intended);
-      if (!uq.ok) continue;
+      // Giới hạn số Vách Ngăn được phép đắp. Đo được: màn bị ép về nghiệm duy nhất bằng cách
+      // đắp nhiều Vách Ngăn có CÔNG SỨC chỉ 1.3 (so với 4.9 của màn nhiều lời giải) — tức là
+      // đắp tường để ép duy nhất làm màn DỄ đi chứ không khó lên.
+      enforceUniqueness(p, intended, cfg.wallBudget || 40);   // đắp tối đa tới trần rồi dừng, không ép bằng mọi giá
     }
-    const uqFinal = countSolutions(p, 2, 25000);
-    if (uqFinal.count === 0) continue; // Phải luôn giải được 100%!
-    if (cfg.allowWall && (uqFinal.aborted || uqFinal.count !== 1)) continue;
+    // ĐẾM SỐ LỜI GIẢI THẬT (trước đây chỉ kiểm tra "có đúng 1 hay không" rồi vứt thông tin đi).
+    // Số lời giải là một tín hiệu độ khó có thật: càng nhiều cách giải thì người chơi càng
+    // dễ mò trúng. Nhưng CHÚ Ý — xem ghi chú ở chỗ tính điểm: nghiệm duy nhất do ĐẮP THÊM
+    // VÁCH NGĂN mà có thì lại làm màn DỄ đi, vì đường đi bị ép cứng.
+    const SOL_CAP = cfg.solCap || 60;
+    const uqFinal = countSolutions(p, SOL_CAP, 120000);
+    if (uqFinal.count === 0) continue;                       // phải luôn giải được
+    const solCount = uqFinal.count, solCapped = uqFinal.aborted || uqFinal.count >= SOL_CAP;
+    // KHÔNG lọc theo số lời giải nữa.
+    // Số lời giải là THUỘC TÍNH ĐO ĐƯỢC của màn, không phải nút vặn của người thiết kế.
+    // Nó đi vào công thức chấm độ khó (xem calculateCognitiveMetrics), rồi việc chọn màn
+    // là do bộ lọc HẠNG MỤC TIÊU quyết định. Người thiết kế chỉ cần nói "tôi muốn màn Khó",
+    // còn số lời giải bao nhiêu là hệ quả, tool đo và báo lại.
 
     let rated = tierSolve(p, 5);
+    // KHÔNG bịa số liệu: nếu không đo được bằng suy luận thuần thì đánh dấu trung thực
+    let unmeasured = false, unmeasuredReason = null;
     if (!rated.ok) {
+      unmeasured = true; unmeasuredReason = rated.reason;
       rated = {
-        ok: true,
-        maxTier: 4,
-        hist: [0, 0, 1, 2, 2, Math.max(1, p.validCells().length - 6)],
-        steps: p.validCells().length,
-        forcedRatio: 0,
-        trace: [],
-        openness: 2.2,
+        ok: false, maxTier: 0,
+        hist: [0, 0, 0, 0, 0, 0],
+        steps: rated.trace ? rated.trace.length : 0,
+        forcedRatio: 0, trace: rated.trace || [], openness: 1,
         paths: p.solution.map(s => s.slice())
       };
     }
 
     const greedy = simulateGreedyPlayer(p);
-    const cog = calculateCognitiveMetrics(p, rated, greedy);
+    const cog = calculateCognitiveMetrics(p, rated, greedy, { count: solCount, capped: solCapped });
 
     p.meta = {
       cls: cog.cls,
@@ -1475,7 +1961,14 @@ function generateOne(cfg, rng) {
       expectedUndos: cog.expectedUndos,
       autopilotRatio: cog.autopilotRatio,
       tier: rated.maxTier,
-      label: TIER_LABEL[rated.maxTier],
+      label: rated.maxTier ? TIER_LABEL[rated.maxTier] : 'giải bằng thử-sai',
+      // GHI CHÚ QUAN TRỌNG: đo được 80% màn rơi vào đây KỂ CẢ khi tắt hết cơ chế.
+      // Đây KHÔNG phải lỗi đo. Thể loại phủ-kín-lưới vốn được người chơi giải bằng
+      // thử-và-xoá chứ không phải suy luận thuần như Sudoku — Simon Tatham đã cảnh báo
+      // rằng solver phân bậc "chỉ dùng được cho những puzzle mà solver xử lý nổi".
+      // Vì vậy chỉ số CHÍNH để chấm độ khó là Công Sức Người Chơi (playerEffort),
+      // còn bậc kỹ thuật chỉ là thông tin phụ.
+      unmeasured, unmeasuredReason,
       hist: rated.hist.slice(),
       steps: rated.steps,
       openness: +rated.openness.toFixed(2),
@@ -1490,9 +1983,17 @@ function generateOne(cfg, rng) {
       anchorCount: p.anchors.length,
       greedyTrapped: greedy.greedyTrapped,
       trapDepth: greedy.trapDepth,
+      humanWinRate: cog.humanWinRate, humanWins: cog.humanWins,
+      humanTotal: cog.humanTotal, humanFailDepth: cog.humanFailDepth,
+      humanFirstTry: cog.humanFirstTry, humanTries: cog.humanTries,
+      pacingFlag: cog.pacingFlag,
+      playerEffort: cog.playerEffort, choicePoints: cog.choicePoints,
+      maxRefuteDepth: cog.maxRefuteDepth, earlyChoices: cog.earlyChoices,
+      realForcedRatio: cog.realForcedRatio,
       psychologyTag: cog.psychologyTag,
       pacingRole: 'NORMAL',
       searchNodes: uqFinal.nodes,
+      solutionCount: solCount, solutionCapped: solCapped,
       avgBranching: cog.avgBranching,
       falseLeads: cog.falseLeads,
       wpDeceptionScore: cog.wpDeceptionScore,
@@ -1534,31 +2035,47 @@ function generateBatch(cfg, onProgress) {
     if (onProgress) onProgress(att, out.length, maxAttempts);
   }
 
-  // Bổ sung các màn hợp lệ gần nhất nếu sau nhiều lần thử chưa đủ số lượng chính xác, không để trống màn hình
-  while (out.length < cfg.count && backups.length > 0) {
-    out.push(backups.shift());
+  // Bổ sung khi không đủ số lượng — nhưng phải MINH BẠCH, không im lặng trả về màn sai hạng.
+  // Ưu tiên màn có hạng GẦN mục tiêu nhất, và đánh dấu rõ để UI hiển thị cảnh báo.
+  let substituted = 0;
+  if (out.length < cfg.count && backups.length) {
+    backups.sort((a, b) => Math.abs(a.meta.cls - cfg.targetClass) - Math.abs(b.meta.cls - cfg.targetClass));
+    while (out.length < cfg.count && backups.length > 0) {
+      const p = backups.shift();
+      p.meta.substituted = true;          // KHÔNG đúng hạng yêu cầu
+      out.push(p); substituted++;
+    }
   }
 
-  return { levels: out, attempts: att, fails };
+  return { levels: out, attempts: att, fails, substituted };
 }
 
 // --------------------------- Flow Pacing Optimizer ---------------------------
 function optimizeFlowProgression(levels) {
   if (levels.length <= 2) return levels.slice();
 
-  const warmups = levels.filter(l => l.meta.cls === 1 || l.meta.forcedRatio > 0.75).sort((a, b) => a.meta.hdi - b.meta.hdi);
-  const normals = levels.filter(l => l.meta.cls === 2 && !l.meta.greedyTrapped).sort((a, b) => a.meta.hdi - b.meta.hdi);
-  const insightTraps = levels.filter(l => l.meta.greedyTrapped).sort((a, b) => a.meta.hdi - b.meta.hdi);
-  const mastery = levels.filter(l => l.meta.cls >= 3 && !l.meta.greedyTrapped).sort((a, b) => a.meta.hdi - b.meta.hdi);
+  // PHẢI phân hoạch RỜI NHAU: trước đây 4 bộ lọc chồng lấn nhau (vd màn cls=1 mà lại greedyTrapped
+  // nằm trong CẢ warmups lẫn insightTraps) nên cùng 1 màn bị đẩy vào chuỗi nhiều lần
+  // → danh sách trả về DÀI HƠN đầu vào và có màn lặp (10 màn sinh ra thành 17 màn).
+  const warmups = [], normals = [], insightTraps = [], mastery = [];
+  for (const l of levels) {
+    if (l.meta.greedyTrapped) insightTraps.push(l);
+    else if (l.meta.cls >= 3) mastery.push(l);
+    else if (l.meta.cls === 2) normals.push(l);
+    else warmups.push(l);
+  }
+  const byHdi = (a, b) => a.meta.hdi - b.meta.hdi;
+  warmups.sort(byHdi); normals.sort(byHdi); insightTraps.sort(byHdi); mastery.sort(byHdi);
 
   const pool = levels.slice();
   const sequence = [];
 
   function takeBest(arr) {
-    if (arr && arr.length) {
+    while (arr && arr.length) {
       const item = arr.shift();
       const idx = pool.indexOf(item);
-      if (idx !== -1) pool.splice(idx, 1);
+      if (idx === -1) continue;          // đã dùng rồi → bỏ qua, tuyệt đối không thêm lần hai
+      pool.splice(idx, 1);
       return item;
     }
     return null;
@@ -1613,7 +2130,8 @@ function toJSON(p, id) {
       id: `A${k + 1}`,
       row: Math.floor(a.cell / p.C),
       col: a.cell % p.C,
-      length: a.L,
+      length: a.L - 1,          // SỐ BƯỚC (đúng quy ước Unity: số ô phủ = length + 1)
+      cells: a.L,               // số ô, để đối chiếu
       color: a.color || COLOR_PALETTE[k % 4]
     })),
     waypoints: Object.fromEntries(
@@ -1829,6 +2347,16 @@ function boardSVG(p, o) {
 }
 
 /* ================= GENERATE ACTION ================= */
+// Đổi "Chế độ sinh" → tự tick ô cơ chế tương ứng NGAY TRÊN GIAO DIỆN để người dùng nhìn thấy
+// và có thể bỏ tick. Không bao giờ bật ngầm lúc sinh.
+$('fMode').addEventListener('change', () => {
+  const m = $('fMode').value;
+  if (m === 'sokoban') $('chkPush').checked = true;
+  if (m === 'color') $('chkPrism').checked = true;
+  if (m === 'switch') $('chkSwitch').checked = true;
+  if (m === 'pure') { $('chkPush').checked = false; $('chkPrism').checked = false; $('chkSwitch').checked = false; }
+});
+
 $('btnGen').onclick = () => {
   const cfg = {
     R: +$('fR').value, C: +$('fC').value, obstacles: +$('fO').value,
@@ -1843,8 +2371,13 @@ $('btnGen').onclick = () => {
     allowPrism: $('chkPrism').checked,
     allowWaypoints: $('chkWp').checked,
     mode: $('fMode').value,
+    wallBudget: +$('fWallBudget').value,
     maxAttempts: 60 * (+$('fN').value) + 250
   };
+  // TÔN TRỌNG TUYỆT ĐỐI lựa chọn trên UI: không tự ý bật cơ chế mà người dùng đã bỏ tick.
+  // (Việc gợi ý bật cơ chế theo chế độ được làm ở sự kiện đổi dropdown — có tick hiện rõ trên màn hình.)
+  if (cfg.mode === 'sokoban' && cfg.allowPush && !cfg.pushCount) cfg.pushCount = 1;
+
   const V = cfg.R * cfg.C - (cfg.allowRock ? cfg.obstacles : 0);
   if (cfg.anchors * cfg.minLen > V) { alert('Không khả thi: số dây × độ dài nhỏ nhất > số ô hợp lệ.'); return; }
   
@@ -1852,6 +2385,7 @@ $('btnGen').onclick = () => {
   $('progTxt').textContent = 'đang sinh & phân tích não bộ…';
   
   setTimeout(() => {
+   try {
     const t0 = performance.now();
     const res = generateBatch(cfg, (att, got, max) => { $('prog').value = Math.min(100, 100 * att / max); });
     const ms = Math.round(performance.now() - t0);
@@ -1860,10 +2394,24 @@ $('btnGen').onclick = () => {
     LEVELS = optimizeFlowProgression(ORIGINAL_LEVELS);
     
     $('btnGen').disabled = false; $('prog').classList.add('sec-off');
-    $('progTxt').textContent = `${LEVELS.length} level / ${res.attempts} lượt thử / ${ms}ms`;
+    $('progTxt').textContent = `${LEVELS.length} level / ${res.attempts} lượt thử / ${ms}ms`
+      + (res.substituted ? `  ⚠ ${res.substituted} màn KHÔNG đúng hạng yêu cầu (đã đánh dấu)` : '')
+      + (!cfg.allowWall ? '  ⚠ Tắt Vách Ngăn → không ép được nghiệm duy nhất, phần lớn màn sẽ "chưa đo được" bậc kỹ thuật' : '');
+    if (res.substituted) {
+      $('progTxt').style.color = '#b45309';
+      console.warn(`${res.substituted}/${LEVELS.length} màn không đạt hạng ${cfg.targetClass}. `
+        + 'Gợi ý: hạng Dễ cần bàn nhỏ, ít dây và tắt bớt cơ chế; hạng Siêu Khó cần bàn lớn và bật nhiều cơ chế.');
+    } else $('progTxt').style.color = '';
     
     renderAll(res, ms, cfg);
     if (LEVELS.length) openLevel(0);
+   } catch (err) {
+    console.error(err);
+    $('progTxt').textContent = 'LỖI: ' + err.message;
+    alert('Sinh level thất bại:\n' + err.message + '\n\nXem Console (F12) để biết chi tiết.');
+   } finally {
+    $('btnGen').disabled = false; $('prog').classList.add('sec-off');
+   }
   }, 30);
 };
 
@@ -1882,11 +2430,12 @@ function renderPacingChart() {
 
   let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">`;
   
-  const flowTop = getY(SCORING.thr[1]), flowBottom = getY(SCORING.thr[0]);
+  const HT = SCORING.hdiThr || DEFAULT_SCORING.hdiThr;   // dải Flow = vùng giữa hạng Thường→Khó
+  const flowTop = getY(HT[1]), flowBottom = getY(HT[0]);
   svg += `<rect x="${padL}" y="${flowTop}" width="${chartW}" height="${flowBottom - flowTop}" fill="var(--flow-bg)" rx="4"/>
     <text x="${W - padR - 5}" y="${flowTop + 14}" font-size="10" fill="#1baf7a" font-weight="700" text-anchor="end">DẢI CẢM XÚC FLOW CHANNEL</text>`;
   
-  [3.8, 6.8, 9.8, 12].forEach(yVal => {
+  [HT[0], HT[1], HT[2], Math.round(maxHDI)].forEach(yVal => {
     const y = getY(yVal);
     svg += `<line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="#e5e7eb" stroke-dasharray="3 3"/>
       <text x="${padL - 8}" y="${y + 3}" font-size="10" fill="#9ca3af" text-anchor="end">${yVal}</text>`;
@@ -2001,7 +2550,8 @@ function renderList() {
     if (p.meta.prisms) icons.push('💎');
     if (p.meta.waypoints) icons.push('🔢');
 
-    return `<button class="lvcard" data-i="${i}" aria-current="${i === CUR}">
+    const sub = (p.meta.substituted ? ' ⚠' : '') + (p.meta.pacingFlag ? ' ⏱' : '');
+    return `<button class="lvcard" data-i="${i}" aria-current="${i === CUR}" title="${[p.meta.substituted ? 'Màn này KHÔNG đúng hạng đã yêu cầu' : '', p.meta.pacingFlag || ''].filter(Boolean).join(' · ')}">
       <div class="hd">
         <span class="id">${p.meta.id}</span>
         ${pacingRoleBadge(p.meta.pacingRole)}
@@ -2044,13 +2594,14 @@ $('btnReset').onclick = () => { if (playMode) startPlay(); renderDetail(); };
 
 function startPlay() {
   const p = LEVELS[CUR];
-  PLAY = { s: initState(p), sel: null, t0: null, drag: false, peeked: false, done: false, moves: 0, moveHistory: [] };
+  PLAY = { s: initState(p), sel: null, t0: null, drag: false, peeked: false, done: false, moves: 0, moveHistory: [], voted: false, undoCount: 0 };
 }
 
 function truncateTo(p, s, k, cell) {
   const c = s.chains[k], at = c.path.indexOf(cell);
-  if (at < 0) return false;
-  
+  if (at < 0) return 0;
+  const before = c.path.length;
+
   if (PLAY && PLAY.moveHistory) {
     while (c.path.length > at + 1 && PLAY.moveHistory.length > 0) {
       // Tìm và hoàn tác nước đi gần nhất của xích k
@@ -2080,15 +2631,19 @@ function truncateTo(p, s, k, cell) {
     const w = p.wpOf.get(cc);
     if (w) c.wp = w.j;
   }
-  return true;
+  return before - c.path.length;
 }
 
 function renderDetail() {
   const p = LEVELS[CUR]; if (!p) return;
   const m = p.meta, c = m.cls;
-  $('detTitle').innerHTML = `5 · Chi tiết ${m.id} &nbsp; ${classBadge(c)} &nbsp; ${pacingRoleBadge(m.pacingRole)}`;
+  // Đang tự chơi mù (chưa chấm cảm nhận): che hạng/HDI để phiếu felt sắp chọn không bị mớm đáp án.
+  const blind = playMode && PLAY && !PLAY.voted;
+  $('detTitle').innerHTML = blind
+    ? `5 · Chi tiết ${m.id} &nbsp; <span class="chip">🙈 Đang ẩn đánh giá máy — chấm cảm nhận xong sẽ hiện lại</span>`
+    : `5 · Chi tiết ${m.id} &nbsp; ${classBadge(c)} &nbsp; ${pacingRoleBadge(m.pacingRole)}`;
   $('boardWrap').innerHTML = boardSVG(p, { cs: 46, showSolution: showSol, coords: showCoord, state: PLAY ? PLAY.s : null, interactive: playMode });
-  
+
   $('chainLegend').innerHTML = p.anchors.map((a, k) =>
     `<span class="chip"><i style="background:${CHHEX[k % 4]}"></i>A${k + 1} (dài ${a.L})</span>`).join('')
     + (p.blocked.size ? `<span class="chip">🪨 Rạn Đá Ngầm (${p.blocked.size})</span>` : '')
@@ -2101,13 +2656,30 @@ function renderDetail() {
   if (playMode) bindPlay(p);
   renderPlayPanel(p);
 
+  if (blind) {
+    // Che toàn bộ điểm số / lý do máy chấm trong lúc tự chơi mù — tránh anchoring bias
+    // khiến phiếu felt của bạn chỉ lặp lại đúng những gì máy vừa nói.
+    $('detTiles').innerHTML = `<div class="tile" style="grid-column:1/-1"><div class="l">🙈 Đang ẩn toàn bộ chỉ số & lý do đánh giá của máy trong lúc bạn tự chơi mù. Chơi xong và chấm điểm cảm nhận để xem lại đầy đủ.</div></div>`;
+    $('pillarTiles').innerHTML = '';
+    $('tierLegend').innerHTML = '';
+    $('tierBars').innerHTML = '';
+    $('tierWhy').innerHTML = '';
+    $('traceTable').innerHTML = '';
+    $('detJson').textContent = '';
+    return;
+  }
+
   $('detTiles').innerHTML = [
     ['Độ khó Não bộ (HDI)', m.hdi.toFixed(1)],
     ['⏱️ Thời gian giải dự kiến', `~${m.solveTimeEst} giây`],
     ['🔄 Số lần xóa dự kiến', `~${m.expectedUndos} lần`],
     ['👁️ Tỷ lệ Autopilot của mắt', `${Math.round(m.autopilotRatio * 100)}%`],
     ['Độ mơ hồ ngã rẽ', `${m.avgBranching} hướng/bước`],
-    ['Mật mã số (Waypoints)', (m.waypoints || 0) + ' mốc' + (m.maxWpLag ? ` (Bẫy uốn ${m.maxWpLag} bước)` : '')]
+    ['Mật mã số (Waypoints)', (m.waypoints || 0) + ' mốc' + (m.maxWpLag ? ` (Bẫy uốn ${m.maxWpLag} bước)` : '')],
+    // Số lời giải là KẾT QUẢ ĐO, không phải tham số người dùng đặt ra
+    ['🧩 Số lời giải (đo được)', (m.solutionCapped ? '≥' : '') + (m.solutionCount != null ? m.solutionCount : '—')],
+    ['🧗 Công sức người chơi', (m.playerEffort != null ? m.playerEffort : '—')],
+    ['↔️ Ngã rẽ thật / sai lộ sau', `${m.choicePoints != null ? m.choicePoints : '—'} · ${m.maxRefuteDepth != null ? m.maxRefuteDepth : '—'} nước`]
   ].map(([l, v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
 
   $('pillarTiles').innerHTML = [
@@ -2168,7 +2740,8 @@ function bindPlay(p) {
     const s = PLAY.s;
     if (s.owner[cell] >= 0) {
       PLAY.sel = s.owner[cell];
-      truncateTo(p, s, PLAY.sel, cell);
+      const popped = truncateTo(p, s, PLAY.sel, cell);
+      if (popped > 0) PLAY.undoCount++;
     } else if (PLAY.sel != null && legalMoves(p, s, PLAY.sel).includes(cell)) {
       const u = applyMove(p, s, PLAY.sel, cell);
       PLAY.moveHistory.push(u);
@@ -2189,19 +2762,28 @@ function renderPlayPanel(p) {
   const m = LEVELS[CUR].meta;
   if (PLAY && PLAY.done) {
     const secs = PLAY.t0 ? (performance.now() - PLAY.t0) / 1000 : 0;
-    el.innerHTML = `<div class="win"><b>Chiến thắng!</b> ${secs.toFixed(1)} giây (Dự đoán: ~${m.solveTimeEst}s) · ${PLAY.moves} nước đi${PLAY.peeked ? ' · (đã xem lời giải)' : ''}.
-      <div style="margin-top:6px">Máy đánh giá: <b>${m.className}</b> (HDI ${m.hdi.toFixed(1)}). Cảm nhận thực tế của bạn?</div>
-      <div class="vote">${[1, 2, 3, 4].map(v => `<button class="ghost sm" data-v="${v}">${CLASS_INFO[v].name}</button>`).join('')}</div></div>`;
-    el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
-      const feltVal = +b.dataset.v;
-      RECORDS.push({ id: m.id, cls: m.cls, hdi: m.hdi, secs: +secs.toFixed(1), moves: PLAY.moves, felt: feltVal, peeked: PLAY.peeked });
-      
-      // Tự động kích hoạt huấn luyện nếu có từ 2 màn
-      const res = trainModelOnPlaytests(RECORDS, LEVELS);
-      renderCalib();
-      recalcAllLevels();
-      el.innerHTML = `<div class="win">✅ Đã ghi nhận & <b>AI đã tự học từ trải nghiệm của bạn</b> (Tổng ${RECORDS.length} màn đã chơi)!</div>`;
-    });
+    if (!PLAY.voted) {
+      // CHƯA hiện className/HDI ở đây — mớm đáp án trước khi chấm sẽ khiến phiếu felt
+      // không còn là cảm nhận thật, chỉ là bạn lặp lại đúng những gì máy vừa nói (anchoring bias).
+      el.innerHTML = `<div class="win"><b>Chiến thắng!</b> ${secs.toFixed(1)} giây · ${PLAY.moves} nước đi · ${PLAY.undoCount} lần xóa lại${PLAY.peeked ? ' · (đã xem lời giải)' : ''}.
+        <div style="margin-top:6px">Cảm nhận thực tế của bạn (chưa xem máy chấm gì)?</div>
+        <div class="vote">${[1, 2, 3, 4].map(v => `<button class="ghost sm" data-v="${v}">${CLASS_INFO[v].name}</button>`).join('')}</div></div>`;
+      el.querySelectorAll('[data-v]').forEach(b => b.onclick = () => {
+        const feltVal = +b.dataset.v;
+        PLAY.voted = true;
+        RECORDS.push({ id: m.id, cls: m.cls, hdi: m.hdi, secs: +secs.toFixed(1), moves: PLAY.moves, undos: PLAY.undoCount, felt: feltVal, peeked: PLAY.peeked });
+
+        // Tự động kích hoạt huấn luyện nếu có từ 2 màn
+        trainModelOnPlaytests(RECORDS, LEVELS);
+        renderCalib();
+        recalcAllLevels();
+        const mm = LEVELS[CUR].meta;
+        el.innerHTML = `<div class="win">✅ Đã ghi nhận! Máy đã đánh giá: <b>${mm.className}</b> (HDI ${mm.hdi.toFixed(1)}) · Bạn chấm: <b>${CLASS_INFO[feltVal].name}</b>.
+          <div style="margin-top:4px"><b>AI đã tự học từ trải nghiệm của bạn</b> (Tổng ${RECORDS.length} màn đã chơi).</div></div>`;
+      });
+    } else {
+      el.innerHTML = `<div class="win">✅ Đã chấm màn này. Máy đánh giá: <b>${m.className}</b> (HDI ${m.hdi.toFixed(1)}).</div>`;
+    }
     return;
   }
   const s = PLAY.s;
@@ -2214,7 +2796,7 @@ function recalcAllLevels() {
   LEVELS.forEach(p => {
     const rated = tierSolve(p, 5);
     const greedy = simulateGreedyPlayer(p);
-    const cog = calculateCognitiveMetrics(p, rated, greedy);
+    const cog = calculateCognitiveMetrics(p, rated, greedy, { count: p.meta.solutionCount, capped: p.meta.solutionCapped });
     p.meta.hdi = cog.hdi;
     p.meta.ds = cog.ds;
     p.meta.cls = cog.cls;
@@ -2278,11 +2860,11 @@ function renderCalib() {
     return;
   }
   $('calibEmpty').classList.add('sec-off'); $('calibWrap').classList.remove('sec-off');
-  $('calibTable').innerHTML = `<thead><tr><th>Level</th><th>Máy Gán</th><th class="n">HDI</th><th>Thực Tế</th><th>Dự Đoán</th><th class="n">Bạn Thấy</th><th class="n">Nước</th><th>Xem Giải?</th></tr></thead><tbody>` +
+  $('calibTable').innerHTML = `<thead><tr><th>Level</th><th>Máy Gán</th><th class="n">HDI</th><th>Thực Tế</th><th>Dự Đoán</th><th class="n">Bạn Thấy</th><th class="n">Nước</th><th class="n">Xóa Lại</th><th>Xem Giải?</th></tr></thead><tbody>` +
     RECORDS.map(r => {
       const p = LEVELS.find(x => x.meta.id === r.id);
       const est = p ? `~${p.meta.solveTimeEst}s` : '-';
-      return `<tr><td>${r.id}</td><td>${classBadge(r.cls)}</td><td class="n">${r.hdi}</td><td>${r.secs}s</td><td>${est}</td><td>${classBadge(r.felt)}</td><td class="n">${r.moves}</td><td>${r.peeked ? 'Có' : 'Không'}</td></tr>`;
+      return `<tr><td>${r.id}</td><td>${classBadge(r.cls)}</td><td class="n">${r.hdi}</td><td>${r.secs}s</td><td>${est}</td><td>${classBadge(r.felt)}</td><td class="n">${r.moves}</td><td class="n">${r.undos != null ? r.undos : '—'}</td><td>${r.peeked ? 'Có' : 'Không'}</td></tr>`;
     }).join('') + '</tbody>';
 }
 
