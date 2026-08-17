@@ -2320,10 +2320,13 @@ function boardSVG(p, o) {
     }
   }
 
-  // 10. Phao Tiêu / Mật Mã Số (Waypoints)
+  // 10. Phao Tiêu / Mật Mã Số (Waypoints) — tô viền + số theo màu của chính dây sở hữu nó,
+  // vì số thứ tự (w.j) được đánh LẠI TỪ 1 cho mỗi dây. Không tô theo màu dây thì 2+ Mỏ Neo
+  // có mốc số sẽ hiện trùng số (hai số "1", hai số "2"...) trông như rải bừa không liên quan.
   for (const [cell, w] of p.wpOf) {
-    s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
-      <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="#92400e" text-anchor="middle" font-weight="900">${w.j}</text>`;
+    const wc = CHHEX[w.k % 4];
+    s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="${wc}" stroke-width="2.5"/>
+      <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="${wc}" text-anchor="middle" font-weight="900">${w.j}</text>`;
   }
 
   // 11. Mỏ Neo (Anchors)
