@@ -2010,13 +2010,20 @@ function generateOne(cfg, rng) {
   return { ok: false, reason: 'no-unique-orientation' };
 }
 
-function generateBatch(cfg, onProgress) {
+async function generateBatch(cfg, onProgress) {
   const rng = mulberry32(cfg.seed || 12345);
   const out = [];
   const backups = [];
   const fails = {};
   const maxAttempts = cfg.maxAttempts || 300;
   let att = 0;
+
+  // CỨ MỖI 15 LƯỢT, NHƯỜNG LẠI LUỒNG CHÍNH CHO TRÌNH DUYỆT (setTimeout 0ms).
+  // Mỗi lượt sinh + chấm điểm não bộ (hội đồng người chơi, công sức, đếm lời giải...)
+  // rất nặng và maxAttempts có thể lên tới hàng trăm-nghìn lượt; chạy đồng bộ liên
+  // tục khiến trình duyệt không kịp vẽ lại/nhận sự kiện → báo "trang không phản hồi".
+  // KHÔNG đổi bất kỳ logic sinh/chấm điểm nào, chỉ nhường luồng để UI còn sống.
+  const YIELD_EVERY = 15;
 
   while (out.length < cfg.count && att < maxAttempts) {
     att++;
@@ -2033,6 +2040,7 @@ function generateBatch(cfg, onProgress) {
       fails[r.reason] = (fails[r.reason] || 0) + 1;
     }
     if (onProgress) onProgress(att, out.length, maxAttempts);
+    if (att % YIELD_EVERY === 0) await new Promise(resolve => setTimeout(resolve, 0));
   }
 
   // Bổ sung khi không đủ số lượng — nhưng phải MINH BẠCH, không im lặng trả về màn sai hạng.
@@ -2387,10 +2395,10 @@ $('btnGen').onclick = () => {
   $('btnGen').disabled = true; $('prog').classList.remove('sec-off');
   $('progTxt').textContent = 'đang sinh & phân tích não bộ…';
   
-  setTimeout(() => {
+  setTimeout(async () => {
    try {
     const t0 = performance.now();
-    const res = generateBatch(cfg, (att, got, max) => { $('prog').value = Math.min(100, 100 * att / max); });
+    const res = await generateBatch(cfg, (att, got, max) => { $('prog').value = Math.min(100, 100 * att / max); });
     const ms = Math.round(performance.now() - t0);
     ORIGINAL_LEVELS = res.levels.map((p, i) => { p.meta.id = 'L' + String(i + 1).padStart(3, '0'); return p; });
     
