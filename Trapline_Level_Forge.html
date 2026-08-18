@@ -319,6 +319,7 @@ progress{width:220px;height:10px}
         <button class="ghost sm" id="btnReset">🔄 Xoá vẽ / Đặt lại</button>
       </div>
       <div id="boardWrap"></div>
+      <div id="moveBlockedMsg" style="display:none;text-align:center;font-size:12.5px;font-weight:700;color:#991b1b;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:6px 10px;margin:4px 0"></div>
       <div class="legend" id="chainLegend"></div>
       <div id="playPanel"></div>
     </div>
@@ -1080,6 +1081,42 @@ const SHAPE_PRESETS = {
   }
 };
 
+// Một số hình mẫu (ring/skull/...) có thể tự cắt thành nhiều mảnh rời rạc ở
+// kích thước bàn cờ nhỏ. Giữ lại thành phần liên thông lớn nhất để đảm bảo
+// mọi hình luôn là một khối duy nhất, bất kể R/C.
+function keepLargestShapeComponent(rows) {
+  const R = rows.length, C = rows[0].length;
+  const grid = rows.map(row => row.split(''));
+  const visited = Array.from({ length: R }, () => new Array(C).fill(false));
+  let best = null, bestSize = 0;
+  for (let r = 0; r < R; r++) {
+    for (let c = 0; c < C; c++) {
+      if (grid[r][c] !== '1' || visited[r][c]) continue;
+      const comp = [];
+      const q = [[r, c]];
+      visited[r][c] = true;
+      while (q.length) {
+        const [cr, cc] = q.pop();
+        comp.push([cr, cc]);
+        for (const [dr, dc] of DIRS) {
+          const nr = cr + dr, nc = cc + dc;
+          if (nr >= 0 && nr < R && nc >= 0 && nc < C && grid[nr][nc] === '1' && !visited[nr][nc]) {
+            visited[nr][nc] = true; q.push([nr, nc]);
+          }
+        }
+      }
+      if (comp.length > bestSize) { bestSize = comp.length; best = comp; }
+    }
+  }
+  if (!best) return rows;
+  const bestSet = new Set(best.map(([r, c]) => r * C + c));
+  return grid.map((row, r) => row.map((ch, c) => (bestSet.has(r * C + c) ? '1' : '0')).join(''));
+}
+for (const key of Object.keys(SHAPE_PRESETS)) {
+  const rawPreset = SHAPE_PRESETS[key];
+  SHAPE_PRESETS[key] = (R, C) => keepLargestShapeComponent(rawPreset(R, C));
+}
+
 function generateGestaltShape(R, C, rng) {
   const keys = ['heart', 'diamond', 'skull', 'bridge', 'ring', 'cross', 'hourglass', 'anchor'];
   if (rng() < 0.70) {
@@ -1096,7 +1133,7 @@ function generateGestaltShape(R, C, rng) {
     grid[cr][cc] = 0;
     grid[cr][C - 1 - cc] = 0; // Đối xứng gương dọc
   }
-  return grid.map(row => row.join(''));
+  return keepLargestShapeComponent(grid.map(row => row.join('')));
 }
 
 // --------------------------- Puzzle Data Model ---------------------------
@@ -1184,7 +1221,10 @@ function initState(p) {
     return {
       k, head: a.cell, len: 1, L: a.L,
       path: [a.cell],
-      colorTag: null,
+      // Dây vốn đã mang màu gốc của chính mỏ neo (a.color) ngay từ đầu — Cổng Màu khớp đúng
+      // màu gốc này thì ĐI QUA ĐƯỢC LUÔN, không bắt buộc phải có Lăng Kính mới đi qua được.
+      // Lăng Kính chỉ cần thiết khi muốn ĐỔI sang màu KHÁC màu gốc để qua 1 Cổng Màu khác màu.
+      colorTag: a.color || null,
       wp: (p.wpOf.get(a.cell) ? p.wpOf.get(a.cell).j : 0)
     };
   });
@@ -1251,6 +1291,56 @@ function legalMoves(p, s, k) {
   return out;
 }
 
+// Giải thích NGẮN GỌN vì sao 1 nước đi cụ thể (dây k -> ô j) bị chặn — trước đây 1 nước đi sai
+// luật chỉ "im lặng không làm gì" trên bàn cờ, người chơi KHÔNG PHÂN BIỆT được "sai màu Cổng
+// Màu" với "dây đã hết số bước" hay "Cổng đang đóng" — mọi trường hợp đều trông y hệt nhau:
+// không có chuyện gì xảy ra. Hàm này soi lại đúng thứ tự kiểm tra của legalMoves() để trả về
+// lý do CHÍNH XÁC nhất (không đoán), dùng để hiện thông báo rõ ràng cho người chơi.
+function explainBlockedMove(p, s, k, j) {
+  const c = s.chains[k];
+  if (c.len >= c.L) return 'Dây này đã dùng hết số bước — không thể đi thêm.';
+  if (!p.nbrs(c.head).includes(j)) return null; // không kề cạnh đầu dây, không phải 1 nước đi thật
+
+  if (s.owner[j] !== -1 && s.owner[j] !== -3) return 'Ô này đã bị dây khác chiếm mất.';
+
+  if (p.switches.some(sw => sw.gateCell === j) && !isGateOpen(p, s, j)) {
+    return 'Cổng đang ĐÓNG — cần bấm đúng Công Tắc mở cổng trước.';
+  }
+
+  const COLOR_VN = { red: 'ĐỎ', blue: 'XANH DƯƠNG', green: 'XANH LÁ', purple: 'TÍM' };
+  const cg = p.colorGates.find(g => g.cell === j);
+  if (cg && c.colorTag !== cg.color) {
+    return `Ô Màu này chỉ cho dây màu ${COLOR_VN[cg.color] || cg.color} đi qua — dây hiện đang mang màu ${COLOR_VN[c.colorTag] || c.colorTag || 'chưa xác định'}.`;
+  }
+
+  const prIdx = s.pushRockPos.indexOf(j);
+  if (prIdx !== -1) {
+    const [hr, hc] = p.rc(c.head), [jr, jc] = p.rc(j);
+    const beyondR = jr + (jr - hr), beyondC = jc + (jc - hc);
+    if (!p.inb(beyondR, beyondC)) return 'Đẩy thùng ra ngoài biên bàn cờ — không hợp lệ.';
+    const beyondCell = p.cell(beyondR, beyondC);
+    if (p.blocked.has(beyondCell)) return 'Phía sau thùng có Đá Tảng chắn — không đẩy được.';
+    if (p.walls.has(ekey(j, beyondCell))) return 'Phía sau thùng có Vách Ngăn chắn — không đẩy được.';
+    if (s.owner[beyondCell] !== -1) return 'Phía sau thùng đã có dây khác choán chỗ — không đẩy được.';
+    if (s.pushRockPos.includes(beyondCell)) return 'Phía sau thùng lại có thùng khác — không đẩy được.';
+    if (p.switches.some(sw => sw.gateCell === beyondCell) && !isGateOpen(p, s, beyondCell)) {
+      return 'Phía sau thùng là 1 Cổng đang đóng — không đẩy được.';
+    }
+  }
+
+  const nWp = p.wpCount[k] || 0;
+  const w = p.wpOf.get(j);
+  if (w) {
+    if (w.k !== k) return 'Ô Mật Mã này thuộc về dây khác.';
+    if (w.j !== c.wp + 1) return `Phải đi đúng thứ tự Mật Mã — cần đi vào số ${c.wp + 1} trước đã.`;
+    if (w.j === nWp && c.len + 1 !== c.L) return 'Đây là ô Mật Mã cuối — chỉ được vào đúng ở bước đi cuối cùng của dây.';
+  } else if (nWp > 0 && c.len + 1 === c.L) {
+    return 'Bước cuối cùng của dây phải đúng vào ô Mật Mã cuối, không phải ô này.';
+  }
+
+  return null; // không rõ lý do cụ thể (hoặc thực ra nước đi này hợp lệ)
+}
+
 function applyMove(p, s, k, j) {
   const c = s.chains[k];
   const prevHead = c.head, prevWp = c.wp, prevTag = c.colorTag;
@@ -1300,6 +1390,22 @@ function undoMove(p, s, u) {
     s.pushRockPos[u.pushedPr.prIdx] = u.pushedPr.from;
   }
   if (u.latchedNow) u.latchedNow.forEach(g => s.latchedGates.delete(g));   // hoàn tác latch
+}
+
+// Dùng cho thao tác KÉO DÂY LÙI LẠI (vuốt ngón tay đè lên đoạn dây đã vẽ) — CHỈ hoàn tác phần
+// đường đi của chính xích đó, KHÔNG hoàn tác thùng đã đẩy hay công tắc khóa đã bấm. Đẩy thùng
+// PHẢI là hành động vĩnh viễn trong ván đang chơi — game không có nút Undo riêng (chỉ có Hint
+// và Freeze), nên cách duy nhất sửa một lần đẩy thùng sai là bấm "Chơi Lại" để chơi lại từ đầu,
+// không phải cứ vuốt lùi dây là thùng tự về chỗ cũ.
+function undoMoveChainOnly(p, s, u) {
+  const c = s.chains[u.k];
+  s.owner[u.j] = -1;
+  c.head = u.prevHead;
+  c.len--;
+  c.path.pop();
+  c.wp = u.prevWp;
+  c.colorTag = u.prevTag;
+  s.free++;
 }
 
 // --------------------------- Pruning & Deductions ---------------------------
@@ -1833,14 +1939,25 @@ function simulateGreedyPlayer(p) {
 }
 
 // --------------------------- Advanced Generator Với 3 Chốt An Toàn ---------------------------
-function placeObstacles(R, C, count, rng, shape = null, maxTry = 60) {
+function placeObstacles(R, C, count, rng, shape = null, maxTry = 60, forcedCells = null) {
   for (let t = 0; t < maxTry; t++) {
     const p = new Puzzle(R, C, shape);
     const valid = p.validCells();
     if (valid.length < 6) continue;
-    const all = shuffle(valid.slice(), rng);
     const placeCount = Math.min(count, Math.max(0, valid.length - 8));
-    for (let i = 0; i < placeCount; i++) p.blocked.add(all[i]);
+    let chosen;
+    if (forcedCells && forcedCells.length) {
+      // Đá tảng người dùng vẽ thủ công (VD: Custom Designer) — dùng ĐÚNG các ô đã chỉ định,
+      // không random, chỉ random THÊM nếu count lớn hơn số ô đã vẽ (không nên xảy ra bình
+      // thường vì count vốn được tính từ chính số ô đã vẽ).
+      const validSet = new Set(valid);
+      chosen = forcedCells.filter(c => validSet.has(c)).slice(0, placeCount);
+      const remaining = shuffle(valid.filter(c => !chosen.includes(c)), rng);
+      while (chosen.length < placeCount && remaining.length) chosen.push(remaining.shift());
+    } else {
+      chosen = shuffle(valid.slice(), rng).slice(0, placeCount);
+    }
+    for (const c of chosen) p.blocked.add(c);
     const v = p.validCells();
     if (v.length < 6) continue;
     // Kiểm tra tính liên thông Flood-Fill
@@ -1848,15 +1965,24 @@ function placeObstacles(R, C, count, rng, shape = null, maxTry = 60) {
     while (q.length) { const x = q.pop(); for (const y of p.nbrs(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
     if (seen.size !== v.length) continue;
     if (v.some(x => p.nbrs(x).length === 0)) continue;
+    // Ghi lại nếu số đá tảng đặt được ít hơn yêu cầu (bàn quá nhỏ) để UI cảnh báo,
+    // thay vì âm thầm sinh ra ít đá tảng hơn cấu hình người dùng đã chọn.
+    p.meta.obstaclesRequested = count;
+    p.meta.obstaclesPlaced = placeCount;
     return p;
   }
   return null;
 }
 
-function partitionIntoPaths(p, K, minLen, rng, budget = 15000) {
+function partitionIntoPaths(p, K, minLen, rng, budget = 15000, forcedStarts = null) {
   const cells = p.validCells();
   const N = cells.length;
   if (K * minLen > N) return null;
+  // forcedStarts: ô mỏ neo người dùng đã vẽ tay (VD: Custom Designer) — ưu tiên THỬ TRƯỚC các
+  // ô này khi chọn điểm bắt đầu mỗi dây, để bám sát đúng bản vẽ thay vì random hoàn toàn.
+  // Không ép cứng 100% (vẫn cho phép rơi về các ô khác nếu không tìm được lời giải nào khớp),
+  // để không làm giảm tỉ lệ sinh thành công.
+  const forcedSet = new Set(forcedStarts || []);
 
   // CHỐT AN TOÀN 2: Kiểm tra cân bằng Parity Chẵn - Lẻ (Bipartite Grid Parity)
   // Mỗi bước di chuyển luôn đổi màu ô: (r + c) % 2. Độ lệch tối đa cho K path là K.
@@ -1964,6 +2090,10 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 15000) {
           } else {
             nextStarts = shuffle(uv, rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 6);
           }
+          if (forcedSet.size) {
+            const forcedAvailable = uv.filter(x => forcedSet.has(x));
+            nextStarts = [...forcedAvailable, ...nextStarts.filter(x => !forcedSet.has(x))];
+          }
           for (const st of nextStarts) {
             visited[st] = 1; cur = [st];
             if (search()) return true;
@@ -1981,6 +2111,10 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 15000) {
     const uv = unvisited();
     const uvDeg1 = uv.filter(x => degOf(x) <= 1);
     let pool = uvDeg1.length > 0 ? shuffle(uvDeg1, rng) : shuffle(uv, rng).sort((a, b) => degOf(a) - degOf(b)).slice(0, 8);
+    if (forcedSet.size) {
+      const forcedAvailable = uv.filter(x => forcedSet.has(x));
+      pool = [...forcedAvailable, ...pool.filter(x => !forcedSet.has(x))];
+    }
     for (const st of pool) {
       visited[st] = 1; cur = [st];
       if (search()) return true;
@@ -2046,20 +2180,47 @@ function decorateMechanics(p, cfg, rng) {
   const isHardTarget = cfg.targetClass === 3;
   const isSuperTarget = cfg.targetClass === 4;
 
+  // Tập hợp ô ĐÃ GẮN 1 cơ chế (thùng đẩy / lăng kính / cổng màu / công tắc / cổng chặn) —
+  // dùng chung xuyên suốt cả 4 khối bên dưới để KHÔNG BAO GIỜ chồng 2 cơ chế lên cùng 1 ô
+  // (trước đây mỗi khối tự kiểm tra riêng, dẫn tới lăng kính có thể vô tình rơi đúng ô công
+  // tắc vì công tắc được quyết định SAU trong thứ tự thực thi).
+  const usedMechCells = new Set();
+
   // 1. Thùng Hàng Đẩy Được (Push Rocks - Sokoban)
-  if (cfg.allowPush && !isEasyTarget) {
+  // GHI CHÚ: trước đây có thêm "&& !isEasyTarget" ở cả 3 khối dưới đây (push/prism/switch),
+  // với ý định "đừng chất thêm độ khó cho màn Dễ". Nhưng hệ quả phụ nghiêm trọng: MỌI màn
+  // "Giới thiệu cơ chế mới" (targetClass=1, đúng nghĩa vì đó là màn dạy đầu tiên) sẽ KHÔNG
+  // BAO GIỜ chứa cơ chế mà chúng giới thiệu — màn tutorial rỗng, phá vỡ hoàn toàn mục đích
+  // dạy luật. Bỏ điều kiện đó: vẫn đặt ĐÚNG 1 lần cơ chế ở màn Dễ (bản đơn giản nhất), độ khó
+  // tăng thêm chỉ đến từ các nhánh isHardTarget/isSuperTarget bên trong mỗi khối.
+  if (cfg.allowPush) {
     const want = Math.min(2, cfg.pushCount || 1);
-    for (let k = 0; k < segs.length && p.pushRocks.length < want; k++) {
+    // cfg.forcedPushCells: ô Thùng Đẩy người dùng vẽ tay — cơ chế này chỉ gắn được vào CUỐI
+    // 1 dây (xem bên dưới), nên "khớp bản vẽ" ở đây nghĩa là ưu tiên THỬ TRƯỚC dây nào có ô
+    // áp chót (b) trùng đúng ô người dùng vẽ, trước khi rơi về thứ tự mặc định.
+    const forcedPushSet = new Set(cfg.forcedPushCells || []);
+    const pushOrder = segs.map((s, k) => k);
+    if (forcedPushSet.size) {
+      pushOrder.sort((k1, k2) => {
+        const b1 = segs[k1].length >= 4 ? segs[k1][segs[k1].length - 2] : -1;
+        const b2 = segs[k2].length >= 4 ? segs[k2][segs[k2].length - 2] : -1;
+        return (forcedPushSet.has(b2) ? 1 : 0) - (forcedPushSet.has(b1) ? 1 : 0);
+      });
+    }
+    for (const k of pushOrder) {
+      if (p.pushRocks.length >= want) break;
       const chain = segs[k];
       if (chain.length < 4) continue;
       const X = chain[chain.length - 1];       // ô cuối — sẽ là chỗ thùng nằm lại
       const b = chain[chain.length - 2];       // thùng đặt ban đầu ở đây
       const a = chain[chain.length - 3];       // dây bước a→b để đẩy thùng b→X
       if (p.wpOf.has(X) || p.wpOf.has(b)) continue;
+      if (usedMechCells.has(X) || usedMechCells.has(b)) continue;
       if (p.walls.has(ekey(b, X))) continue;
       const [ra, ca] = p.rc(a), [rb, cb] = p.rc(b), [rx, cx] = p.rc(X);
       if (rb - ra !== rx - rb || cb - ca !== cx - cb) continue;   // phải thẳng hàng mới đẩy được
       p.pushRocks.push({ cell: b, initialCell: b });
+      usedMechCells.add(b);
       chain.pop();                                                // dây ngắn đi 1 ô
       p.anchors[k].L = chain.length;
       p.solution[k] = chain;
@@ -2067,32 +2228,115 @@ function decorateMechanics(p, cfg, rng) {
   }
 
   // 2. Lăng Kính (Prism) & Cổng Màu (ColorGate)
-  if (cfg.allowPrism && !isEasyTarget) {
-    const longChains = segs.filter(s => s.length >= 5);
-    if (longChains.length && (cfg.targetClass >= 3 || rng() < 0.6)) {
-      const chain = pick(longChains, rng);
-      const color = pick(COLOR_PALETTE, rng);
-      const pi = 1;
-      const gi = Math.min(chain.length - 2, pi + 2 + Math.floor(rng() * (chain.length - pi - 3)));
-      if (gi > pi) {
-        p.prisms.push({ cell: chain[pi], color });
-        p.colorGates.push({ cell: chain[gi], color });
+  if (cfg.allowPrism) {
+    const longChainIdxs = segs.map((s, k) => k).filter(k => segs[k].length >= 5);
+    if (longChainIdxs.length && (cfg.targetClass >= 3 || rng() < 0.6)) {
+      // cfg.forcedPrismCells: ô Lăng Kính người dùng vẽ tay — cơ chế này luôn gắn ở Ô THỨ 2
+      // của dây được chọn (pi=1, xem bên dưới), nên chỉ khớp được nếu ô vẽ tay trùng đúng
+      // vị trí đó trên MỘT dây đủ dài nào đó — còn không thì rơi về chọn ngẫu nhiên như cũ.
+      const forcedPrismSet = new Set(cfg.forcedPrismCells || []);
+      const freeChainIdxs = longChainIdxs.filter(k => !usedMechCells.has(segs[k][1]));
+      const forcedMatch = forcedPrismSet.size ? freeChainIdxs.find(k => forcedPrismSet.has(segs[k][1])) : undefined;
+      const chainIdx = forcedMatch !== undefined ? forcedMatch : (freeChainIdxs.length ? pick(freeChainIdxs, rng) : undefined);
+      const chain = chainIdx !== undefined ? segs[chainIdx] : null;
+      if (chain) {
+        // Dây đã mang sẵn màu gốc của mỏ neo (xem initState) — nếu Lăng Kính tình cờ đổi RA
+        // ĐÚNG màu gốc của chính nó thì Cổng Màu phía sau vô nghĩa (dây vốn đã qua được sẵn).
+        // Loại màu gốc khỏi lựa chọn để Lăng Kính luôn thực sự CẦN THIẾT.
+        const ownColor = p.anchors[chainIdx] ? p.anchors[chainIdx].color : null;
+        const colorChoices = COLOR_PALETTE.filter(c => c !== ownColor);
+        const color = pick(colorChoices.length ? colorChoices : COLOR_PALETTE, rng);
+        const pi = 1;
+        let gi = Math.min(chain.length - 2, pi + 2 + Math.floor(rng() * (chain.length - pi - 3)));
+        if (usedMechCells.has(chain[gi])) gi = pi; // ô cổng bị trùng cơ chế khác — huỷ (gi<=pi chặn dưới)
+        if (gi > pi) {
+          p.prisms.push({ cell: chain[pi], color });
+          p.colorGates.push({ cell: chain[gi], color });
+          usedMechCells.add(chain[pi]);
+          usedMechCells.add(chain[gi]);
+        }
+      }
+    }
+  }
+
+  // 2b. Cổng Màu ĐỘC LẬP (không cần Lăng Kính đi kèm) — khớp đúng màu GỐC sẵn có của mỏ neo
+  // (xem initState), đi qua được ngay từ đầu vì dây vốn đã mang màu đó. Cho phép thiết kế
+  // màn CHỈ có Cổng Màu, không bắt buộc phải có Lăng Kính.
+  if (cfg.allowColorGate) {
+    const want = Math.min(3, cfg.colorGateCount || 1);
+    const usedCells = usedMechCells;
+    let added = 0;
+
+    // Ưu tiên TUYỆT ĐỐI: đúng ô người dùng đã chọn trong Designer, NẾU ô đó thực sự rơi vào
+    // đường đi của 1 dây nào đó — nhưng LUÔN dùng màu GỐC THẬT của dây đi qua ô đó (không
+    // dùng màu người dùng preview chọn), để đảm bảo cổng luôn đi qua được, không bao giờ
+    // biến màn thành bất khả thi vì lệch màu.
+    if (cfg.forcedColorGates && cfg.forcedColorGates.length) {
+      for (const fg of cfg.forcedColorGates) {
+        if (added >= want) break;
+        if (usedCells.has(fg.cell)) continue;
+        const ownerIdx = segs.findIndex(s => s.includes(fg.cell));
+        if (ownerIdx === -1) continue; // ô này không nằm trên đường đi dây nào — bỏ qua, dùng ngẫu nhiên bù ở dưới
+        const realColor = p.anchors[ownerIdx] ? p.anchors[ownerIdx].color : COLOR_PALETTE[ownerIdx % 4];
+        p.colorGates.push({ cell: fg.cell, color: realColor });
+        usedCells.add(fg.cell);
+        added++;
+      }
+    }
+
+    if (added < want) {
+      const order = segs.map((s, k) => k).filter(k => segs[k].length >= 3);
+      shuffle(order, rng);
+      for (const k of order) {
+        if (added >= want) break;
+        const chain = segs[k];
+        const ownColor = p.anchors[k] ? p.anchors[k].color : COLOR_PALETTE[k % 4];
+        const gi = Math.min(chain.length - 1, 1 + Math.floor(rng() * (chain.length - 1)));
+        const cell = chain[gi];
+        if (usedCells.has(cell)) continue;
+        p.colorGates.push({ cell, color: ownColor });
+        usedCells.add(cell);
+        added++;
       }
     }
   }
 
   // 3. Công Tắc (Switch) & Cổng Chặn (Gate)
-  if (cfg.allowSwitch && !isEasyTarget) {
-    const swChainIdx = 0;
-    const gateChainIdx = (cfg.targetClass >= 3 && segs.length > 1) ? 1 : 0;
-    const swChain = segs[swChainIdx], gateChain = segs[gateChainIdx];
+  if (cfg.allowSwitch) {
+    let swChainIdx = 0;
+    let gateChainIdx = (cfg.targetClass >= 3 && segs.length > 1) ? 1 : 0;
+    let swIdx = 1;
+    let gateIdx = gateChainIdx === swChainIdx ? Math.min(segs[swChainIdx].length - 2, swIdx + 2) : 1;
 
-    if (swChain.length >= 3 && gateChain.length >= 3 && (cfg.targetClass >= 3 || rng() < 0.6)) {
-      const swIdx = 1;
-      const gateIdx = gateChainIdx === swChainIdx ? Math.min(swChain.length - 2, swIdx + 2) : 1;
+    // cfg.forcedSwitchCell / forcedGateCell: ô Công Tắc + Cổng Chặn người dùng vẽ tay (2 brush
+    // riêng biệt) — tìm xem ô đó có rơi vào GIỮA đường đi của dây nào không (không phải ô đầu
+    // hay ô cuối, vì công tắc/cổng cần dây thực sự "đi qua"), nếu có thì dùng đúng vị trí đó
+    // thay vì luôn cố định dây đầu tiên / ô thứ 2 như mặc định.
+    if (cfg.forcedSwitchCell != null && !usedMechCells.has(cfg.forcedSwitchCell)) {
+      for (let k = 0; k < segs.length; k++) {
+        const idx = segs[k].indexOf(cfg.forcedSwitchCell);
+        if (idx > 0 && idx < segs[k].length - 1) { swChainIdx = k; swIdx = idx; break; }
+      }
+    }
+    if (cfg.forcedGateCell != null && !usedMechCells.has(cfg.forcedGateCell)) {
+      for (let k = 0; k < segs.length; k++) {
+        const idx = segs[k].indexOf(cfg.forcedGateCell);
+        if (idx > 0 && idx < segs[k].length - 1 && !(k === swChainIdx && idx === swIdx)) { gateChainIdx = k; gateIdx = idx; break; }
+      }
+    }
+    const swChain = segs[swChainIdx], gateChain = segs[gateChainIdx];
+    const forcedRequested = cfg.forcedSwitchCell != null || cfg.forcedGateCell != null;
+
+    if (swChain.length >= 3 && gateChain.length >= 3 && (cfg.targetClass >= 3 || rng() < 0.6 || forcedRequested)
+        && !usedMechCells.has(swChain[swIdx]) && !usedMechCells.has(gateChain[gateIdx])) {
       const swCell = swChain[swIdx];
       const gateCell = gateChain[gateIdx];
-      const latch = rng() < 0.5;
+      usedMechCells.add(swCell);
+      usedMechCells.add(gateCell);
+      // cfg.forceLatch cho phép level spec ép cứng 1 trong 2 biến thể (latch giữ mãi vs
+      // không-latch tự đóng khi rời ô) — cần thiết cho các màn DẠY RIÊNG từng biến thể,
+      // thay vì phó mặc 50/50 rng khiến người chơi có thể không bao giờ gặp 1 trong 2 biến thể.
+      const latch = (typeof cfg.forceLatch === 'boolean') ? cfg.forceLatch : rng() < 0.5;
       p.switches.push({ swCell, gateCell, latch });
     }
   }
@@ -2167,7 +2411,10 @@ function generateOne(cfg, rng) {
   // Lấy shape mask theo cấu hình
   let shape = null;
   if (cfg.shapeMode === 'custom') {
-    shape = getPainterShape();
+    // cfg.customShape cho phép caller (VD: Custom Designer trong Pirate_Trails_50_Levels.html,
+    // nơi module Interactive Shape Painter — và getPainterShape() — không được build kèm) truyền
+    // thẳng mảng shape đã vẽ, thay vì luôn phải đọc từ biến toàn cục PAINTER_GRID của painter.
+    shape = cfg.customShape || (typeof getPainterShape === 'function' ? getPainterShape() : null);
   } else if (cfg.shapeMode && cfg.shapeMode !== 'rect' && SHAPE_PRESETS[cfg.shapeMode]) {
     shape = SHAPE_PRESETS[cfg.shapeMode](cfg.R, cfg.C);
   } else if (cfg.shapeMode === 'auto_gestalt') {
@@ -2175,10 +2422,13 @@ function generateOne(cfg, rng) {
   }
 
   const obstacleCount = cfg.allowRock ? cfg.obstacles : 0;
-  const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng, shape);
+  // cfg.forcedRockCells: đúng các ô đá tảng người dùng đã vẽ tay (chỉ số ô, r*C+c) — nếu có,
+  // dùng CHÍNH XÁC các ô đó thay vì để random chọn vị trí khác với bản vẽ.
+  const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng, shape, 60, cfg.forcedRockCells);
   if (!p0) return { ok: false, reason: 'obstacle-layout' };
 
-  const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng);
+  // cfg.forcedAnchorCells: ô mỏ neo người dùng vẽ tay — ưu tiên bám sát (xem partitionIntoPaths).
+  const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng, 15000, cfg.forcedAnchorCells);
   if (!segsRaw) return { ok: false, reason: 'no-partition' };
 
   const K = segsRaw.length;
@@ -2190,7 +2440,19 @@ function generateOne(cfg, rng) {
   } else {
     orientationCombos.push([0, 0, 0], [0, 1, 0], [1, 0, 1], [1, 1, 1]);
   }
-  shuffle(orientationCombos, rng);
+  // Nếu có mỏ neo vẽ tay, ưu tiên thử TRƯỚC các cách xoay dây giữ đúng ô đó làm điểm ĐẦU dây
+  // (thay vì random hoàn toàn), để không lỡ đảo ngược dây sang đúng chiều ngược ý người vẽ.
+  if (cfg.forcedAnchorCells && cfg.forcedAnchorCells.length) {
+    const forcedSet = new Set(cfg.forcedAnchorCells);
+    const scoreCombo = (combo) => segsRaw.reduce((acc, s, idx) => {
+      const startCell = combo[idx] ? s[s.length - 1] : s[0];
+      return acc + (forcedSet.has(startCell) ? 1 : 0);
+    }, 0);
+    shuffle(orientationCombos, rng);
+    orientationCombos.sort((a, b) => scoreCombo(b) - scoreCombo(a));
+  } else {
+    shuffle(orientationCombos, rng);
+  }
 
   for (const combo of orientationCombos) {
     const segs = segsRaw.map((s, idx) => (combo[idx] ? s.slice().reverse() : s.slice()));
@@ -2342,7 +2604,8 @@ async function generateBatch(cfg, onProgress) {
     }
   }
 
-  return { levels: out, attempts: att, fails, substituted };
+  const obstacleShortfalls = out.filter(p => p.meta.obstaclesPlaced != null && p.meta.obstaclesPlaced < p.meta.obstaclesRequested).length;
+  return { levels: out, attempts: att, fails, substituted, obstacleShortfalls };
 }
 
 // --------------------------- Flow Pacing Optimizer ---------------------------
@@ -2522,6 +2785,11 @@ function boardSVG(p, o) {
   const X = i => pad + (i % p.C) * cs, Y = i => pad + Math.floor(i / p.C) * cs;
   const cx = i => X(i) + cs / 2, cy = i => Y(i) + cs / 2;
   const fs = Math.max(8, Math.round(cs * 0.30));
+  // Màu THẬT của từng mỏ neo (đúng field a.color dùng để khớp Cổng Màu/Lăng Kính) — trước đây
+  // mỏ neo/dây/mật mã vẽ bằng bảng màu trang trí riêng CHHEX (không liên quan gì tới a.color),
+  // nên 1 Cổng Màu logic khớp đúng dây nhưng lại HIỆN RA màu khác hẳn màu dây trên bàn cờ thật.
+  // Dùng đúng 1 nguồn màu duy nhất cho tất cả (dây, mỏ neo, mật mã, cổng màu, lăng kính).
+  const anchorHex = k => COLOR_HEX_MAP[(p.anchors[k] && p.anchors[k].color) || COLOR_PALETTE[k % 4]] || CHHEX[k % 4];
 
   let s = `<svg class="board" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Bàn cờ ${p.R}x${p.C}">
   <defs>
@@ -2559,12 +2827,14 @@ function boardSVG(p, o) {
       <text x="${cx(gc)}" y="${cy(gc) + fs * 0.36}" font-size="${fs * 0.9}" text-anchor="middle">${isOpen ? '🔓' : '⛩️'}</text>`;
   });
 
-  // 3. Cổng Màu (ColorGates)
+  // 3. Cổng Màu (ColorGates) — không icon cửa, chỉ tô nền MỜ NHẠT đúng màu THẬT của cổng
+  // (đúng yêu cầu thiết kế: "ô màu nền thôi", người chơi nhận biết qua sắc thái nhạt của
+  // chính màu đó, không cần biểu tượng riêng).
   p.colorGates.forEach(cg => {
     const colorHex = COLOR_HEX_MAP[cg.color] || '#3b82f6';
-    s += `<rect x="${X(cg.cell) + 3}" y="${Y(cg.cell) + 3}" width="${cs - 6}" height="${cs - 6}" rx="5"
-      fill="rgba(255,255,255,0.7)" stroke="${colorHex}" stroke-width="3"/>
-      <text x="${cx(cg.cell)}" y="${cy(cg.cell) + fs * 0.36}" font-size="${fs * 0.9}" text-anchor="middle">🚪</text>`;
+    const rgb = [1, 3, 5].map(i => parseInt(colorHex.substr(i, 2), 16));
+    s += `<rect x="${X(cg.cell) + 2}" y="${Y(cg.cell) + 2}" width="${cs - 4}" height="${cs - 4}" rx="6"
+      fill="rgba(${rgb.join(',')},0.32)" stroke="${colorHex}" stroke-width="2"/>`;
   });
 
   // 4. Công Tắc (Switches)
@@ -2585,7 +2855,7 @@ function boardSVG(p, o) {
   if (o.showSolution && p.solution) {
     p.solution.forEach((path, k) => {
       const d = path.map(i => `${cx(i)},${cy(i)}`).join(' ');
-      s += `<polyline points="${d}" fill="none" stroke="${CHHEX[k % 4]}" stroke-width="${Math.max(2, cs * 0.12)}"
+      s += `<polyline points="${d}" fill="none" stroke="${anchorHex(k)}" stroke-width="${Math.max(2, cs * 0.12)}"
         stroke-dasharray="${cs * 0.16} ${cs * 0.16}" stroke-linecap="round" opacity="0.6"/>`;
     });
   }
@@ -2596,9 +2866,9 @@ function boardSVG(p, o) {
       if (c.path.length < 2) return;
       const d = c.path.map(i => `${cx(i)},${cy(i)}`).join(' ');
       s += `<polyline points="${d}" fill="none" stroke="#ffffff" stroke-width="${cs * 0.34 + 4}" stroke-linecap="round" stroke-linejoin="round"/>`;
-      s += `<polyline points="${d}" fill="none" stroke="${CHHEX[k % 4]}" stroke-width="${cs * 0.34}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      s += `<polyline points="${d}" fill="none" stroke="${anchorHex(k)}" stroke-width="${cs * 0.34}" stroke-linecap="round" stroke-linejoin="round"/>`;
       const h = c.path[c.path.length - 1];
-      if (c.len < c.L) s += `<circle cx="${cx(h)}" cy="${cy(h)}" r="${cs * 0.16}" fill="#ffffff" stroke="${CHHEX[k % 4]}" stroke-width="2.5"/>`;
+      if (c.len < c.L) s += `<circle cx="${cx(h)}" cy="${cy(h)}" r="${cs * 0.16}" fill="#ffffff" stroke="${anchorHex(k)}" stroke-width="2.5"/>`;
     });
   }
 
@@ -2626,7 +2896,7 @@ function boardSVG(p, o) {
 
   // 10. Phao Tiêu / Mật Mã Số (Waypoints)
   for (const [cell, w] of p.wpOf) {
-    const wc = CHHEX[w.k % 4];
+    const wc = anchorHex(w.k);
     s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="${wc}" stroke-width="2.5"/>
       <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="${wc}" text-anchor="middle" font-weight="900">${w.j}</text>`;
   }
@@ -2635,9 +2905,9 @@ function boardSVG(p, o) {
   p.anchors.forEach((a, k) => {
     const isFinished = o.state && o.state.chains[k].len === a.L;
     const rem = isFinished ? '✓' : (o.state ? (a.L - o.state.chains[k].len) : (a.L - 1));
-    s += `<circle cx="${cx(a.cell)}" cy="${cy(a.cell)}" r="${cs * 0.36}" fill="${CHHEX[k % 4]}"/>
+    s += `<circle cx="${cx(a.cell)}" cy="${cy(a.cell)}" r="${cs * 0.36}" fill="${anchorHex(k)}"/>
       <text x="${cx(a.cell)}" y="${cy(a.cell) + fs * 0.36}" font-size="${fs}" fill="#ffffff" text-anchor="middle" font-weight="800">${rem}</text>
-      <text x="${X(a.cell) + 3}" y="${Y(a.cell) + Math.max(9, fs * 0.72)}" font-size="${Math.max(7, fs * 0.60)}" fill="${CHHEX[k % 4]}" font-weight="800">A${k + 1}</text>`;
+      <text x="${X(a.cell) + 3}" y="${Y(a.cell) + Math.max(9, fs * 0.72)}" font-size="${Math.max(7, fs * 0.60)}" fill="${anchorHex(k)}" font-weight="800">A${k + 1}</text>`;
   });
 
   // 12. Vùng bấm tương tác
@@ -2799,10 +3069,35 @@ function renderPainterUI() {
         }
       }
     };
+    cell.ontouchstart = (e) => {
+      e.preventDefault();
+      pushPainterHistory();
+      isPaintingMouseDown = true;
+      paintTargetVal = !PAINTER_GRID[r][c];
+      PAINTER_GRID[r][c] = paintTargetVal;
+      renderPainterUI();
+    };
   });
+
+  // touchmove không nhắm vào ô đang ở dưới ngón tay (khác mouseenter), nên phải tự
+  // tra ô qua elementFromPoint để hỗ trợ vẽ bằng cách kéo ngón tay trên cảm ứng.
+  container.ontouchmove = (e) => {
+    if (!isPaintingMouseDown) return;
+    e.preventDefault();
+    const touch = e.touches[0];
+    const el = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (el && el.classList.contains('p-cell')) {
+      const tr = +el.dataset.r, tc = +el.dataset.c;
+      if (PAINTER_GRID[tr][tc] !== paintTargetVal) {
+        PAINTER_GRID[tr][tc] = paintTargetVal;
+        renderPainterUI();
+      }
+    }
+  };
 }
 
 document.addEventListener('mouseup', () => { isPaintingMouseDown = false; });
+document.addEventListener('touchend', () => { isPaintingMouseDown = false; });
 document.addEventListener('keydown', (e) => {
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
     if (e.shiftKey) redoPainter(); else undoPainter();
@@ -2908,7 +3203,7 @@ $('btnGen').onclick = () => {
     R: +$('fR').value, C: +$('fC').value, obstacles: +$('fO').value,
     anchors: Math.min(4, +$('fK').value), minLen: +$('fM').value,
     count: +$('fN').value, seed: +$('fS').value,
-    shapeMode: $('fShape').value,
+    shapeMode: $('chkShapePainter').checked ? $('fShape').value : 'rect',
     targetClass: +$('fT').value || null, acceptAnyTier: +$('fT').value === 0,
     allowRock: $('chkRock').checked,
     allowWall: $('chkWall').checked,
@@ -2949,8 +3244,9 @@ $('btnGen').onclick = () => {
     $('btnGen').disabled = false; $('prog').classList.add('sec-off');
     $('progTxt').textContent = `${LEVELS.length} level / ${res.attempts} lượt thử / ${ms}ms`
       + (res.substituted ? `  ⚠ ${res.substituted} màn KHÔNG đúng hạng yêu cầu (đã đánh dấu)` : '')
+      + (res.obstacleShortfalls ? `  ⚠ ${res.obstacleShortfalls} màn có ÍT đá tảng hơn số bạn yêu cầu (bàn cờ quá nhỏ)` : '')
       + (!cfg.allowWall ? '  ⚠ Tắt Vách Ngăn → không ép được nghiệm duy nhất, phần lớn màn sẽ "chưa đo được" bậc kỹ thuật' : '');
-    if (res.substituted) {
+    if (res.substituted || res.obstacleShortfalls) {
       $('progTxt').style.color = '#b45309';
       console.warn(`${res.substituted}/${LEVELS.length} màn không đạt hạng ${cfg.targetClass}. `
         + 'Gợi ý: hạng Dễ cần bàn nhỏ, ít dây và tắt bớt cơ chế; hạng Siêu Khó cần bàn lớn và bật nhiều cơ chế.');
@@ -3161,7 +3457,7 @@ function truncateTo(p, s, k, cell) {
       const lastIdx = PLAY.moveHistory.map((m, idx) => m.k === k ? idx : -1).filter(idx => idx !== -1).pop();
       if (lastIdx == null) break;
       const u = PLAY.moveHistory.splice(lastIdx, 1)[0];
-      undoMove(p, s, u);
+      undoMoveChainOnly(p, s, u);
     }
   } else {
     while (c.path.length > at + 1) {
@@ -3174,7 +3470,10 @@ function truncateTo(p, s, k, cell) {
     c.len = c.path.length;
   }
 
-  c.colorTag = null;
+  // BUG ĐÃ SỬA: trước đây reset về null rồi CHỈ suy ra lại màu từ Lăng Kính trên đường đi, bỏ
+  // qua màu GỐC của chính mỏ neo (xem initState) — khiến Cổng Màu ĐỘC LẬP (khớp màu gốc, không
+  // cần Lăng Kính) bị chặn ngay khi người chơi chạm lại vào dây đã vẽ, dù hiện đúng màu.
+  c.colorTag = p.anchors[k].color || null;
   for (const cc of c.path) {
     const pr = p.prisms.find(x => x.cell === cc);
     if (pr) c.colorTag = pr.color;
@@ -3198,7 +3497,7 @@ function renderDetail() {
   $('boardWrap').innerHTML = boardSVG(p, { cs: 46, showSolution: showSol, coords: showCoord, state: PLAY ? PLAY.s : null, interactive: playMode });
 
   $('chainLegend').innerHTML = p.anchors.map((a, k) =>
-    `<span class="chip"><i style="background:${CHHEX[k % 4]}"></i>A${k + 1} (dài ${a.L})</span>`).join('')
+    `<span class="chip"><i style="background:${COLOR_HEX_MAP[a.color] || CHHEX[k % 4]}"></i>A${k + 1} (dài ${a.L})</span>`).join('')
     + (p.blocked.size ? `<span class="chip">🪨 Rạn Đá Ngầm (${p.blocked.size})</span>` : '')
     + (p.walls.size ? `<span class="chip"><i style="background:#0f172a"></i>Vách Ngăn (${p.walls.size})</span>` : '')
     + (p.pushRocks.length ? `<span class="chip">📦 Thùng Hàng (${p.pushRocks.length})</span>` : '')
@@ -3272,7 +3571,7 @@ function renderDetail() {
   $('traceTable').innerHTML = `<thead><tr><th class="n">#</th><th>Mỏ Neo</th><th>Ô</th><th>Kỹ thuật suy luận</th><th class="n">Số lựa chọn</th></tr></thead><tbody>` +
     tr.trace.map((s, ix) => {
       const [r, cc] = p.rc(s.cell);
-      return `<tr><td class="n">${ix + 1}</td><td><span class="chip"><i style="background:${CHHEX[s.k % 4]}"></i>A${s.k + 1}</span></td>
+      return `<tr><td class="n">${ix + 1}</td><td><span class="chip"><i style="background:${COLOR_HEX_MAP[p.anchors[s.k] && p.anchors[s.k].color] || CHHEX[s.k % 4]}"></i>A${s.k + 1}</span></td>
         <td>R${r}C${cc}</td><td><span class="tierpill" style="background:${TCOL[s.tier]}">T${s.tier}</span> ${TIER_INFO[s.tier].name}</td>
         <td class="n">${s.opts}</td></tr>`;
     }).join('') + '</tbody>';
@@ -3281,6 +3580,16 @@ function renderDetail() {
 }
 
 /* ================= PLAY INTERACTIONS ================= */
+let MOVE_BLOCKED_MSG_TIMER = null;
+function showMoveBlockedMsg(msg) {
+  const el = $('moveBlockedMsg');
+  if (!el || !msg) return;
+  el.textContent = '⛔ ' + msg;
+  el.style.display = 'block';
+  if (MOVE_BLOCKED_MSG_TIMER) clearTimeout(MOVE_BLOCKED_MSG_TIMER);
+  MOVE_BLOCKED_MSG_TIMER = setTimeout(() => { el.style.display = 'none'; }, 1600);
+}
+
 function bindPlay(p) {
   const svg = $('boardWrap').querySelector('svg');
   const cellAt = ev => {
@@ -3299,7 +3608,10 @@ function bindPlay(p) {
       const u = applyMove(p, s, PLAY.sel, cell);
       PLAY.moveHistory.push(u);
       PLAY.moves++;
-    } else return;
+    } else {
+      if (PLAY.sel != null) showMoveBlockedMsg(explainBlockedMove(p, s, PLAY.sel, cell));
+      return;
+    }
     if (s.free === 0 && s.chains.every(c => c.len === c.L)) PLAY.done = true;
     renderDetail();
   };

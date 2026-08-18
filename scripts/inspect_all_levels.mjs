@@ -1,12 +1,12 @@
 import fs from 'fs';
 import vm from 'vm';
 
-const forgeHtml = fs.readFileSync('d:/GameDG/Trapline_Level_Forge.html', 'utf8');
+const forgeHtml = fs.readFileSync('Trapline_Level_Forge.html', 'utf8');
 const startScript1 = forgeHtml.indexOf('<script>') + 8;
 const endScript1 = forgeHtml.indexOf('</script>');
 const script1 = forgeHtml.substring(startScript1, endScript1);
 
-const levels = JSON.parse(fs.readFileSync('d:/GameDG/scripts/generated_50_levels.json', 'utf8'));
+const levels = JSON.parse(fs.readFileSync('scripts/generated_50_levels.json', 'utf8'));
 
 const inspectorCode = `
 ${script1}
@@ -44,10 +44,10 @@ function inspectSuite(levels) {
       });
     }
 
-    let boardCells = 0;
-    for (let c = 0; c < p.RC; c++) {
-      if (!p.blocked.has(c)) boardCells++;
-    }
+    // Chỉ đếm ô CHƠI ĐƯỢC (không void theo shape, không bị block) — nếu không, màn có
+    // hình dạng (heart/skull/ring/...) sẽ luôn báo "HỤT" sai vì các ô khoét rỗng bị
+    // tính nhầm là ô cần dây phủ qua.
+    const boardCells = p.validCells().length;
 
     const pushCount = p.pushRocks.length;
     const isFull = (totalAnchorCells + pushCount) === boardCells;
@@ -70,7 +70,7 @@ function inspectSuite(levels) {
 
 const totalValid = inspectSuite(levels);
 console.log('\\n========================================');
-console.log('TOTAL 100% VALID & SOLVABLE LEVELS: ' + totalValid + ' / 50');
+console.log('TOTAL 100% VALID & SOLVABLE LEVELS: ' + totalValid + ' / ' + levels.length);
 console.log('========================================');
 `;
 

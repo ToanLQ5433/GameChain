@@ -1,3 +1,7 @@
+// Pipeline THỬ NGHIỆM (thêm cơ chế MEC-05 Bom vào bộ 50 màn). KHÔNG phải
+// pipeline chính thức: bộ 50 màn thực sự dùng để build Pirate_Trails_50_Levels.html
+// đến từ scripts/gen-50-sawtooth.mjs → scripts/generated_50_levels.json. Script này
+// ghi ra một file output RIÊNG để không đè lên dữ liệu chính thức.
 import fs from 'fs';
 import vm from 'vm';
 
@@ -58,15 +62,27 @@ function generateMasterSuite(specs) {
       cfg.shapeMode = 'rect';
       cfg.maxAttempts = 500;
       const res = generateOne(cfg, mulberry32(9999 + i * 101));
-      p = res.ok ? res.puzzle : new Puzzle(spec.R, spec.C);
+      p = res.ok ? res.puzzle : null;
+    }
+
+    if (!p) {
+      throw new Error('Không thể sinh level ' + spec.id + ' ("' + spec.name + '") sau tất cả các seed dự phòng. '
+        + 'Dừng build thay vì ghi ra một level trống/không có lời giải.');
     }
 
     // Set Bombs (MEC-05) if spec has bombs
     p.bombs = new Set();
     if (spec.bombs > 0) {
-      // Place bomb in a cell adjacent to push rock solution path or empty corner
+      // Place bomb in a cell not already used by any other mechanic
+      const swCells = new Set(p.switches.flatMap(sw => [sw.swCell, sw.gateCell]));
+      const prismCells = new Set(p.prisms.map(pr => pr.cell));
+      const gateCells = new Set(p.colorGates.map(cg => cg.cell));
       for (let c = 0; c < p.RC; c++) {
-        if (!p.blocked.has(c) && !p.anchors.some(a => a.cell === c) && (!p.pushRocks || !p.pushRocks.some(pr => pr.cell === c))) {
+        if (!p.blocked.has(c)
+          && !p.anchors.some(a => a.cell === c)
+          && (!p.pushRocks || !p.pushRocks.some(pr => pr.cell === c))
+          && !p.wpOf.has(c)
+          && !swCells.has(c) && !prismCells.has(c) && !gateCells.has(c)) {
           p.bombs.add(c);
           if (p.bombs.size >= spec.bombs) break;
         }
@@ -129,5 +145,6 @@ const sandbox = { console, masterSpecs };
 vm.createContext(sandbox);
 const resultLevels = vm.runInContext(runnerCode, sandbox);
 
-fs.writeFileSync('scripts/generated_50_levels.json', JSON.stringify(resultLevels, null, 2));
+fs.writeFileSync('scripts/generated_50_levels.master-experimental.json', JSON.stringify(resultLevels, null, 2));
 console.log('Successfully generated all 50 Master Levels with MEC-05 Bombs & Sawtooth Pacing!');
+console.log('(Experimental output — the official 50-level suite is scripts/generated_50_levels.json, built by gen-50-sawtooth.mjs)');

@@ -1,12 +1,17 @@
+// Pipeline THỬ NGHIỆM ("100% perfect" — có kiểm chứng nghiệm duy nhất mạnh hơn).
+// KHÔNG phải pipeline chính thức: bộ 50 màn thực sự dùng để build
+// Pirate_Trails_50_Levels.html đến từ scripts/gen-50-sawtooth.mjs →
+// scripts/generated_50_levels.json. Script này ghi ra một file output RIÊNG để
+// không đè lên dữ liệu chính thức.
 import fs from 'fs';
 import vm from 'vm';
 
-const forgeHtml = fs.readFileSync('d:/GameDG/Trapline_Level_Forge.html', 'utf8');
+const forgeHtml = fs.readFileSync('Trapline_Level_Forge.html', 'utf8');
 const startScript1 = forgeHtml.indexOf('<script>') + 8;
 const endScript1 = forgeHtml.indexOf('</script>');
 const script1 = forgeHtml.substring(startScript1, endScript1);
 
-const pureSpecs = JSON.parse(fs.readFileSync('d:/GameDG/scripts/pure_50_specs.json', 'utf8'));
+const pureSpecs = JSON.parse(fs.readFileSync('scripts/pure_50_specs.json', 'utf8'));
 
 pureSpecs.forEach(s => {
   if (s.id === 'L49') {
@@ -23,6 +28,9 @@ ${script1}
 function decorateMechanicsStrict(p, cfg, rng) {
   const segs = p.solution;
   if (!segs || !segs.length) return;
+  // Một ô chỉ được gán TỐI ĐA 1 vai trò đặc biệt (thùng/lăng kính/công tắc/mật mã),
+  // nếu không renderer sẽ vẽ chồng 2 icon lên cùng 1 ô cờ.
+  const claimed = new Set();
 
   // 1. Thùng Hàng (Push Rocks - Sokoban)
   if (cfg.allowPush) {
@@ -33,12 +41,13 @@ function decorateMechanicsStrict(p, cfg, rng) {
       const X = chain[chain.length - 1];
       const b = chain[chain.length - 2];
       const a = chain[chain.length - 3];
-      if (p.wpOf.has(X) || p.wpOf.has(b)) continue;
+      if (claimed.has(X) || claimed.has(b) || claimed.has(a)) continue;
       if (p.walls.has(ekey(b, X))) continue;
       const [ra, ca] = p.rc(a), [rb, cb] = p.rc(b), [rx, cx] = p.rc(X);
       if (rb - ra !== rx - rb || cb - ca !== cx - cb) continue;
-      
+
       p.pushRocks.push({ cell: b, initialCell: b });
+      claimed.add(b);
       chain.pop();
       p.anchors[k].L = chain.length;
       p.solution[k] = chain;
@@ -53,9 +62,11 @@ function decorateMechanicsStrict(p, cfg, rng) {
       const color = pick(COLOR_PALETTE, rng);
       const pi = 1;
       const gi = Math.min(chain.length - 1, pi + 2);
-      if (gi > pi) {
+      if (gi > pi && !claimed.has(chain[pi]) && !claimed.has(chain[gi])) {
         p.prisms.push({ cell: chain[pi], color });
         p.colorGates.push({ cell: chain[gi], color });
+        claimed.add(chain[pi]);
+        claimed.add(chain[gi]);
       }
     }
   }
@@ -71,8 +82,12 @@ function decorateMechanicsStrict(p, cfg, rng) {
       const gateIdx = gateChainIdx === swChainIdx ? Math.min(swChain.length - 1, swIdx + 2) : 1;
       const swCell = swChain[swIdx];
       const gateCell = gateChain[gateIdx];
-      const latch = cfg.name && cfg.name.includes('Latch') ? true : rng() < 0.5;
-      p.switches.push({ swCell, gateCell, latch });
+      if (!claimed.has(swCell) && !claimed.has(gateCell)) {
+        const latch = cfg.name && cfg.name.includes('Latch') ? true : rng() < 0.5;
+        p.switches.push({ swCell, gateCell, latch });
+        claimed.add(swCell);
+        claimed.add(gateCell);
+      }
     }
   }
 
@@ -83,13 +98,14 @@ function decorateMechanicsStrict(p, cfg, rng) {
       if (p.wpOf.size >= count) return;
       const L = chain.length;
       if (L < 4) return;
-      
+
       const stepInterval = Math.max(1, Math.floor((L - 1) / (count + 1)));
       let num = 1;
       for (let s = 1; s <= count && s * stepInterval < L; s++) {
         const cell = chain[s * stepInterval];
-        if (!p.wpOf.has(cell)) {
+        if (!p.wpOf.has(cell) && !claimed.has(cell)) {
           p.wpOf.set(cell, { k, j: num++ });
+          claimed.add(cell);
         }
       }
       p.wpCount[k] = num - 1;
@@ -179,9 +195,17 @@ function generatePureLevelStrict(spec, seedBase) {
     return lvlJson;
   }
 
-  // Guaranteed clean fallback
+  // Guaranteed clean fallback (0 rocks, chỉ chia K đường theo đúng spec.K — KHÔNG
+  // được gộp về 1 đường duy nhất, vì spec.K anchors là điều runtime bắt buộc phải khớp).
   const p0 = placeObstacles(spec.R, spec.C, 0, mulberry32(seedBase), null);
-  const segsRaw = partitionIntoPaths(p0, spec.K, 3, mulberry32(seedBase + 10)) || [Array.from({length: p0.RC}, (_, i) => i)];
+  if (!p0) {
+    throw new Error('Không thể xếp bàn cờ trống cho ' + spec.id + ' (' + spec.R + 'x' + spec.C + ').');
+  }
+  const segsRaw = partitionIntoPaths(p0, spec.K, 3, mulberry32(seedBase + 10));
+  if (!segsRaw) {
+    throw new Error('Không thể chia ' + spec.K + ' đường cho ' + spec.id + ' ('
+      + spec.R + 'x' + spec.C + ') ngay cả ở bàn cờ trống — spec không khả thi về mặt toán học.');
+  }
   const p = p0.clone();
   p.anchors = segsRaw.map((s, k) => ({ cell: s[0], L: s.length, color: COLOR_PALETTE[k % 4] }));
   p.solution = segsRaw;
@@ -233,5 +257,6 @@ const sandbox = { console, pureSpecs };
 vm.createContext(sandbox);
 const resultLevels = vm.runInContext(perfectBuilderCode, sandbox);
 
-fs.writeFileSync('d:/GameDG/scripts/generated_50_levels.json', JSON.stringify(resultLevels, null, 2));
-console.log('Successfully written 100% perfect 50 levels to generated_50_levels.json!');
+fs.writeFileSync('scripts/generated_50_levels.perfect-experimental.json', JSON.stringify(resultLevels, null, 2));
+console.log('Successfully written 100% perfect 50 levels to generated_50_levels.perfect-experimental.json!');
+console.log('(Experimental output — the official 50-level suite is scripts/generated_50_levels.json, built by gen-50-sawtooth.mjs)');

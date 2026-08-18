@@ -1,7 +1,16 @@
 import fs from 'fs';
 
-// Read generated 50 levels and update names to clean, basic mechanical notes
+// Read generated 50 levels and update names to clean, basic mechanical notes.
+// Các mốc số idx cố định bên dưới (1,2,3,4,5,11,21,22,31,41) khớp đúng ranh giới
+// chương của scripts/gen-50-sawtooth.mjs (Chương 1 L01-10, Chương 2 từ L11...).
+// Script này CHỈ nên chạy trên scripts/generated_50_levels.json — không chạy trên
+// các file *-experimental.json (chương/thứ tự cơ chế khác).
 const levels = JSON.parse(fs.readFileSync('scripts/generated_50_levels.json', 'utf8'));
+if (levels.length !== 50) {
+  console.error(`FATAL: expected 50 levels, got ${levels.length}. Refusing to rename — `
+    + `this script assumes the gen-50-sawtooth.mjs chapter layout and would mislabel a different-sized suite.`);
+  process.exit(1);
+}
 
 levels.forEach((lvl, idx) => {
   const num = idx + 1;

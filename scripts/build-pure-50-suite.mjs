@@ -1,3 +1,7 @@
+// Pipeline THỬ NGHIỆM (sinh 50 màn từ pure_50_specs.json). KHÔNG phải pipeline
+// chính thức: bộ 50 màn thực sự dùng để build Pirate_Trails_50_Levels.html đến
+// từ scripts/gen-50-sawtooth.mjs → scripts/generated_50_levels.json. Script này
+// ghi ra một file output RIÊNG để không đè lên dữ liệu chính thức.
 import fs from 'fs';
 import vm from 'vm';
 
@@ -52,7 +56,12 @@ function generatePureSuite(specs) {
     if (!p) {
       cfg.maxAttempts = 600;
       const res = generateOne(cfg, mulberry32(1111 + i * 37));
-      p = res.ok ? res.puzzle : new Puzzle(spec.R, spec.C);
+      p = res.ok ? res.puzzle : null;
+    }
+
+    if (!p) {
+      throw new Error('Không thể sinh level ' + spec.id + ' ("' + spec.name + '") sau tất cả các seed dự phòng. '
+        + 'Dừng build thay vì ghi ra một level trống/không có lời giải.');
     }
 
     p.meta = p.meta || {};
@@ -106,5 +115,6 @@ const sandbox = { console, pureSpecs };
 vm.createContext(sandbox);
 const resultLevels = vm.runInContext(runnerCode, sandbox);
 
-fs.writeFileSync('scripts/generated_50_levels.json', JSON.stringify(resultLevels, null, 2));
+fs.writeFileSync('scripts/generated_50_levels.pure-experimental.json', JSON.stringify(resultLevels, null, 2));
 console.log('Successfully generated all 50 Pure Single-Mechanic Levels!');
+console.log('(Experimental output — the official 50-level suite is scripts/generated_50_levels.json, built by gen-50-sawtooth.mjs)');

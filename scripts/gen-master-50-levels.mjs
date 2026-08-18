@@ -23,7 +23,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L04", chapter: 1, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "Bàn Cờ Gestalt (5×5)", R: 5, C: 5, K: 2, minLen: 8,
+    name: "Bàn Cờ Gestalt (5×5)", R: 5, C: 5, K: 2, minLen: 6,
     shapeMode: "diamond", rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: false, bombs: 0,
     timer: null, buff: null, tip: "Đường đi rộng thoáng, vuốt mượt mà để xả căng thẳng sau màn Hard."
   },
@@ -73,7 +73,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L12", chapter: 2, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "2 Màu Độc Lập Thập Tự (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    name: "2 Màu Độc Lập Thập Tự (6×5)", R: 6, C: 5, K: 2, minLen: 6,
     shapeMode: "cross", rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: true, waypoints: false, bombs: 0,
     timer: null, buff: null, tip: "2 Dây tự tìm đúng lăng kính của mình trên bàn cờ Thập Tự."
   },
@@ -121,7 +121,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L20", chapter: 2, pacing: "👑 CLIMAX CH2", difficulty: "4 · Siêu Khó (Mastery)", role: "MASTERY",
-    name: "Thập Tự Đa Sắc Matrix (7×6)", R: 7, C: 6, K: 4, minLen: 8,
+    name: "Thập Tự Đa Sắc Matrix (7×6)", R: 7, C: 6, K: 4, minLen: 5,
     shapeMode: "cross", rocks: 0, wallBudget: 2, pushCount: 2, switches: false, prisms: true, waypoints: false, bombs: 0,
     timer: 130, buff: "🎁 RƯƠNG CỤM 2", tip: "Phân bổ không gian 4 góc cực gắt."
   },
@@ -135,7 +135,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L22", chapter: 3, pacing: "Shō (Phát triển)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "Mốc Nối 1-3 Diamond (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    name: "Mốc Nối 1-3 Diamond (6×5)", R: 6, C: 5, K: 2, minLen: 4,
     shapeMode: "diamond", rocks: 0, wallBudget: 1, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
     timer: 75, buff: null, tip: "Quan sát toàn bộ vị trí mốc số trước khi đặt tay kéo."
   },
@@ -147,7 +147,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L24", chapter: 3, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "Mốc Nối Trái Tim (6×5)", R: 6, C: 5, K: 2, minLen: 10,
+    name: "Mốc Nối Trái Tim (6×5)", R: 6, C: 5, K: 2, minLen: 5,
     shapeMode: "heart", rocks: 0, wallBudget: 0, pushCount: 0, switches: false, prisms: false, waypoints: true, bombs: 0,
     timer: 75, buff: null, tip: "3 Mốc đặt theo đường cong tự nhiên của trái tim, vuốt 1 nét thông suốt."
   },
@@ -227,7 +227,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L37", chapter: 4, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "Mỏ Neo Cơ Quan (7×6)", R: 7, C: 6, K: 3, minLen: 10,
+    name: "Mỏ Neo Cơ Quan (7×6)", R: 7, C: 6, K: 3, minLen: 6,
     shapeMode: "anchor", rocks: 0, wallBudget: 1, pushCount: 0, switches: true, prisms: false, waypoints: false, bombs: 0,
     timer: 75, buff: null, tip: "Bố cục thoáng, thao tác đè nút mở cổng nhẹ nhàng."
   },
@@ -271,7 +271,7 @@ const MASTER_SPECS = [
   },
   {
     id: "L44", chapter: 5, pacing: "Ketsu (Xả hơi)", difficulty: "1 · Dễ (Warm-up)", role: "WARMUP",
-    name: "Nổ Bom Trái Tim (6×6)", R: 6, C: 6, K: 2, minLen: 12,
+    name: "Nổ Bom Trái Tim (6×6)", R: 6, C: 6, K: 2, minLen: 8,
     shapeMode: "heart", rocks: 0, wallBudget: 0, pushCount: 1, switches: false, prisms: false, waypoints: false, bombs: 1,
     timer: 75, buff: null, tip: "1 Cú đẩy trúng Bom tạo chuỗi nổ haptic rung chuyển, giải phóng toàn bộ bàn cờ."
   },
