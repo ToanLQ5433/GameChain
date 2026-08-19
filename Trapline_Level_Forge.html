@@ -124,7 +124,7 @@ progress{width:220px;height:10px}
 .shape-box{background:#f8fafc;border:1.5px solid #cbd5e1;border-radius:12px;padding:14px;margin:12px 0}
 .painter-board-frame{display:inline-block;background:#b9814a;border:2.5px solid #6b4423;border-radius:14px;padding:8px;box-shadow:inset 0 2px 4px rgba(0,0,0,0.25), 0 4px 10px rgba(0,0,0,0.12)}
 .painter-grid{display:inline-grid;gap:3px;user-select:none;touch-action:none}
-.p-cell{width:36px;height:36px;border-radius:6px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;transition:transform .1s ease, background .15s ease}
+.p-cell{width:var(--p-cell, 36px);height:var(--p-cell, 36px);border-radius:6px;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:700;transition:transform .1s ease, background .15s ease}
 .p-cell.active{background:#ffffff;border:1.5px solid #d6e2fb;box-shadow:0 2px 4px rgba(0,0,0,0.15), inset 0 1px 0 #ffffff;color:#475569}
 .p-cell.void{background:rgba(0,0,0,0.28);border:1px dashed rgba(255,255,255,0.25);box-shadow:inset 0 2px 4px rgba(0,0,0,0.3);color:rgba(255,255,255,0.35);opacity:0.65}
 .p-cell:hover{transform:scale(1.08);z-index:2}
@@ -151,8 +151,8 @@ progress{width:220px;height:10px}
 <section class="card" id="secGen">
   <h2>1 · Tạo Lập & Phân Tích Độ Khó Não Bộ (Cognitive Level Generator)</h2>
   <div class="row">
-    <div class="f"><label for="fR">Số hàng</label><input id="fR" type="number" min="3" max="9" value="5"></div>
-    <div class="f"><label for="fC">Số cột</label><input id="fC" type="number" min="3" max="8" value="5"></div>
+    <div class="f"><label for="fR">Số hàng</label><input id="fR" type="number" min="3" max="20" value="5"></div>
+    <div class="f"><label for="fC">Số cột</label><input id="fC" type="number" min="3" max="20" value="5"></div>
     <div class="f"><label for="fK">Số Mỏ Neo (Dây)</label><input id="fK" type="number" min="1" max="4" value="2"></div>
     <div class="f"><label for="fM">Dây ngắn nhất</label><input id="fM" type="number" min="2" max="12" value="3"></div>
     <div class="f wide"><label for="fShape">Hình dạng Bàn Cờ</label>
@@ -398,7 +398,11 @@ const DEFAULT_SCORING = {
   wDeadEnd: 0.35,
   // Ngưỡng phân hạng theo HDI — hiệu chỉnh theo phân bố ĐO ĐƯỢC trên 80 level
   // (min 5.5 · trung vị ~12.6 · max ~18). Bộ cũ 3.8/6.8/9.8 nằm dưới cả trung vị.
-  hdiThr: [10.3, 12.9, 16.8]
+  hdiThr: [10.3, 12.9, 16.8],
+  // Ngưỡng "openness cơ sở" (độ mở trung bình 1 nước đi hợp lệ) dùng chung cho cả bộ chấm
+  // độ khó lẫn Level Timer (xem estimateSolveTime) — 1.5 nghĩa là trung bình có 1.5 lựa chọn
+  // hợp lệ mỗi bước mới bắt đầu tính là "mở", dưới ngưỡng này coi như gần như ép buộc.
+  openBase: 1.5
 };
 
 let SCORING = JSON.parse(JSON.stringify(DEFAULT_SCORING));
@@ -423,6 +427,109 @@ const CLASS_INFO = [
   { id: 3, key: 'HARD', name: '3 · Khó (Insight/Trap)', dsMax: 9.8, desc: 'Bẫy trực giác gây ức chế xóa dây làm lại 1-3 lần, giải 35-75s.' },
   { id: 4, key: 'SUPER', name: '4 · Siêu Khó (Mastery)', dsMax: Infinity, desc: 'Quá tải bộ nhớ ngắn hạn, ngõ cụt trễ sâu (>=4 bước), giải 75-180s+.' }
 ];
+
+// =====================================================================
+// LEVEL TIMER — ước tính T_giải_trung_bình từ chính dữ liệu Solver đã đo
+// trong meta (hist, anchorCount, openness) — không cần playtest tay từng màn.
+// =====================================================================
+
+// Giây ước tính cho MỖI BƯỚC kéo dây, theo đúng bậc kỹ thuật ở TIER_COST
+// (bậc 1 = ô ép buộc gần như không cần nghĩ; bậc 5 = phải giả định + truy
+// mâu thuẫn, tốn thời gian suy luận nhất).
+// ⚠️ Đây là bộ số KHỞI ĐIỂM — bắt buộc hiệu chỉnh lại bằng playtest thật
+// (xem calibrateFromPlaytest ở cuối) trước khi dùng chính thức cho bản ra mắt.
+const SECONDS_PER_TIER = [0, 0.8, 1.6, 3.0, 5.5, 9.0];
+//                    bậc:  -   1    2    3    4    5
+
+const TIME_BASE = {
+  perAnchor: 5,       // giây "định hình lại tư duy" mỗi khi có 1 dây độc lập
+  perOpenness: 1.2,   // giây phạt thêm mỗi đơn vị openness vượt ngưỡng cơ sở
+  opennessBase: SCORING.openBase, // dùng chung ngưỡng với engine (1.5)
+  startup: 8          // giây nhìn tổng thể bàn cờ trước khi đặt tay
+};
+
+// Hệ số nhân + sàn tối thiểu theo hạng (khớp CLASS_INFO: 1=Dễ 2=Thường 3=Khó 4=Siêu Khó)
+// ⚠️ Cũng là số khởi điểm — hiệu chỉnh lại theo playtest thật.
+const TIME_CONFIG = [
+  null,
+  { key: 'EASY',   mult: null, floor: null },  // Dễ: không giới hạn giờ — đúng GDD mục 2.6
+  { key: 'NORMAL', mult: 2.5,  floor: 15 },
+  { key: 'HARD',   mult: 2.0,  floor: 20 },
+  { key: 'SUPER',  mult: 1.8,  floor: 25 }
+];
+
+/** Ước tính T_giải_trung_bình (giây) của 1 level từ dữ liệu Solver đã đo. */
+function estimateSolveTime(meta) {
+  let t = TIME_BASE.startup + TIME_BASE.perAnchor * meta.anchorCount;
+  for (let tier = 1; tier <= 5; tier++) {
+    t += (meta.hist[tier] || 0) * SECONDS_PER_TIER[tier];
+  }
+  t += TIME_BASE.perOpenness * Math.max(0, (meta.openness || 1) - TIME_BASE.opennessBase);
+  return t;
+}
+
+/**
+ * Tính Time Limit cuối cùng cho 1 level:
+ *   Time Limit = T_giải_ước_tính × hệ_số_nhân(hạng) + sàn_tối_thiểu(hạng)
+ * Trả limited:false nếu là hạng Dễ (không có Level Timer theo GDD 2.6).
+ */
+function tinhTimeLimit(meta) {
+  const cfg = TIME_CONFIG[meta.cls];
+  if (!cfg || cfg.mult === null) return { limited: false, solveTime: null, timeLimit: null };
+
+  const solveTime = estimateSolveTime(meta);
+  const timeLimit = Math.ceil(solveTime * cfg.mult + cfg.floor);
+  return {
+    limited: true,
+    solveTime: +solveTime.toFixed(1),
+    timeLimit,
+    ratio: +(timeLimit / solveTime).toFixed(2)  // soát lại đúng hệ số mong muốn (2.5/2.0/1.8)
+  };
+}
+
+/**
+ * Hiệu chỉnh lại toàn bộ hệ số trên bằng dữ liệu playtest thật.
+ * samples: [{ meta, realSeconds }]  — realSeconds đo từ người chơi thật
+ * Trả về SECONDS_PER_TIER mới bằng hồi quy tuyến tính đơn giản (least squares).
+ */
+function calibrateFromPlaytest(samples) {
+  // X = [hist1..hist5, anchorCount, opennessExcess, 1] , y = realSeconds
+  const X = samples.map(s => {
+    const m = s.meta;
+    const row = [1, 2, 3, 4, 5].map(t => m.hist[t] || 0);
+    row.push(m.anchorCount, Math.max(0, (m.openness || 1) - TIME_BASE.opennessBase), 1);
+    return row;
+  });
+  const y = samples.map(s => s.realSeconds);
+  // Giải hệ bằng normal equation (X^T X) beta = X^T y — đủ dùng cho vài chục mẫu
+  const XT = X[0].map((_, j) => X.map(row => row[j]));
+  const XTX = XT.map(r1 => XT.map(r2 => r1.reduce((a, v, i) => a + v * r2[i], 0)));
+  const XTy = XT.map(r => r.reduce((a, v, i) => a + v * y[i], 0));
+  const beta = solveLinear(XTX, XTy); // [k1..k5, perAnchor, perOpenness, startup]
+  return {
+    SECONDS_PER_TIER: [0, ...beta.slice(0, 5)],
+    perAnchor: beta[5], perOpenness: beta[6], startup: beta[7]
+  };
+}
+function solveLinear(A, b) { // Gauss elimination cơ bản
+  const n = b.length;
+  const M = A.map((r, i) => [...r, b[i]]);
+  for (let i = 0; i < n; i++) {
+    let p = i; for (let k = i + 1; k < n; k++) if (Math.abs(M[k][i]) > Math.abs(M[p][i])) p = k;
+    [M[i], M[p]] = [M[p], M[i]];
+    for (let k = i + 1; k < n; k++) {
+      const f = M[k][i] / M[i][i];
+      for (let j = i; j <= n; j++) M[k][j] -= f * M[i][j];
+    }
+  }
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    let s = M[i][n];
+    for (let j = i + 1; j < n; j++) s -= M[i][j] * x[j];
+    x[i] = s / M[i][i];
+  }
+  return x;
+}
 
 const TIER_LABEL = [null, 'Rất Dễ', 'Dễ', 'Thường', 'Khó', 'Siêu Khó'];
 
@@ -1701,6 +1808,20 @@ function analyzePlayerEffort(p) {
   const s = initState(p);
   const N = Math.max(1, p.validCells().length);
 
+  // HIỆU NĂNG: branchIsDead() bên dưới gọi countSolutions2 (backtracking, ngân sách node CỐ
+  // ĐỊNH 12000, mỗi node tốn O(N) do reachOK/assignFeasible quét lại toàn bộ ô) — và được gọi
+  // 1 LẦN CHO MỖI NHÁNH SAI tại MỌI điểm rẽ dọc suốt lời giải. Ở bản đồ lớn (hỗ trợ tới 20x20 =
+  // 400 ô), lời giải dài hơn hẳn (nhiều điểm rẽ hơn) VÀ mỗi lần kiểm tra cũng đắt hơn — 2 yếu
+  // tố nhân với nhau khiến hàm này từng tốn tới ~25 GIÂY cho 1 màn duy nhất (đã đo trực tiếp
+  // bằng DevTools, đây mới là nguyên nhân thật gây "không sinh được level" ở bản đồ lớn, không
+  // phải partitionIntoPaths/countSolutions như tưởng ban đầu). Co giãn ngân sách theo cùng cách
+  // generateOne làm (giữ nguyên 12000 cho bản đồ <=100 ô), VÀ giới hạn TỔNG số lần kiểm tra
+  // nhánh trong 1 lần chấm — vượt trần thì coi các điểm rẽ còn lại là "không đo tiếp" (hạ ước
+  // tính công sức xuống bảo thủ hơn) thay vì treo vô thời hạn bất kể lời giải dài bao nhiêu.
+  const cellScale = Math.min(1, 100 / N);
+  const branchNodeCap = Math.max(2000, Math.round(12000 * cellScale));
+  let checksLeft = Math.max(60, Math.round(400 * cellScale));
+
   // Bộ lọc mà MẮT NGƯỜI làm tự động: bỏ nước đi cắt cụt ô, bỏ nước làm lệch số ô của vùng.
   const humanMoves = (k) => {
     let ms = legalMoves(p, s, k);
@@ -1723,7 +1844,7 @@ function analyzePlayerEffort(p) {
   // đó thực sự KHÔNG CÒN LỜI GIẢI NÀO.
   const branchIsDead = (k, m) => {
     const u = applyMove(p, s, k, m);
-    const r = countSolutions2(p, s, 1, 12000);
+    const r = countSolutions2(p, s, 1, branchNodeCap);
     undoMove(p, s, u);
     return r === 0;
   };
@@ -1760,6 +1881,7 @@ function analyzePlayerEffort(p) {
         if (steps <= 3) earlyChoices++;
         for (const m of ms) {
           if (m === correct) continue;
+          if (checksLeft-- <= 0) continue;          // đã vượt trần tổng số lần kiểm tra — bỏ qua, không treo
           if (!branchIsDead(k, m)) continue;        // nhánh này vẫn thắng được → không tốn gì
           const d = refutationDepth(k, m, Math.min(N, 25));
           maxDepth = Math.max(maxDepth, d);
@@ -2227,43 +2349,143 @@ function decorateMechanics(p, cfg, rng) {
     }
   }
 
-  // 2. Lăng Kính (Prism) & Cổng Màu (ColorGate)
+  // 2. Lăng Kính (Prism) & Cổng Màu (ColorGate) — CHUỖI đổi màu nối tiếp trên 1 dây.
+  // Trước đây khối này CHỈ BAO GIỜ đặt đúng 1 lăng kính + 1 cổng màu cho CẢ MÀN, bất kể độ khó
+  // hay bản đồ lớn nhỏ — khiến cơ chế luôn nhạt giống nhau mọi lần sinh. Giờ hỗ trợ đúng 2 kiểu
+  // thử thách: (a) NHIỀU cặp lăng kính+cổng độc lập trên NHIỀU dây khác nhau trong cùng 1 màn,
+  // và (b) 1 dây phải đi qua NHIỀU lăng kính liên tiếp (đổi màu nhiều lần) rồi mới tới ĐÚNG 1
+  // cổng màu ở cuối — số cặp và độ dài chuỗi lăng kính trên mỗi dây đều tăng theo Hạng mục tiêu.
+  const prismDecoratedChains = new Set();
   if (cfg.allowPrism) {
-    const longChainIdxs = segs.map((s, k) => k).filter(k => segs[k].length >= 5);
-    if (longChainIdxs.length && (cfg.targetClass >= 3 || rng() < 0.6)) {
-      // cfg.forcedPrismCells: ô Lăng Kính người dùng vẽ tay — cơ chế này luôn gắn ở Ô THỨ 2
-      // của dây được chọn (pi=1, xem bên dưới), nên chỉ khớp được nếu ô vẽ tay trùng đúng
-      // vị trí đó trên MỘT dây đủ dài nào đó — còn không thì rơi về chọn ngẫu nhiên như cũ.
-      const forcedPrismSet = new Set(cfg.forcedPrismCells || []);
-      const freeChainIdxs = longChainIdxs.filter(k => !usedMechCells.has(segs[k][1]));
-      const forcedMatch = forcedPrismSet.size ? freeChainIdxs.find(k => forcedPrismSet.has(segs[k][1])) : undefined;
-      const chainIdx = forcedMatch !== undefined ? forcedMatch : (freeChainIdxs.length ? pick(freeChainIdxs, rng) : undefined);
-      const chain = chainIdx !== undefined ? segs[chainIdx] : null;
-      if (chain) {
-        // Dây đã mang sẵn màu gốc của mỏ neo (xem initState) — nếu Lăng Kính tình cờ đổi RA
-        // ĐÚNG màu gốc của chính nó thì Cổng Màu phía sau vô nghĩa (dây vốn đã qua được sẵn).
-        // Loại màu gốc khỏi lựa chọn để Lăng Kính luôn thực sự CẦN THIẾT.
-        const ownColor = p.anchors[chainIdx] ? p.anchors[chainIdx].color : null;
-        const colorChoices = COLOR_PALETTE.filter(c => c !== ownColor);
-        const color = pick(colorChoices.length ? colorChoices : COLOR_PALETTE, rng);
-        const pi = 1;
-        let gi = Math.min(chain.length - 2, pi + 2 + Math.floor(rng() * (chain.length - pi - 3)));
-        if (usedMechCells.has(chain[gi])) gi = pi; // ô cổng bị trùng cơ chế khác — huỷ (gi<=pi chặn dưới)
-        if (gi > pi) {
-          p.prisms.push({ cell: chain[pi], color });
-          p.colorGates.push({ cell: chain[gi], color });
-          usedMechCells.add(chain[pi]);
-          usedMechCells.add(chain[gi]);
+    const forcedPrismSet = new Set(cfg.forcedPrismCells || []);
+
+    // HIỆU NĂNG: từng thử chainsWanted tới 2 dây × hops tới 3 lăng kính/dây cho màn Siêu Khó —
+    // mỗi lăng kính thêm là 1 chiều "trạng thái màu" mới mà countSolutions() (đếm lời giải thật,
+    // xem generateOne) phải dò cho MỌI dây, và phép cắt tỉa prismPairOK chỉ kiểm tra khá lỏng
+    // ("có tồn tại đâu đó 1 lăng kính đúng màu" chứ không biết đúng thứ tự hay không) nên số
+    // node cần duyệt tăng gần như bùng nổ — nhiều lượt sinh chạm trần nodeCap (120.000 node/lần,
+    // vài giây mỗi lần), khiến cả trang gần như treo. Giữ ĐÚNG 1 dây được trang trí mỗi màn
+    // (như bản gốc) — độ khó tăng thêm chỉ đến từ số lăng kính NỐI TIẾP trên dây đó, và chặn
+    // trần ở 2 lăng kính (không phải 3) để không gian trạng thái vẫn nhỏ, tương tự tính chất
+    // của bản gốc.
+    let chainsWanted = 1;
+    let hopsRoll;
+    if (isSuperTarget)       hopsRoll = () => rng() < 0.5 ? 2 : 1;
+    else if (isHardTarget)   hopsRoll = () => rng() < 0.4 ? 2 : 1;
+    else if (isNormalTarget) hopsRoll = () => rng() < 0.3 ? 2 : 1;
+    else                     hopsRoll = () => 1; // Dễ: luôn đơn giản nhất, chỉ dạy luật
+    if (!(cfg.targetClass >= 3 || rng() < 0.6)) chainsWanted = 0; // giữ đúng xác suất "có xuất hiện cơ chế" như cũ ở màn dễ/thường
+
+    const candidateOrder = segs.map((s, k) => k).filter(k => segs[k].length >= 5);
+    shuffle(candidateOrder, rng);
+    // Ưu tiên dây có chứa lăng kính người dùng vẽ tay lên đầu hàng chờ
+    if (forcedPrismSet.size) {
+      candidateOrder.sort((k1, k2) => {
+        const has1 = segs[k1].some(cell => forcedPrismSet.has(cell)) ? 1 : 0;
+        const has2 = segs[k2].some(cell => forcedPrismSet.has(cell)) ? 1 : 0;
+        return has2 - has1;
+      });
+    }
+
+    let placed = 0;
+    for (const k of candidateOrder) {
+      if (placed >= chainsWanted) break;
+      const chain = segs[k];
+      const ownColor = p.anchors[k] ? p.anchors[k].color : null;
+
+      // cfg.forcedPrismCells: ô Lăng Kính người dùng vẽ tay trên dây này (có thể NHIỀU ô, đúng
+      // thứ tự xuất hiện trên đường đi) — bám sát ĐÚNG số lượng + vị trí đó thay vì random.
+      // Trước đây chỉ khớp được ô đầu tiên vẽ đúng vị trí pi=1, các ô vẽ thêm bị âm thầm bỏ qua.
+      const forcedOnChain = chain
+        .map((cell, idx) => ({ cell, idx }))
+        .filter(x => x.idx > 0 && forcedPrismSet.has(x.cell) && !usedMechCells.has(x.cell))
+        .sort((a, b) => a.idx - b.idx);
+
+      let prismIdxs;
+      if (forcedOnChain.length) {
+        prismIdxs = forcedOnChain.map(x => x.idx);
+      } else {
+        // Không ép cứng lăng kính đầu tiên vào ô thứ 2 (pi=1) nữa — để ngẫu nhiên chọn vị trí,
+        // đôi khi tạo ra 1 đoạn "dải màu gốc" trước lăng kính đầu (giống ảnh tham khảo: mảng
+        // màu lớn TRƯỚC khi gặp lăng kính), đôi khi lăng kính rơi ngay từ đầu như trước — đa
+        // dạng hoá thay vì luôn 1 kiểu bố cục.
+        const hops = hopsRoll();
+        prismIdxs = [];
+        let cursor = 1;
+        for (let i = 0; i < hops; i++) {
+          const roomAfter = hops - i; // chừa chỗ cho các lăng kính còn lại + tối thiểu 1 ô cổng cuối
+          const avail = [];
+          for (let j = cursor; j < chain.length - roomAfter; j++) if (!usedMechCells.has(chain[j])) avail.push(j);
+          if (!avail.length) break;
+          const idx = avail[Math.floor(rng() * avail.length)];
+          prismIdxs.push(idx);
+          cursor = idx + 2; // chừa tối thiểu 1 ô làm cổng màu trước khi tới lăng kính kế tiếp
         }
+        if (!prismIdxs.length) continue;
       }
+      if (prismIdxs.some(pi => usedMechCells.has(chain[pi]))) continue;
+
+      // BẮT BUỘC: mỗi lăng kính phải có ít nhất 1 Cổng Màu đòi đúng màu nó vừa đổi ra, nằm ở
+      // đâu đó SAU nó (và trước lăng kính kế tiếp nếu có, hoặc hết dây nếu là lăng kính cuối) —
+      // không được để lăng kính nào "vô nghĩa" (đổi màu xong không dẫn tới đâu cả). Đoạn TRƯỚC
+      // lăng kính đầu tiên (nếu có) chỉ là trang trí bằng màu gốc, được phép rỗng.
+      const legRanges = [];
+      let legLo = 1;
+      for (let i = 0; i < prismIdxs.length; i++) { legRanges.push([legLo, prismIdxs[i]]); legLo = prismIdxs[i] + 1; }
+      legRanges.push([legLo, chain.length]);
+      const legAvail = legRanges.map(([lo, hi]) => {
+        const avail = [];
+        for (let j = lo; j < hi; j++) if (!usedMechCells.has(chain[j])) avail.push(j);
+        return avail;
+      });
+      if (legAvail.slice(1).some(avail => !avail.length)) continue; // đoạn BẮT BUỘC nào hết chỗ thì huỷ cả chuỗi
+
+      // Màu từng lăng kính: luôn khác màu NGAY TRƯỚC nó VÀ khác màu GỐC của dây — nếu không,
+      // hoặc lăng kính đổi ra màu đã sẵn có (thừa thãi), hoặc Cổng Màu theo sau nó vốn đã đi
+      // qua được ngay từ đầu (không cần lăng kính này).
+      let prevColor = ownColor;
+      const colors = prismIdxs.map(() => {
+        const forbid = new Set([prevColor, ownColor]);
+        const color = pick(COLOR_PALETTE.filter(c => !forbid.has(c)), rng);
+        prevColor = color;
+        return color;
+      });
+      const legColors = [ownColor, ...colors]; // dải 0 = màu gốc (trước lăng kính đầu), dải i = colors[i-1]
+
+      prismIdxs.forEach((pi, i) => { p.prisms.push({ cell: chain[pi], color: colors[i] }); usedMechCells.add(chain[pi]); });
+      // Mỗi đoạn ngẫu nhiên chọn 1 trong 2 kiểu bố trí — TÔ NGUYÊN CẢ DẢI liền mạch (khối màu
+      // lớn) hoặc chỉ 1 Ô LẺ đơn — để 1 màn có thể vừa có ô rời rạc vừa có dải liền, không rập
+      // khuôn đúng 1 kiểu cho mọi lăng kính.
+      legAvail.forEach((avail, i) => {
+        if (!avail.length) return; // đoạn trang trí trước lăng kính đầu, không có chỗ — bỏ qua, không sao
+        const useBand = rng() < 0.5;
+        const cells = useBand ? avail : [avail[Math.floor(rng() * avail.length)]];
+        for (const j of cells) {
+          p.colorGates.push({ cell: chain[j], color: legColors[i] });
+          usedMechCells.add(chain[j]);
+        }
+      });
+      prismDecoratedChains.add(k);
+      placed++;
     }
   }
 
   // 2b. Cổng Màu ĐỘC LẬP (không cần Lăng Kính đi kèm) — khớp đúng màu GỐC sẵn có của mỏ neo
   // (xem initState), đi qua được ngay từ đầu vì dây vốn đã mang màu đó. Cho phép thiết kế
   // màn CHỈ có Cổng Màu, không bắt buộc phải có Lăng Kính.
+  // HIỆU NĂNG: khác hẳn lăng kính (mục 2) — 1 cổng dùng ĐÚNG màu gốc sẵn có của chính dây sở
+  // hữu nó luôn được thoả NGAY TỪ ĐẦU (colorTag ban đầu = màu gốc), không cần bộ giải "chờ" hay
+  // "đoán" gì cả nên không sinh thêm nhánh dò nào cho countSolutions() — AN TOÀN để đặt DÀY ĐẶC,
+  // kể cả phủ gần kín 1 dây, không lo lag. Vì vậy KHÔNG giới hạn số cổng theo số dây (1 dây có
+  // thể mang nhiều hơn 1 cổng) — số cổng tăng theo Hạng mục tiêu, trừ khi cfg.colorGateCount đã
+  // được người dùng chỉ định rõ (VD: vẽ tay trong Designer) — lúc đó luôn tôn trọng đúng số họ
+  // muốn, dù lớn tới đâu.
   if (cfg.allowColorGate) {
-    const want = Math.min(3, cfg.colorGateCount || 1);
+    const baseWant = isSuperTarget ? 3 : isHardTarget ? 2 : 1;
+    // Thỉnh thoảng chọn 1 màn "đậm đặc" hẳn hơn (mô phỏng đúng kiểu 1 khối màu lớn gần phủ kín
+    // 1 dây) thay vì lúc nào cũng chỉ vài ô — đa dạng hoá thay vì rập khuôn 1 mật độ cố định.
+    const rollWant = () => rng() < 0.25 ? baseWant + 4 + Math.floor(rng() * 6) : baseWant;
+    const want = cfg.colorGateCount || rollWant();
     const usedCells = usedMechCells;
     let added = 0;
 
@@ -2285,18 +2507,45 @@ function decorateMechanics(p, cfg, rng) {
     }
 
     if (added < want) {
-      const order = segs.map((s, k) => k).filter(k => segs[k].length >= 3);
-      shuffle(order, rng);
-      for (const k of order) {
+      // Bỏ qua dây đã có chuỗi Lăng Kính riêng (mục 2) — cổng độc lập giả định dây vẫn mang
+      // ĐÚNG màu gốc lúc đi qua, điều này không còn chắc chắn nếu dây đã bị lăng kính đổi màu.
+      // Mỗi dây ngẫu nhiên rơi vào 1 trong 2 kiểu — TÔ NGUYÊN đoạn trống dài nhất thành 1 DẢI
+      // liền mạch, hoặc rải vài Ô LẺ rời rạc không liền nhau — để 1 màn có thể vừa có ô rời rạc
+      // vừa có dải liền, không rập khuôn đúng 1 kiểu cho mọi dây.
+      const eligibleChainIdxs = segs.map((s, k) => k).filter(k => segs[k].length >= 3 && !prismDecoratedChains.has(k));
+      shuffle(eligibleChainIdxs, rng);
+      for (const k of eligibleChainIdxs) {
         if (added >= want) break;
         const chain = segs[k];
         const ownColor = p.anchors[k] ? p.anchors[k].color : COLOR_PALETTE[k % 4];
-        const gi = Math.min(chain.length - 1, 1 + Math.floor(rng() * (chain.length - 1)));
-        const cell = chain[gi];
-        if (usedCells.has(cell)) continue;
-        p.colorGates.push({ cell, color: ownColor });
-        usedCells.add(cell);
-        added++;
+        const avail = [];
+        for (let j = 1; j < chain.length; j++) if (!usedCells.has(chain[j])) avail.push(j);
+        if (!avail.length) continue;
+
+        if (rng() < 0.5) {
+          // Kiểu DẢI: tìm đoạn gồm các chỉ số LIÊN TIẾP dài nhất trong avail rồi tô trọn.
+          let bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+          for (let i = 0; i < avail.length; i++) {
+            if (i > 0 && avail[i] === avail[i - 1] + 1) curLen++; else { curStart = avail[i]; curLen = 1; }
+            if (curLen > bestLen) { bestLen = curLen; bestStart = curStart; }
+          }
+          const take = Math.min(bestLen, want - added);
+          for (let j = bestStart; j < bestStart + take; j++) {
+            p.colorGates.push({ cell: chain[j], color: ownColor });
+            usedCells.add(chain[j]);
+            added++;
+          }
+        } else {
+          // Kiểu RỜI RẠC: vài ô đơn lẻ ngẫu nhiên trên dây này, không cần liền nhau.
+          shuffle(avail, rng);
+          const take = Math.min(avail.length, want - added, 1 + Math.floor(rng() * 3));
+          for (let i = 0; i < take; i++) {
+            const cell = chain[avail[i]];
+            p.colorGates.push({ cell, color: ownColor });
+            usedCells.add(cell);
+            added++;
+          }
+        }
       }
     }
   }
@@ -2427,8 +2676,22 @@ function generateOne(cfg, rng) {
   const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng, shape, 60, cfg.forcedRockCells);
   if (!p0) return { ok: false, reason: 'obstacle-layout' };
 
+  // HIỆU NĂNG: partitionIntoPaths/countSolutions là backtracking với ngân sách node CỐ ĐỊNH
+  // (15000/120000) — nhưng MỖI node duyệt tốn O(số ô) vì reachOK/assignFeasible/freeComponents
+  // đều quét lại TOÀN BỘ ô mỗi lần gọi, nên chi phí 1 node tăng tuyến tính theo kích thước bản
+  // đồ. Từ khi hỗ trợ bản đồ tới 20x20 (400 ô, gấp ~5-8 lần mức cũ ~50-80 ô), 1 lượt thử có thể
+  // tốn tới vài giây thay vì vài chục ms — nhân với hàng trăm lượt thử (maxAttempts) khiến cả
+  // trang treo hàng chục phút dù KHÔNG có vòng lặp vô hạn (đã xác nhận qua DevTools: CPU 100%
+  // liên tục, không phản hồi, nhưng có bound rõ ràng — chỉ là quá chậm ở quy mô lớn). Co giãn
+  // ngân sách NGHỊCH với số ô để chi phí mỗi lượt thử luôn ở mức chấp nhận được — giữ NGUYÊN
+  // đúng 15000/120000 cho bản đồ <=100 ô như trước (không đổi hành vi cũ, chỉ bản đồ lớn mới
+  // bị co lại).
+  const cellScale = Math.min(1, 100 / (cfg.R * cfg.C));
+  const partitionBudget = Math.max(3000, Math.round(15000 * cellScale));
+  const solveNodeCap = Math.max(20000, Math.round(120000 * cellScale));
+
   // cfg.forcedAnchorCells: ô mỏ neo người dùng vẽ tay — ưu tiên bám sát (xem partitionIntoPaths).
-  const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng, 15000, cfg.forcedAnchorCells);
+  const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng, partitionBudget, cfg.forcedAnchorCells);
   if (!segsRaw) return { ok: false, reason: 'no-partition' };
 
   const K = segsRaw.length;
@@ -2475,7 +2738,7 @@ function generateOne(cfg, rng) {
     // dễ mò trúng. Nhưng CHÚ Ý — xem ghi chú ở chỗ tính điểm: nghiệm duy nhất do ĐẮP THÊM
     // VÁCH NGĂN mà có thì lại làm màn DỄ đi, vì đường đi bị ép cứng.
     const SOL_CAP = cfg.solCap || 60;
-    const uqFinal = countSolutions(p, SOL_CAP, 120000);
+    const uqFinal = countSolutions(p, SOL_CAP, solveNodeCap);
     if (uqFinal.count === 0) continue;                       // phải luôn giải được
     const solCount = uqFinal.count, solCapped = uqFinal.aborted || uqFinal.count >= SOL_CAP;
     // KHÔNG lọc theo số lời giải nữa.
@@ -2553,6 +2816,14 @@ function generateOne(cfg, rng) {
       deductiveScore: cog.deductiveScore,
       mechScore: cog.mechScore
     };
+
+    // Level Timer: tính sẵn ngay lúc sinh, dùng đúng dữ liệu Solver vừa đo trong p.meta ở trên
+    // (hist/anchorCount/openness/cls) — không cần đo lại hay playtest tay. Hạng Dễ không giới
+    // hạn giờ (timerSec = null) đúng GDD 2.6.
+    const timeInfo = tinhTimeLimit(p.meta);
+    p.meta.estimatedSolveTimeSec = timeInfo.solveTime;
+    p.meta.timerSec = timeInfo.limited ? timeInfo.timeLimit : null;
+
     return { ok: true, puzzle: p, rated };
   }
 
@@ -2567,12 +2838,16 @@ async function generateBatch(cfg, onProgress) {
   const maxAttempts = cfg.maxAttempts || 300;
   let att = 0;
 
-  // CỨ MỖI 15 LƯỢT, NHƯỜNG LẠI LUỒNG CHÍNH CHO TRÌNH DUYỆT (setTimeout 0ms).
+  // NHƯỜNG LẠI LUỒNG CHÍNH CHO TRÌNH DUYỆT (setTimeout 0ms) SAU MỖI LƯỢT THỬ.
   // Mỗi lượt sinh + chấm điểm não bộ (hội đồng người chơi, công sức, đếm lời giải...)
   // rất nặng và maxAttempts có thể lên tới hàng trăm-nghìn lượt; chạy đồng bộ liên
   // tục khiến trình duyệt không kịp vẽ lại/nhận sự kiện → báo "trang không phản hồi".
   // KHÔNG đổi bất kỳ logic sinh/chấm điểm nào, chỉ nhường luồng để UI còn sống.
-  const YIELD_EVERY = 15;
+  // Hạ về 1 (nhường sau MỌI lượt, không phải mỗi 6 lượt): từ khi hỗ trợ bản đồ tới 20x20, 1
+  // lượt thử có thể tốn tới vài giây (xem ghi chú hiệu năng ở generateOne) — dồn 6 lượt như vậy
+  // lại mới nhường thì trang vẫn treo hàng chục giây liền. Chi phí thêm của việc nhường mỗi
+  // lượt (1 setTimeout 0ms) không đáng kể so với 1 lượt sinh, nên không có lý do gì không làm.
+  const YIELD_EVERY = 1;
 
   while (out.length < cfg.count && att < maxAttempts) {
     att++;
@@ -2670,6 +2945,9 @@ function optimizeFlowProgression(levels) {
 function toJSON(p, id) {
   return {
     id: id || p.meta.id || null,
+    // timerSec: null = hạng Dễ, không giới hạn giờ (GDD 2.6) — xem Level Timer/generateOne.
+    // KHÔNG dùng "|| 0" hay "|| <default>" ở nơi đọc field này, vì null có nghĩa RIÊNG.
+    timerSec: p.meta.timerSec != null ? p.meta.timerSec : null,
     grid: { rows: p.R, cols: p.C },
     shape: p.shape ? p.shape.slice() : Array(p.R).fill('1'.repeat(p.C)),
     rocks: [...p.blocked].map(c => ({ r: Math.floor(c / p.C), c: c % p.C })),
@@ -2776,6 +3054,14 @@ function updateAIStatus() {
   }
 }
 updateAIStatus();
+
+// Cỡ ô (px) linh hoạt theo kích thước bản đồ — giữ nguyên cỡ mặc định cho bản đồ nhỏ như trước
+// giờ, chỉ tự thu nhỏ khi bản đồ đủ lớn (hỗ trợ tới 20x20) để bàn cờ không tràn khỏi khung hiển
+// thị (trước đây cố định 1 cỡ, 20x20 sẽ vẽ ra bàn cờ ~920px, dễ tràn ra ngoài layout).
+function autoCellSize(rows, cols, maxPx, defaultPx) {
+  const dim = Math.max(rows, cols);
+  return Math.max(14, Math.min(defaultPx, Math.floor(maxPx / dim)));
+}
 
 /* ================= BOARD SVG RENDER (FULL MECHANICS & SHAPES) ================= */
 function boardSVG(p, o) {
@@ -3037,7 +3323,9 @@ function renderPainterUI() {
   const stats = updatePainterStats();
   const deg1Set = new Set(stats.deg1List.map(([r, c]) => `${r}_${c}`));
   
-  container.style.gridTemplateColumns = `repeat(${PAINTER_C}, 36px)`;
+  const cellPx = autoCellSize(PAINTER_R, PAINTER_C, 640, 36);
+  container.style.setProperty('--p-cell', cellPx + 'px');
+  container.style.gridTemplateColumns = `repeat(${PAINTER_C}, var(--p-cell))`;
   let html = '';
   for (let r = 0; r < PAINTER_R; r++) {
     for (let c = 0; c < PAINTER_C; c++) {
@@ -3405,7 +3693,7 @@ function renderList() {
         <span class="id">${p.meta.id}</span>
         ${pacingRoleBadge(p.meta.pacingRole)}
       </div>
-      ${boardSVG(p, { cs: 26 })}
+      ${boardSVG(p, { cs: autoCellSize(p.R, p.C, 200, 26) })}
       <div class="mt">
         <b>HDI ${p.meta.hdi.toFixed(1)}</b> · ${CLASS_INFO[c].name}
         <br>⏱️ ~${p.meta.solveTimeEst}s · 🔄 ~${p.meta.expectedUndos} lần xóa
@@ -3494,7 +3782,7 @@ function renderDetail() {
   $('detTitle').innerHTML = blind
     ? `5 · Chi tiết ${m.id} &nbsp; <span class="chip">🙈 Đang ẩn đánh giá máy — chấm cảm nhận xong sẽ hiện lại</span>`
     : `5 · Chi tiết ${m.id} &nbsp; ${classBadge(c)} &nbsp; ${pacingRoleBadge(m.pacingRole)}`;
-  $('boardWrap').innerHTML = boardSVG(p, { cs: 46, showSolution: showSol, coords: showCoord, state: PLAY ? PLAY.s : null, interactive: playMode });
+  $('boardWrap').innerHTML = boardSVG(p, { cs: autoCellSize(p.R, p.C, 640, 46), showSolution: showSol, coords: showCoord, state: PLAY ? PLAY.s : null, interactive: playMode });
 
   $('chainLegend').innerHTML = p.anchors.map((a, k) =>
     `<span class="chip"><i style="background:${COLOR_HEX_MAP[a.color] || CHHEX[k % 4]}"></i>A${k + 1} (dài ${a.L})</span>`).join('')
