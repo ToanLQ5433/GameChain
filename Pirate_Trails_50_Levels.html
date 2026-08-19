@@ -409,6 +409,16 @@ progress{width:220px;height:10px}
   color: #065f46;
   border-color: #34d399;
 }
+.designer-cell.key {
+  background: #fef9c3;
+  color: #a16207;
+  border-color: #facc15;
+}
+.designer-cell.keygate {
+  background: #fed7aa;
+  color: #c2410c;
+  border-color: #fb923c;
+}
 .designer-cell.bomb {
   background: #fee2e2;
   color: #dc2626;
@@ -634,6 +644,8 @@ progress{width:220px;height:10px}
             <label class="mech-check"><input type="checkbox" id="chkRrPush"> 📦 Thùng Hàng</label>
             <label class="mech-check"><input type="checkbox" id="chkRrSwitch"> 🔘 Công Tắc & Cổng</label>
             <label class="mech-check"><input type="checkbox" id="chkRrPrism"> 💎 Lăng Kính Màu</label>
+            <label class="mech-check"><input type="checkbox" id="chkRrColorGate"> 🚪 Cổng Màu Độc Lập</label>
+            <label class="mech-check"><input type="checkbox" id="chkRrKey"> 🔑 Chìa & Cổng Khóa</label>
             <label class="mech-check"><input type="checkbox" id="chkRrWp"> 🔢 Mật Mã Số</label>
             <label class="mech-check"><input type="checkbox" id="chkRrBomb"> 💣 Bom Bẫy (MEC-05)</label>
           </div>
@@ -675,13 +687,15 @@ progress{width:220px;height:10px}
         <div class="brush-bar" id="dsBrushBar">
           <button class="brush-btn active" data-brush="land">🟩 Ô Đất</button>
           <button class="brush-btn" data-brush="void">⬜ Khoét Rỗng</button>
-          <button class="brush-btn" data-brush="anchor">⚓ Mỏ Neo</button>
+          <button class="brush-btn" data-brush="anchor">⚓ Mỏ Neo (A1-A4)</button>
           <button class="brush-btn" data-brush="rock">🪨 Đá Tảng</button>
           <button class="brush-btn" data-brush="push">📦 Thùng</button>
           <button class="brush-btn" data-brush="switch">🔘 Công Tắc</button>
-          <button class="brush-btn" data-brush="gate">🚧 Cổng Chặn (đi cùng Công Tắc)</button>
-          <button class="brush-btn" data-brush="prism">💎 Lăng Kính (đổi màu)</button>
-          <button class="brush-btn" data-brush="colorgate">🚪 Cổng Màu (đứng 1 mình)</button>
+          <button class="brush-btn" data-brush="gate">🚧 Cổng Chặn</button>
+          <button class="brush-btn" data-brush="key">🔑 Chìa Khóa</button>
+          <button class="brush-btn" data-brush="keygate">🔒 Cổng Khóa</button>
+          <button class="brush-btn" data-brush="prism">💎 Lăng Kính</button>
+          <button class="brush-btn" data-brush="colorgate">🚪 Cổng Màu</button>
           <button class="brush-btn" data-brush="waypoint">🔢 Mật Mã</button>
           <button class="brush-btn" data-brush="bomb">💣 Bom Bẫy</button>
         </div>
@@ -15137,7 +15151,9 @@ $('btnDoReroll').onclick = () => {
     allowPush: $('chkRrPush').checked,
     pushCount: $('chkRrPush').checked ? 1 : 0,
     allowPrism: $('chkRrPrism').checked,
-    allowSwitch: $('chkRrSwitch').checked,
+    allowSwitch: $('chkRrSwitch').checked || ($('chkRrKey') && $('chkRrKey').checked),
+    allowColorGate: $('chkRrColorGate') ? $('chkRrColorGate').checked : false,
+    colorGateCount: ($('chkRrColorGate') && $('chkRrColorGate').checked) ? 1 : 0,
     allowWaypoints: $('chkRrWp').checked,
     maxAttempts: 350
   };
@@ -15225,6 +15241,8 @@ function loadLevelIntoDesigner(lvl) {
     if (DS_GRID[sw.r] && DS_GRID[sw.r][sw.c]) DS_GRID[sw.r][sw.c] = { type: 'switch' };
     if (DS_GRID[sw.gateR] && DS_GRID[sw.gateR][sw.gateC]) DS_GRID[sw.gateR][sw.gateC] = { type: 'gate' };
   });
+  if (lvl.keys) lvl.keys.forEach(k => { if (DS_GRID[k.r] && DS_GRID[k.r][k.c]) DS_GRID[k.r][k.c] = { type: 'key' }; });
+  if (lvl.keyGates) lvl.keyGates.forEach(kg => { if (DS_GRID[kg.gateR] && DS_GRID[kg.gateR][kg.gateC]) DS_GRID[kg.gateR][kg.gateC] = { type: 'keygate' }; });
   if (lvl.prisms) lvl.prisms.forEach(pm => { if (DS_GRID[pm.r] && DS_GRID[pm.r][pm.c]) DS_GRID[pm.r][pm.c] = { type: 'prism', color: pm.color }; });
   if (lvl.colorGates) lvl.colorGates.forEach(cg => { if (DS_GRID[cg.r] && DS_GRID[cg.r][cg.c]) DS_GRID[cg.r][cg.c] = { type: 'colorgate', color: cg.color }; });
   if (lvl.bombs) lvl.bombs.forEach(bm => { if (DS_GRID[bm.r] && DS_GRID[bm.r][bm.c]) DS_GRID[bm.r][bm.c] = { type: 'bomb' }; });
@@ -15282,10 +15300,15 @@ function renderDesignerGrid() {
       else if (cell.type === 'push') icon = '📦';
       else if (cell.type === 'switch') icon = '🔘';
       else if (cell.type === 'gate') icon = '🚧';
-      else if (cell.type === 'prism') icon = '💎';
+      else if (cell.type === 'key') icon = '🔑';
+      else if (cell.type === 'keygate') icon = '🔒';
+      else if (cell.type === 'prism') {
+        const pCol = cell.color || 'blue';
+        const hex = COLOR_HEX_MAP[pCol] || COLOR_HEX_MAP.blue;
+        styleAttr = ` style="background:${hexToRgba(hex, 0.22)};border-color:${hex};color:${hex}"`;
+        icon = '💎';
+      }
       else if (cell.type === 'colorgate') {
-        // Không icon — chỉ tô nền MỜ NHẠT đúng màu mỏ neo mà cổng này khớp, người chơi vẫn
-        // nhận ra qua sắc màu (đúng yêu cầu: "ô màu nền thôi", không cần icon cửa).
         const hex = COLOR_HEX_MAP[cell.color] || COLOR_HEX_MAP.red;
         styleAttr = ` style="background:${hexToRgba(hex, 0.28)};border-color:${hexToRgba(hex, 0.55)};color:${hex}"`;
         icon = '';
@@ -15326,15 +15349,32 @@ function applyBrushToCell(r, c) {
   else if (DS_BRUSH === 'push') DS_GRID[r][c] = cur.type === 'push' ? { type: 'land' } : { type: 'push' };
   else if (DS_BRUSH === 'switch') DS_GRID[r][c] = cur.type === 'switch' ? { type: 'land' } : { type: 'switch' };
   else if (DS_BRUSH === 'gate') DS_GRID[r][c] = cur.type === 'gate' ? { type: 'land' } : { type: 'gate' };
-  else if (DS_BRUSH === 'prism') DS_GRID[r][c] = cur.type === 'prism' ? { type: 'land' } : { type: 'prism' };
+  else if (DS_BRUSH === 'key') DS_GRID[r][c] = cur.type === 'key' ? { type: 'land' } : { type: 'key' };
+  else if (DS_BRUSH === 'keygate') DS_GRID[r][c] = cur.type === 'keygate' ? { type: 'land' } : { type: 'keygate' };
+  else if (DS_BRUSH === 'prism') {
+    // Xoay vòng màu Lăng Kính: blue -> red -> green -> purple -> land
+    const prismColors = ['blue', 'red', 'green', 'purple'];
+    if (cur.type === 'prism') {
+      const idx = prismColors.indexOf(cur.color || 'blue');
+      if (idx === prismColors.length - 1) {
+        DS_GRID[r][c] = { type: 'land' };
+      } else {
+        DS_GRID[r][c] = { type: 'prism', color: prismColors[idx + 1] };
+      }
+    } else {
+      DS_GRID[r][c] = { type: 'prism', color: 'blue' };
+    }
+  }
   else if (DS_BRUSH === 'colorgate') {
-    // Khác các brush khác: bấm lặp lại KHÔNG xoá mà XOAY sang màu tiếp theo trong số các
-    // màu mỏ neo đang có trên bản đồ — để chọn đúng màu mong muốn. Muốn xoá, đổi sang brush
-    // "Ô Đất" rồi bấm lại (giống cách xoá mọi cơ chế khác).
+    // Xoay vòng màu Cổng Màu: red -> blue -> green -> purple -> land
     const mapColors = getMapAnchorColors();
     if (cur.type === 'colorgate') {
       const idx = mapColors.indexOf(cur.color);
-      DS_GRID[r][c] = { type: 'colorgate', color: mapColors[(idx + 1) % mapColors.length] };
+      if (idx === mapColors.length - 1) {
+        DS_GRID[r][c] = { type: 'land' };
+      } else {
+        DS_GRID[r][c] = { type: 'colorgate', color: mapColors[idx + 1] };
+      }
     } else {
       DS_GRID[r][c] = { type: 'colorgate', color: mapColors[0] };
     }
@@ -15342,8 +15382,14 @@ function applyBrushToCell(r, c) {
   else if (DS_BRUSH === 'waypoint') DS_GRID[r][c] = cur.type === 'waypoint' ? { type: 'land' } : { type: 'waypoint' };
   else if (DS_BRUSH === 'bomb') DS_GRID[r][c] = cur.type === 'bomb' ? { type: 'land' } : { type: 'bomb' };
   else if (DS_BRUSH === 'anchor') {
+    // Xoay vòng Mỏ Neo: A1 (k=0) -> A2 (k=1) -> A3 (k=2) -> A4 (k=3) -> Ô Đất
     if (cur.type === 'anchor') {
-      DS_GRID[r][c] = { type: 'land' };
+      const nextK = (cur.k != null ? cur.k : 0) + 1;
+      if (nextK >= 4) {
+        DS_GRID[r][c] = { type: 'land' };
+      } else {
+        DS_GRID[r][c] = { type: 'anchor', k: nextK };
+      }
     } else {
       const existingAnchors = countAnchors();
       DS_GRID[r][c] = { type: 'anchor', k: existingAnchors % 4 };
@@ -15488,7 +15534,8 @@ function buildPuzzleFromDesignerDraft() {
   const p = new Puzzle(DS_R, DS_C, shape);
 
   const switchCells = [], gateCells = [];
-  const anchorCells = [];
+  const keyCells = [], keyGateCells = [];
+  const anchorMap = new Map();
   let hasWaypoint = false;
 
   for (let r = 0; r < DS_R; r++) {
@@ -15499,20 +15546,24 @@ function buildPuzzleFromDesignerDraft() {
       else if (cell.type === 'push') p.pushRocks.push({ cell: idx, initialCell: idx });
       else if (cell.type === 'switch') switchCells.push(idx);
       else if (cell.type === 'gate') gateCells.push(idx);
+      else if (cell.type === 'key') keyCells.push(idx);
+      else if (cell.type === 'keygate') keyGateCells.push(idx);
       else if (cell.type === 'prism') p.prisms.push({ cell: idx, color: cell.color || 'blue' });
-      else if (cell.type === 'colorgate') p.colorGates.push({ cell: idx, color: cell.color });
-      else if (cell.type === 'anchor') anchorCells[cell.k != null ? cell.k : anchorCells.length] = idx;
+      else if (cell.type === 'colorgate') p.colorGates.push({ cell: idx, color: cell.color || 'red' });
+      else if (cell.type === 'anchor') anchorMap.set(idx, cell.k != null ? cell.k : anchorMap.size);
       else if (cell.type === 'waypoint') hasWaypoint = true;
     }
   }
 
-  // Ghép Công Tắc với Cổng Chặn theo đúng thứ tự quét trái->phải, trên->dưới — công tắc thứ
-  // N đi với cổng thứ N. Thiếu 1 trong 2 (VD vẽ công tắc mà chưa vẽ cổng) thì bỏ qua cặp đó.
-  p.switches = switchCells
-    .map((swCell, i) => ({ swCell, gateCell: gateCells[i], latch: true }))
+  // Kết hợp switch/gate và key/keygate thành các cặp công tắc - cổng chặn
+  const allSwitchCells = [...switchCells, ...keyCells];
+  const allGateCells = [...gateCells, ...keyGateCells];
+  p.switches = allSwitchCells
+    .map((swCell, i) => ({ swCell, gateCell: allGateCells[i], latch: true }))
     .filter(sw => sw.gateCell != null);
 
-  p.anchors = anchorCells.filter(x => x != null).map((cell, k) => ({
+  const sortedAnchorEntries = [...anchorMap.entries()].sort((a, b) => a[1] - b[1]);
+  p.anchors = sortedAnchorEntries.map(([cell], k) => ({
     cell,
     L: Math.max(2, DS_ANCHOR_STEPS[k] || 2),
     color: COLOR_PALETTE[k % 4]
@@ -15556,45 +15607,34 @@ function buildLevelFromDesigner(meta, id) {
   const anchorsCount = countAnchors() || +$('dsK').value || 2;
   const rocksCount = DS_GRID.flat().filter(c => c.type === 'rock').length;
   const pushCount = DS_GRID.flat().filter(c => c.type === 'push').length;
-  const switchCount = DS_GRID.flat().filter(c => c.type === 'switch').length;
-  const gateCount = DS_GRID.flat().filter(c => c.type === 'gate').length;
+  const switchCount = DS_GRID.flat().filter(c => c.type === 'switch' || c.type === 'key').length;
+  const gateCount = DS_GRID.flat().filter(c => c.type === 'gate' || c.type === 'keygate').length;
   const prismCount = DS_GRID.flat().filter(c => c.type === 'prism').length;
   const colorGateCount = DS_GRID.flat().filter(c => c.type === 'colorgate').length;
   const wpCount = DS_GRID.flat().filter(c => c.type === 'waypoint').length;
-  // Vị trí CHÍNH XÁC các ô đá tảng đã vẽ tay — truyền thẳng xuống placeObstacles() để nó dùng
-  // đúng những ô này thay vì tự chọn ngẫu nhiên (xem ghi chú trong Trapline_Level_Forge.html).
+  
   const forcedRockCells = [];
   for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'rock') forcedRockCells.push(r * DS_C + c);
-  // Vị trí CHÍNH XÁC các ô mỏ neo đã vẽ tay — ưu tiên bám sát (best-effort, xem ghi chú
-  // trong partitionIntoPaths) vì thuật toán tìm đường đôi khi vẫn cần tự do chọn ô khác để
-  // ra được lời giải, không thể ép cứng 100% mà không giảm tỉ lệ sinh thành công.
+  
   const forcedAnchorCells = [];
   for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'anchor') forcedAnchorCells.push(r * DS_C + c);
-  // Vị trí + MÀU chính xác từng Cổng Màu đã chọn trong Designer — ưu tiên đặt đúng ô này
-  // (best-effort: chỉ dùng được nếu ô đó thực sự rơi vào đường đi của 1 dây nào đó).
+  
   const forcedColorGates = [];
   for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'colorgate') forcedColorGates.push({ cell: r * DS_C + c, color: DS_GRID[r][c].color });
-  // Vị trí CHÍNH XÁC các ô Thùng Đẩy / Lăng Kính đã vẽ tay — ưu tiên bám sát (best-effort,
-  // xem decorateMechanics): chỉ khớp được nếu ô đó rơi đúng vào điểm mà cơ chế có thể gắn vào
-  // trên đường đi đã tính (cuối dây với thùng đẩy, ô thứ 2 của dây dài với lăng kính).
+  
   const forcedPushCells = [];
   const forcedPrismCells = [];
   for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
     if (DS_GRID[r][c].type === 'push') forcedPushCells.push(r * DS_C + c);
     if (DS_GRID[r][c].type === 'prism') forcedPrismCells.push(r * DS_C + c);
   }
-  // Công Tắc + Cổng Chặn giờ là 2 brush RIÊNG BIỆT ('switch' và 'gate') — trước đây chỉ có
-  // brush "switch" nên người dùng không có cách nào chỉ rõ cổng chặn nằm ở đâu, luôn bị AI tự
-  // chọn ngẫu nhiên. Chỉ dùng Ô ĐẦU TIÊN vẽ mỗi loại (1 công tắc + 1 cổng / màn).
+  
   let forcedSwitchCell = null, forcedGateCell = null;
   for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
-    if (forcedSwitchCell === null && DS_GRID[r][c].type === 'switch') forcedSwitchCell = r * DS_C + c;
-    if (forcedGateCell === null && DS_GRID[r][c].type === 'gate') forcedGateCell = r * DS_C + c;
+    if (forcedSwitchCell === null && (DS_GRID[r][c].type === 'switch' || DS_GRID[r][c].type === 'key')) forcedSwitchCell = r * DS_C + c;
+    if (forcedGateCell === null && (DS_GRID[r][c].type === 'gate' || DS_GRID[r][c].type === 'keygate')) forcedGateCell = r * DS_C + c;
   }
-  // Số bước mỗi dây do người dùng cấu hình ở bảng "Bước Đi Từng Mỏ Neo" — trước đây bị BỎ QUA
-  // hoàn toàn khi sinh màn (minLen luôn cố định = 3, không liên quan gì tới con số người dùng
-  // gõ), khiến độ dài dây thực tế ra rất khác ý định. Dùng để (1) đặt minLen hợp lý hơn và
-  // (2) chấm điểm "khớp bản vẽ" khi thử nhiều lần sinh (xem scoreDesignerFidelity bên dưới).
+  
   const kFinal = Math.min(4, Math.max(1, anchorsCount));
   const anchorStepTargets = DS_ANCHOR_STEPS.slice(0, kFinal);
   const validStepTargets = anchorStepTargets.filter(x => x > 0);
@@ -15623,8 +15663,6 @@ function buildLevelFromDesigner(meta, id) {
     forcedGateCell: forcedGateCell,
     allowPrism: prismCount > 0,
     forcedPrismCells: forcedPrismCells,
-    // Cổng Màu ĐỘC LẬP (không có Lăng Kính đi kèm) — khớp đúng màu GỐC của 1 mỏ neo, không
-    // cần đổi màu mới đi qua được. Xem decorateMechanics trong Trapline_Level_Forge.html.
     allowColorGate: colorGateCount > 0,
     colorGateCount: colorGateCount,
     forcedColorGates: forcedColorGates,
@@ -15632,11 +15670,6 @@ function buildLevelFromDesigner(meta, id) {
     maxAttempts: 350
   };
 
-  // Trước đây gọi generateOne() ĐÚNG 1 LẦN với 1 seed random duy nhất — nếu lần đó random ra
-  // vị trí thùng/công tắc/lăng kính lệch xa bản vẽ tay (dù vẫn hợp lệ), người dùng không có
-  // cơ hội nào khác và kết quả trông như "level AI tự bịa" chứ không phải bản họ vẽ. Giờ thử
-  // NHIỀU seed khác nhau rồi LUÔN giữ lại lần khớp bản vẽ NHIỀU NHẤT (điểm fidelity cao nhất),
-  // không chỉ chấp nhận lần ra được đầu tiên.
   const DESIGNER_GEN_ATTEMPTS = 14;
   let res = null, bestScore = -Infinity;
   for (let attempt = 0; attempt < DESIGNER_GEN_ATTEMPTS; attempt++) {
@@ -15665,8 +15698,6 @@ function buildLevelFromDesigner(meta, id) {
     }
   }
 
-  // AI TỰ CHẤM ĐỘ KHÓ: chạy đúng bộ máy đánh giá nhận thức dùng cho cả 53 màn gốc, không
-  // phải con số người dùng tự gõ — HDI/hạng độ khó luôn do máy đo, không thể chỉnh tay.
   const rated = tierSolve(p, 5);
   const greedy = simulateGreedyPlayer(p);
   const cog = calculateCognitiveMetrics(p, rated, greedy, { count: 1, capped: false });
@@ -15702,16 +15733,11 @@ function buildLevelFromDesigner(meta, id) {
   return { ok: true, json: newJson };
 }
 
-// Đánh số lại TOÀN BỘ id ('L01','L02'...) theo đúng vị trí thật trong mảng — bắt buộc phải
-// chạy lại sau MỌI lần chèn/xoá level, nếu không id sẽ lệch khỏi vị trí hiển thị.
+// Đánh số lại TOÀN BỘ id ('L01','L02'...) theo đúng vị trí thật trong mảng
 function renumberSuiteLevelIds() {
   SUITE_LEVELS.forEach((lvl, i) => { lvl.id = 'L' + String(i + 1).padStart(2, '0'); });
 }
 
-// Chẩn đoán CỤ THỂ lý do generateOne thất bại, thay vì chỉ nói chung chung "bị cô lập hoặc
-// không tìm được lời giải" — 2 nguyên nhân hay gặp nhất khi tự vẽ map là (a) parity đen/trắng
-// lệch quá nhiều so với số dây (một dây liên tục BẮT BUỘC đi xen kẽ đen-trắng, nên bất khả thi
-// về mặt toán học chứ không phải thuật toán yếu), và (b) hình vẽ bị chia thành nhiều đảo rời rạc.
 function diagnoseDesignerFailure(result) {
   const K = result.cfg ? result.cfg.anchors : Math.max(1, countAnchors());
   const p0 = new Puzzle(DS_R, DS_C, DS_GRID.map(row => row.map(c => c.type === 'void' ? '0' : '1').join('')));
@@ -15758,9 +15784,6 @@ $('btnDsAutoGenerate').onclick = () => {
   alert('🎉 AI đã phủ kín 100% bản vẽ, gài vách ngăn và hoàn tất đánh giá não bộ toàn diện! Bạn có thể kiểm tra ở Tab 1 và chơi thử ở giữa.');
 };
 
-// Dùng chung đúng logic với "AI Tự Phủ Kín" — khác biệt duy nhất là thông báo, để người dùng
-// có thể bấm thẳng nút này mà không cần bấm "AI Tự Phủ Kín" trước, bản vẽ hiện tại trên lưới
-// Designer vẫn luôn được xử lý và lưu (KHÔNG được để rơi vào tình trạng bấm mà không có gì xảy ra).
 $('btnDsSaveCurrent').onclick = () => {
   const curLvl = SUITE_LEVELS[SUITE_CUR_IDX];
   const result = buildLevelFromDesigner(curLvl, curLvl.id);
@@ -15775,49 +15798,50 @@ $('btnDsSaveCurrent').onclick = () => {
   alert('✅ Đã lưu đè bản vẽ hiện tại vào màn ' + curLvl.id + '!');
 };
 
-// "Tự Chơi Để Vẽ Đường Đi": nạp THẲNG bản vẽ hiện tại (DS_GRID + DS_ANCHOR_STEPS) vào khung
-// chơi thử ở giữa màn hình — KHÔNG qua generateOne, không random đường đi. Người thiết kế tự
-// kéo dây/đẩy thùng như đang chơi thật; engine chỉ đóng vai trò trọng tài chặn nước đi sai luật.
 $('btnDsPlayManual').onclick = () => {
   const { puzzle, hasWaypoint } = buildPuzzleFromDesignerDraft();
   if (puzzle.anchors.length === 0) {
     alert('❌ Chưa vẽ Mỏ Neo nào — cần ít nhất 1 mỏ neo mới chơi thử được.');
     return;
   }
+  // Cho phép dây kéo linh hoạt tối đa theo số ô đất hợp lệ để tự do vẽ
+  const maxFree = puzzle.validCells().length;
+  puzzle.anchors.forEach(a => { a.L = maxFree; });
+  
   const curLvl = SUITE_LEVELS[SUITE_CUR_IDX];
   puzzle.meta = { id: curLvl ? curLvl.id : 'DRAFT' };
   STUDIO_MANUAL_DRAFT = true;
   startStudioPlay(puzzle, curLvl ? curLvl.timerSec : 0);
   switchSubTab('Info');
-  let msg = '🎮 Đã nạp ĐÚNG bản vẽ của bạn vào khung chơi thử (giữa màn hình) — tự kéo dây / đẩy thùng để vẽ đường đi. Phủ kín đúng luật (thắng màn) rồi quay lại tab Thiết Kế, bấm "Lưu Đúng Đường Đi Vừa Vẽ".';
+  let msg = '🎮 Đã nạp ĐÚNG bản vẽ của bạn vào khung chơi thử (giữa màn hình) — tự kéo dây / đẩy thùng để vẽ đường đi (số bước linh hoạt, không lo bị chặn). Khi phủ kín 100% ô đất (thắng màn), quay lại tab Thiết Kế và bấm "Lưu Đúng Đường Đi Vừa Vẽ".';
   if (hasWaypoint) msg = '⚠️ Mật Mã (Waypoint) chưa hỗ trợ ở chế độ Tự Vẽ Đường Đi — các ô Mật Mã đã vẽ sẽ bị coi như ô đất thường ở lần chơi thử này.\n\n' + msg;
   alert(msg);
 };
 
-// "Lưu Đúng Đường Đi Vừa Vẽ": KHÔNG tự sinh, KHÔNG tự sửa vị trí bất kỳ ô nào — chỉ kiểm tra
-// đúng 1 điều kiện HỢP LỆ duy nhất (giống hệt điều kiện THẮNG MÀN khi chơi thật: phủ kín toàn
-// bộ ô + mọi dây đủ số bước), rồi lưu NGUYÊN VẸN đường đi thật sự vừa được kéo tay.
 $('btnDsSaveManualPath').onclick = () => {
   if (!STUDIO_MANUAL_DRAFT || !STUDIO_PLAY || !STUDIO_CUR_PUZZLE) {
     alert('❌ Chưa ở chế độ Tự Vẽ Đường Đi — bấm "🎮 Tự Chơi Để Vẽ Đường Đi" trước đã.');
     return;
   }
   const p = STUDIO_CUR_PUZZLE, s = STUDIO_PLAY.s;
-  const win = s.free === 0 && s.chains.every(c => c.len === c.L);
+  const win = s.free === 0 && s.chains.every(c => c.len >= 2);
   if (!win) {
-    const shortChains = s.chains.filter(c => c.len < c.L).map(c => `Dây ${c.k + 1}: đi ${c.len}/${c.L} ô`).join(', ');
+    const shortChains = s.chains.filter(c => c.len < 2).map(c => `Dây ${c.k + 1}: mới đi ${c.len} ô (cần >= 2)`).join(', ');
     const uncovered = [];
     for (let i = 0; i < p.RC; i++) if (s.owner[i] === -1 && !s.pushRockPos.includes(i)) uncovered.push(`(${Math.floor(i / p.C)},${i % p.C})`);
-    alert('❌ Chưa hợp lệ — CHƯA lưu gì cả vì bản vẽ chưa đúng luật (chưa thắng màn):\n\n'
+    alert('❌ Chưa hợp lệ — CHƯA lưu gì cả vì bản vẽ chưa đúng luật (chưa phủ kín 100% ô đất):\n\n'
       + (shortChains ? 'Dây chưa đủ số bước: ' + shortChains + '\n' : '')
       + (uncovered.length ? 'Ô còn trống chưa được phủ: ' + uncovered.join(' ') : ''));
     return;
   }
 
-  // Đúng luật rồi — lấy NGUYÊN đường đi thật sự vừa kéo tay, không đổi gì thêm. Chỉ đo (không
-  // sửa) độ khó bằng đúng bộ máy chấm dùng chung cho cả 53 màn gốc.
+  // Đúng luật rồi — lấy NGUYÊN đường đi thật sự vừa kéo tay, cập nhật số bước chính xác
   p.solution = s.chains.map(c => c.path.slice());
-  p.anchors.forEach((a, k) => { a.L = s.chains[k].len; });
+  p.anchors.forEach((a, k) => { 
+    a.L = s.chains[k].len;
+    DS_ANCHOR_STEPS[k] = s.chains[k].len;
+  });
+  renderAnchorStepsPanel();
 
   const rated = tierSolve(p, 5);
   const greedy = simulateGreedyPlayer(p);
@@ -15854,7 +15878,7 @@ $('btnDsSaveManualPath').onclick = () => {
   selectSuiteLevel(SUITE_CUR_IDX);
   switchSubTab('Info');
   saveSuiteDraft();
-  alert('✅ Đã lưu ĐÚNG 100% đường đi bạn vừa tự vẽ vào màn ' + curLvl.id + ' — không có ô/vị trí nào bị đổi.');
+  alert('✅ Đã lưu ĐÚNG 100% đường đi bạn vừa tự vẽ vào màn ' + curLvl.id + ' — số bước từng mỏ neo đã được tự động cập nhật chính xác.');
 };
 
 // CHÈN THÀNH MÀN MỚI (không đè): dựng level từ bản vẽ hiện tại, chèn vào đúng vị trí id người
