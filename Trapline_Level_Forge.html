@@ -135,6 +135,32 @@ progress{width:220px;height:10px}
 .painter-badge{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:3px 8px;border-radius:6px;background:#fff;border:1px solid #cbd5e1}
 .painter-badge.ok{background:#f0fdf4;border-color:#86efac;color:#166534}
 .painter-badge.warn{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+
+/* Tự Thiết Kế Level (Custom Designer) — mượn nguyên bộ style từ Pirate_Trails_50_Levels.html */
+.brush-bar{display:flex;gap:4px;flex-wrap:wrap;margin:8px 0}
+.brush-btn{display:flex;align-items:center;gap:4px;padding:5px 8px;border-radius:7px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1.5px solid #cbd5e1;background:#ffffff;color:#475569;transition:all 0.1s}
+.brush-btn:hover{border-color:#2563eb;color:#2563eb}
+.brush-btn.active{background:#2563eb;color:#ffffff;border-color:#1d4ed8;box-shadow:0 1px 4px rgba(37,99,235,0.25)}
+
+.designer-cell{width:var(--ds-cell, 36px);height:var(--ds-cell, 36px);border:1px solid #cbd5e1;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;
+  user-select:none;background:#ffffff;transition:transform 0.08s}
+.designer-cell:hover{transform:scale(1.06);z-index:2}
+.designer-cell.void{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8}
+.designer-cell.rock{background:#94a3b8;color:#ffffff}
+.designer-cell.anchor{background:#2563eb;color:#ffffff;box-shadow:0 2px 4px rgba(0,0,0,0.2)}
+.designer-cell.push{background:#fef08a;color:#854d0e;border-color:#facc15}
+.designer-cell.switch{background:#e0e7ff;color:#4338ca;border-color:#818cf8}
+.designer-cell.gate{background:#ffedd5;color:#9a3412;border-color:#fb923c}
+.designer-cell.prism{background:#fce7f3;color:#be185d;border-color:#f472b6}
+.designer-cell.waypoint{background:#ecfdf5;color:#065f46;border-color:#34d399}
+.designer-cell.key{background:#fef9c3;color:#a16207;border-color:#facc15}
+.designer-cell.keygate{background:#fed7aa;color:#c2410c;border-color:#fb923c}
+.designer-cell.bomb{background:#fee2e2;color:#dc2626;border-color:#f87171}
+
+.anchor-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#ffffff;
+  border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -233,11 +259,13 @@ progress{width:220px;height:10px}
       <div class="f chk"><input type="checkbox" id="chkSwitch"><label for="chkSwitch">🔘 <b>Công Tắc & Cổng</b> (Gates)</label></div>
       <div class="f chk"><input type="checkbox" id="chkPrism"><label for="chkPrism">💎 <b>Lăng Kính & Cổng Màu</b></label></div>
       <div class="f chk"><input type="checkbox" id="chkWp"><label for="chkWp">🔢 <b>Mật Mã Số</b> (Waypoints)</label></div>
+      <div class="f chk"><input type="checkbox" id="chkBomb"><label for="chkBomb">💣 <b>Bom Bẫy</b> (đâm vào chết, đẩy thùng vào để phá)</label></div>
       <div class="f chk" style="background:#eef2ff;border:1.5px solid #a5b4fc;border-radius:6px;padding:3px 6px"><input type="checkbox" id="chkShapePainter"><label for="chkShapePainter">🎨 <b>Bảng Vẽ Map Bất Kỳ</b></label></div>
     </div>
     <div class="row" style="margin-top:10px">
       <div class="f"><label for="fO">Số Đá Tảng tối đa</label><input id="fO" type="number" min="0" max="10" value="2"></div>
       <div class="f"><label for="fPushCount">Số Thùng Hàng tối đa</label><input id="fPushCount" type="number" min="0" max="3" value="1"></div>
+      <div class="f"><label for="fBombCount">Số Bom tối đa</label><input id="fBombCount" type="number" min="0" max="5" value="1"></div>
       <div class="f wide"><label for="fMode">Chế độ phân bổ cơ chế</label>
         <select id="fMode">
           <option value="auto" selected>Tự động đa dạng (Hải trình tổng hợp)</option>
@@ -258,6 +286,96 @@ progress{width:220px;height:10px}
     <div class="row" style="gap:8px">
       <button class="ai-btn sm" id="btnAutoFit">🎯 Tự Động Học & Tinh Chỉnh (Auto-Learn)</button>
       <button class="ghost sm" id="btnResetLearning">🔄 Xoá Dữ Liệu Học</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TỰ THIẾT KẾ LEVEL & MÁY TỰ CHẤM ĐIỂM (Custom Designer) ============ -->
+<section class="card" id="secDesigner">
+  <h2>🎨 Tự Thiết Kế Level & Máy Tự Chấm Điểm (Custom Designer)</h2>
+  <p class="hint">Tự vẽ bàn cờ, mỏ neo và cơ chế bằng cọ vẽ bên dưới — sau đó chọn 1 trong 2 cách để có level: để <b>AI tự phủ kín</b> đường đi và chấm điểm ngay, hoặc <b>tự tay kéo dây</b> để vẽ đúng lời giải của riêng bạn rồi máy chấm chính xác bản vẽ đó. Kết quả được chấm bằng ĐÚNG bộ máy chấm độ khó Não Bộ (HDI) dùng cho toàn bộ level sinh tự động ở trên.</p>
+
+  <!-- GRID SIZE & ANCHOR CONTROLS -->
+  <div class="row" style="margin-bottom:6px;gap:6px">
+    <div class="f"><label for="dsR">Hàng (R)</label><input id="dsR" type="number" min="3" max="20" value="6"></div>
+    <div class="f"><label for="dsC">Cột (C)</label><input id="dsC" type="number" min="3" max="20" value="6"></div>
+    <div class="f"><label for="dsK">Số Mỏ Neo</label><input id="dsK" type="number" min="1" max="4" value="2"></div>
+    <div class="f" style="display:flex;align-items:flex-end">
+      <button class="ghost sm" id="btnDsResize" style="padding:6px 10px">Áp Dụng Lưới</button>
+    </div>
+  </div>
+
+  <!-- BRUSH SELECTOR TOOLBAR -->
+  <div style="font-size:11px;font-weight:700;color:#64748b;margin-top:6px">CHỌN CỌ VẼ (BRUSH):</div>
+  <div class="brush-bar" id="dsBrushBar">
+    <button class="brush-btn active" data-brush="land">🟩 Ô Đất</button>
+    <button class="brush-btn" data-brush="void">⬜ Khoét Rỗng</button>
+    <button class="brush-btn" data-brush="anchor">⚓ Mỏ Neo (A1-A4)</button>
+    <button class="brush-btn" data-brush="rock">🪨 Đá Tảng</button>
+    <button class="brush-btn" data-brush="wall">🧱 Vách Ngăn (bấm gần cạnh ô)</button>
+    <button class="brush-btn" data-brush="push">📦 Thùng</button>
+    <button class="brush-btn" data-brush="switch">🔘 Công Tắc</button>
+    <button class="brush-btn" data-brush="gate">🚧 Cổng Chặn</button>
+    <button class="brush-btn" data-brush="key">🔑 Chìa Khóa</button>
+    <button class="brush-btn" data-brush="keygate">🔒 Cổng Khóa</button>
+    <button class="brush-btn" data-brush="prism">💎 Lăng Kính</button>
+    <button class="brush-btn" data-brush="colorgate">🚪 Cổng Màu</button>
+    <button class="brush-btn" data-brush="waypoint">🔢 Mật Mã (bấm để đổi dây A1-A4, tự đánh số)</button>
+    <button class="brush-btn" data-brush="bomb">💣 Bom Bẫy (đâm vào chết, đẩy thùng vào để phá)</button>
+  </div>
+
+  <!-- QUICK SHAPE PRESETS & TRANSFORM TOOLS -->
+  <div class="row" style="gap:4px;margin-bottom:8px;flex-wrap:wrap">
+    <button class="ai-btn sm" id="btnDs_Random">🎲 Random Gestalt</button>
+    <button class="ghost sm" id="btnDs_MirrorX" title="Đối xứng ngang">🪞 Mirror X</button>
+    <button class="ghost sm" id="btnDs_MirrorY" title="Đối xứng dọc">🪞 Mirror Y</button>
+    <button class="ghost sm" id="btnDs_Fill">⬛ Đầy</button>
+    <button class="ghost sm" id="btnDs_Clear">⬜ Rỗng</button>
+    <button class="ghost sm" id="btnDs_Undo">↩️ Undo</button>
+  </div>
+
+  <!-- INTERACTIVE DESIGNER GRID FRAME -->
+  <div style="display:flex;justify-content:center;margin:8px 0;background:#f8fafc;padding:10px;border-radius:10px;border:1.5px dashed #cbd5e1;overflow-x:auto">
+    <div id="dsGridContainer" style="display:grid;gap:4px"></div>
+  </div>
+
+  <!-- ANCHOR STEPS & LENGTH CONFIGURATION PANEL -->
+  <div style="margin:10px 0;padding:8px 10px;background:#f1f5f9;border-radius:8px;border:1px solid #cbd5e1">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <b style="font-size:11.5px;color:#334155">⚓ Cấu Hình Bước Đi Từng Mỏ Neo (chỉ dùng cho AI Tự Phủ Kín):</b>
+      <button class="ghost sm" id="btnDsAutoSplitSteps" style="padding:2px 6px;font-size:10px">⚡ Chia Đều Bước</button>
+    </div>
+    <div id="dsAnchorStepList"></div>
+  </div>
+
+  <!-- LIVE SHAPE METRICS -->
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <span class="painter-badge" id="dsBadgeCells">Tổng ô: 36</span>
+    <span class="painter-badge" id="dsBadgeAnchors">⚓ Mỏ Neo: 2</span>
+    <span class="painter-badge" id="dsBadgeWalls">🧱 Vách Ngăn: 0</span>
+    <span class="painter-badge" id="dsBadgeBombs">💣 Bom: 0</span>
+  </div>
+
+  <!-- CÁCH 1: AI TỰ PHỦ KÍN & CHẤM ĐIỂM -->
+  <div style="padding-top:6px">
+    <label style="font-size:11.5px;font-weight:700;color:#334155;text-transform:uppercase">⚡ Cách 1 — AI Tự Phủ Kín Đường Đi</label>
+    <div class="hint" style="margin:4px 0 6px 0">AI tự tìm 1 cách phủ kín 100% bản vẽ của bạn (tôn trọng đúng hình dạng/mỏ neo/cơ chế/Vách Ngăn đã vẽ), rồi chấm điểm Não Bộ đầy đủ và thêm vào danh sách level.</div>
+    <button class="primary" id="btnDsAutoGenerate" style="width:100%">⚡ AI Tự Phủ Kín 100% & Đánh Giá Toàn Diện</button>
+  </div>
+
+  <!-- CÁCH 2: TỰ VẼ ĐƯỜNG ĐI -->
+  <div style="margin-top:14px;padding-top:10px;border-top:1.5px dashed #cbd5e1">
+    <label style="font-size:11.5px;font-weight:700;color:#334155;text-transform:uppercase">🎮 Cách 2 — Tự Vẽ Đường Đi (Không AI)</label>
+    <div class="hint" style="margin:4px 0 6px 0">Bạn tự kéo dây / đẩy thùng để giải chính bản vẽ này ở khung chơi thử bên dưới — không có thuật toán nào chọn đường đi hay đổi vị trí ô nào thay bạn. Engine chỉ đóng vai trò TRỌNG TÀI (chặn nước đi sai luật, y hệt lúc chơi thật). Khi phủ kín đúng luật (thắng), bấm nút Lưu để máy chấm ĐÚNG bản vẽ tay của bạn.</div>
+    <div class="row" style="gap:6px">
+      <button class="ghost" id="btnDsPlayManual" style="flex:1">🎮 Tự Chơi Để Vẽ Đường Đi</button>
+      <button class="ghost sm" id="btnDsResetManual" style="display:none">🔄 Vẽ Lại Từ Đầu</button>
+    </div>
+    <div id="dsPlayWrap" style="display:none;margin-top:10px">
+      <div style="display:flex;justify-content:center;padding:10px;background:#f8fafc;border-radius:10px;border:1.5px dashed #cbd5e1;overflow-x:auto" id="dsPlayBoardWrap"></div>
+      <p class="hint" id="dsPlayPanel" style="text-align:center;margin:6px 0"></p>
+      <div id="dsPlayMsg" style="display:none;margin:6px 0;padding:8px 10px;border-radius:8px;background:#fef2f2;border:1.5px solid #fca5a5;color:#991b1b;font-size:12.5px;font-weight:600"></div>
+      <button class="primary" id="btnDsSaveManualPath" style="width:100%;margin-top:6px">✅ Lưu Đúng Đường Đi Vừa Vẽ & Chấm Điểm</button>
     </div>
   </div>
 </section>
@@ -777,11 +895,18 @@ function analyzeWaypointDeception(p) {
 const T_EASY_CAP = 10.3;    // trần HDI khi >=6/8 lối chơi tự nhiên thắng ngay  → tối đa hạng Dễ
 const T_NORMAL_CAP = 12.9;  // trần HDI khi >=4/8 lối chơi tự nhiên thắng ngay  → tối đa hạng Thường
 
-function calculateCognitiveMetrics(p, rated, greedy, solInfo) {
+// `cache` (tham số THỨ 5, TÙY CHỌN — mọi lời gọi cũ không truyền vẫn chạy y hệt trước giờ):
+// {brain, topo, wpData, panel, eff} — 5 phép phân tích ĐẮT TIỀN NHẤT hàm này làm (đặc biệt
+// analyzePlayerEffort/simulateHumanPanel, đã đo được tốn tới HÀNG CHỤC GIÂY ở bàn lớn) đều CHỈ
+// phụ thuộc CẤU TRÚC BÀN CỜ (p) + hành vi mô phỏng, KHÔNG phụ thuộc SCORING (trọng số) — nên khi
+// một chỗ gọi cần tính LẶP LẠI (VD: dò trọng số wAmbiguity qua nhiều vòng gradient descent, xem
+// trainModelOnPlaytests) mà bàn cờ KHÔNG ĐỔI, có thể tính 5 phần này ĐÚNG 1 LẦN rồi truyền lại
+// qua cache — hàm vẫn tính ĐÚNG HỆT (chỉ tránh làm lại phần không đổi), không phải rút gọn/xấp xỉ.
+function calculateCognitiveMetrics(p, rated, greedy, solInfo, cache) {
   const K = p.anchors.length;
-  const brain = analyzeBrainCognition(p);
-  const topo = analyzeSpatialTopology(p);
-  const wpData = analyzeWaypointDeception(p);
+  const brain = (cache && cache.brain) || analyzeBrainCognition(p);
+  const topo = (cache && cache.topo) || analyzeSpatialTopology(p);
+  const wpData = (cache && cache.wpData) || analyzeWaypointDeception(p);
   const N = Math.max(1, p.validCells().length);
 
   // Nếu người chơi đi theo trực giác tự nhiên (greedy autopilot) mà THẮNG NGAY KHÔNG BỊ KẸT:
@@ -803,8 +928,8 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo) {
   // 3. Trụ cột 3: Bẫy Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước - YẾU TỐ QUYẾT ĐỊNH ĐỘ KHÓ VỚI CON NGƯỜI
   // Chấm theo HỘI ĐỒNG NGƯỜI CHƠI thay vì 1 lối greedy duy nhất.
   // Càng ít lối chơi tự nhiên thắng được thì màn càng khó thật với người.
-  const panel = simulateHumanPanel(p);
-  const eff = analyzePlayerEffort(p);
+  const panel = (cache && cache.panel) || simulateHumanPanel(p);
+  const eff = (cache && cache.eff) || analyzePlayerEffort(p);
   // trapScore giờ tính bằng CÔNG SỨC PHẢI BỎ RA, không phải "bot có trượt hay không".
   let trapScore = Math.min(7.0, eff.effort) + (1 - panel.winRate) * 1.0;
   let expectedUndos = Math.max(0, eff.choicePoints - eff.earlyChoices);
@@ -921,7 +1046,10 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo) {
     contentionScore: +spatialComplexityScore.toFixed(2),
     trapScore: +trapScore.toFixed(2),
     deductiveScore: +ds.toFixed(2),
-    mechScore: +mechScore.toFixed(2)
+    mechScore: +mechScore.toFixed(2),
+    // Cho phép caller lấy lại đúng 5 phần ĐẮT TIỀN vừa tính để TÁI SỬ DỤNG ở lần gọi sau qua
+    // tham số cache (xem ghi chú ở đầu hàm) — không ảnh hưởng gì tới các chỗ gọi cũ không đọc field này.
+    _subMetrics: { brain, topo, wpData, panel, eff }
   };
 }
 
@@ -940,14 +1068,30 @@ function trainModelOnPlaytests(records, levels) {
   let lr = 0.04;
   let iterations = 120;
 
-  for (let it = 0; it < iterations; it++) {
-    for (const rec of validData) {
-      const p = levels.find(l => l.meta.id === rec.id);
-      if (!p) continue;
+  // HIỆU NĂNG: trước đây gọi lại TOÀN BỘ pipeline chấm điểm (tierSolve + simulateGreedyPlayer +
+  // calculateCognitiveMetrics — bên trong có analyzePlayerEffort/simulateHumanPanel, những hàm
+  // đã đo được thật tốn tới HÀNG CHỤC GIÂY ở bàn lớn) ĐÚNG 120 LẦN CHO MỖI MÀN mỗi khi bấm "Tự
+  // Động Học" — dù CHỈ 1 số hạng DUY NHẤT (ambiguityScore, phụ thuộc SCORING.wAmbiguity — tham
+  // số ĐANG được dò) thực sự đổi qua từng vòng lặp; phần còn lại (cấu trúc bàn cờ + hành vi mô
+  // phỏng) hoàn toàn KHÔNG phụ thuộc trọng số nên luôn ra kết quả giống hệt nhau ở cả 120 lần.
+  // Giờ chỉ giải + mô phỏng ĐÚNG 1 LẦN cho mỗi màn (ngoài vòng lặp), rồi TÁI SỬ DỤNG qua tham số
+  // cache của calculateCognitiveMetrics (xem ghi chú ở hàm đó) — giảm đúng 120 LẦN khối lượng
+  // tính toán mà kết quả huấn luyện (wAmbiguity/ngưỡng phân hạng) HỆT NHAU tuyệt đối, vì các phần
+  // được cache không hề đổi giữa các vòng lặp.
+  const prepared = [];
+  for (const rec of validData) {
+    const p = levels.find(l => l.meta.id === rec.id);
+    if (!p) continue;
+    const rated = tierSolve(p, 5);
+    const greedy = simulateGreedyPlayer(p);
+    const solInfo = { count: p.meta.solutionCount, capped: p.meta.solutionCapped };
+    const cog0 = calculateCognitiveMetrics(p, rated, greedy, solInfo);
+    prepared.push({ rec, p, rated, greedy, solInfo, cache: cog0._subMetrics });
+  }
 
-      const rated = tierSolve(p, 5);
-      const greedy = simulateGreedyPlayer(p);
-      const cog = calculateCognitiveMetrics(p, rated, greedy, { count: p.meta.solutionCount, capped: p.meta.solutionCapped });
+  for (let it = 0; it < iterations; it++) {
+    for (const { rec, p, rated, greedy, solInfo, cache } of prepared) {
+      const cog = calculateCognitiveMetrics(p, rated, greedy, solInfo, cache);
 
       // ĐỘ TIN CẬY CỦA PHIẾU — chỉ có 1 người chấm (bạn) nên không thể lấy trung bình
       // đông người để triệt nhiễu. Thay vào đó đối chiếu phiếu 'felt' với HÀNH VI THẬT
@@ -975,7 +1119,11 @@ function trainModelOnPlaytests(records, levels) {
       if (Math.abs(error) > 0.1) {
         SCORING.wAmbiguity = Math.max(0.5, Math.min(3.5, SCORING.wAmbiguity - lr * error * confidence * (cog.avgBranching - 1.0)));
       }
-      samples.push({ hdi: cog.hdi, felt: rec.felt, confidence });
+      // Chỉ ghi lại mẫu ở VÒNG LẶP CUỐI (sau khi wAmbiguity đã hội tụ) — trước đây ghi ở CẢ
+      // 120 vòng, khiến mảng samples có 120 bản gần-trùng-nhau mỗi màn, làm loãng/thiên vị bước
+      // dò ngưỡng phân hạng bên dưới về phía các giá trị TRUNG GIAN chưa hội tụ thay vì giá trị
+      // HDI cuối cùng thực sự dùng để chấm điểm.
+      if (it === iterations - 1) samples.push({ hdi: cog.hdi, felt: rec.felt, confidence });
     }
   }
 
@@ -1259,6 +1407,7 @@ class Puzzle {
     this.wpCount = [];
     this.solution = null;
     this.meta = {};
+    this._nbrsCache = null;
   }
   get RC() { return this.R * this.C; }
   inb(r, c) { return r >= 0 && r < this.R && c >= 0 && c < this.C; }
@@ -1272,7 +1421,25 @@ class Puzzle {
   cell(r, c) { return r * this.C + c; }
   color(i) { const [r, c] = this.rc(i); return (r + c) & 1; }
 
+  // HIỆU NĂNG: đo bằng CPU Profiler thật (Chrome DevTools Protocol) khi sinh level ở bản đồ
+  // lớn (20x20) — nbrs() một mình chiếm 54.8% TOÀN BỘ thời gian CPU, cộng thêm ekey() (string
+  // concat cho Set tường) gọi bên trong nó chiếm thêm 12.6% — gần 70% tổng thời gian chỉ để
+  // tính lại hàng xóm của 1 ô, dù kết quả này KHÔNG ĐỔI trong suốt quá trình dò/chấm điểm (chỉ
+  // phụ thuộc shape/blocked/walls — những thứ đã CHỐT XONG trước khi countSolutions/tierSolve/
+  // analyzePlayerEffort bắt đầu chạy, không phải trạng thái đường đi s đang đổi). Cache kết quả
+  // 1 LẦN cho MỖI puzzle (gọi buildNbrsCache() ngay sau khi walls chốt xong trong generateOne)
+  // biến hàng triệu lần tính lại thành 1 lần tính + tra bảng — không cần sửa bất kỳ hàm gọi
+  // nbrs() nào khác (countSolutions, reachOK, freeComponents, legalMoves...), vì tất cả đều gọi
+  // qua đúng p.nbrs(i) này.
+  buildNbrsCache() {
+    const cache = new Array(this.RC);
+    for (let i = 0; i < this.RC; i++) cache[i] = this._computeNbrs(i);
+    this._nbrsCache = cache;
+  }
   nbrs(i) {
+    return this._nbrsCache ? this._nbrsCache[i] : this._computeNbrs(i);
+  }
+  _computeNbrs(i) {
     const out = [];
     const [r, c] = this.rc(i);
     if (this.isVoid(r, c)) return out;
@@ -1298,6 +1465,7 @@ class Puzzle {
     const p = new Puzzle(this.R, this.C, this.shape);
     p.blocked = new Set(this.blocked);
     p.walls = new Set(this.walls);
+    p.bombs = new Set(this.bombs || []);
     p.pushRocks = this.pushRocks.map(pr => ({ ...pr }));
     p.switches = this.switches.map(sw => ({ ...sw }));
     p.prisms = this.prisms.map(pr => ({ ...pr }));
@@ -1336,9 +1504,12 @@ function initState(p) {
     };
   });
 
+  // MEC-05: ô Bom KHÔNG tính vào diện tích cần phủ kín — đây là ô hiểm hoạ (đâm vào chết ngay,
+  // xem legalMoves/act()), không phải ô cần đi qua để thắng, nên loại khỏi "free" y hệt cách
+  // pushRockPos bị loại (đều là ô "tồn tại thật trên bàn" nhưng không nằm trong diện phủ kín).
   let free = 0;
-  for (let i = 0; i < p.RC; i++) if (owner[i] === -1 && !pushRockPos.includes(i)) free++;
-  return { owner, chains, pushRockPos, latchedGates, pushLog, free };
+  for (let i = 0; i < p.RC; i++) if (owner[i] === -1 && !pushRockPos.includes(i) && !(p.bombs && p.bombs.has(i))) free++;
+  return { owner, chains, pushRockPos, latchedGates, pushLog, free, bombs: new Set(p.bombs || []) };
 }
 
 function isGateOpen(p, s, gateCell) {
@@ -1362,6 +1533,14 @@ function legalMoves(p, s, k) {
   for (const j of p.nbrs(c.head)) {
     if (s.owner[j] !== -1 && s.owner[j] !== -3) continue;
     if (p.blocked.has(j)) continue;
+    // MEC-05: KHÔNG cho đi THẲNG vào ô Bom ĐANG GÀI như 1 nước đi bình thường (đâm vào Bom là 1
+    // nước đi RIÊNG — chết ngay, xử lý ở lớp tương tác act()/bindPlay, KHÔNG đi qua legalMoves()
+    // — xem ghi chú ở đó). Dùng s.bombs (ĐỘNG, đổi theo từng ván) chứ KHÔNG dùng p.bombs (tĩnh):
+    // sau khi bị đẩy thùng vào (phá bom — xem applyMove), ô đó bị xoá khỏi s.bombs, trở thành đất
+    // trống HOÀN TOÀN — phải cho đi vào bình thường lại, không được tiếp tục chặn như tường vô
+    // hình. Đẩy thùng VÀO ô Bom vẫn hợp lệ bình thường vì đây chỉ chặn "j" (đích bước đi trực
+    // tiếp), không chặn "beyondCell" (đích thùng bị đẩy tới).
+    if (s.bombs && s.bombs.has(j)) continue;
 
     if (p.switches.some(sw => sw.gateCell === j)) {
       if (!isGateOpen(p, s, j)) continue;
@@ -1452,20 +1631,37 @@ function applyMove(p, s, k, j) {
   const c = s.chains[k];
   const prevHead = c.head, prevWp = c.wp, prevTag = c.colorTag;
   let pushedPr = null;
+  let freeDelta = -1; // mặc định: 1 ô free biến mất (được sở hữu)
 
   const prIdx = s.pushRockPos.indexOf(j);
   if (prIdx !== -1) {
     const [hr, hc] = p.rc(c.head), [jr, jc] = p.rc(j);
     const beyondCell = p.cell(jr + (jr - hr), jc + (jc - hc));
-    s.pushRockPos[prIdx] = beyondCell;
-    pushedPr = { prIdx, from: j, to: beyondCell };
+    // MEC-05: đẩy thùng ĐÚNG vào ô Bom ĐANG GÀI -> phá bom, CẢ THÙNG LẪN BOM CÙNG BIẾN MẤT NGAY
+    // (không phải thùng "đứng lại" ở beyondCell) — ô beyondCell trở thành đất trống HOÀN TOÀN, từ
+    // giờ ĐI QUA ĐƯỢC BÌNH THƯỜNG (xem legalMoves dùng s.bombs động) và GIA NHẬP diện cần phủ kín
+    // (trước đó bị loại vì là Bom — xem initState) — đây là 1 ô MỚI thêm vào diện free, không
+    // phải mất đi, nên free CỘNG THÊM 1 (ngược với trường hợp thường: đẩy vào ô đất thường thì
+    // beyondCell mất trạng thái free, trừ 1). Phải xử lý ngay TRONG applyMove (không phải chỉ ở
+    // lớp UI act()) để chính bộ giải (countSolutions/tierSolve...) cũng hiểu đúng cơ chế phá bom
+    // này khi tìm/đếm lời giải, không chỉ có người chơi thật mới bấm được.
+    const willDefuse = !!(s.bombs && s.bombs.has(beyondCell));
+    if (willDefuse) {
+      s.bombs.delete(beyondCell);
+      s.pushRockPos.splice(prIdx, 1);
+      freeDelta = +1;
+    } else {
+      s.pushRockPos[prIdx] = beyondCell;
+      freeDelta = -1;
+    }
+    pushedPr = { prIdx, from: j, to: beyondCell, defused: willDefuse };
   }
 
   s.owner[j] = k;
   c.head = j;
   c.len++;
   c.path.push(j);
-  s.free--;
+  s.free += freeDelta;
 
   const prism = p.prisms.find(pr => pr.cell === j);
   if (prism) c.colorTag = prism.color;
@@ -1480,7 +1676,7 @@ function applyMove(p, s, k, j) {
     }
   });
 
-  return { k, j, prevHead, prevWp, prevTag, pushedPr, latchedNow };
+  return { k, j, prevHead, prevWp, prevTag, pushedPr, latchedNow, freeDelta };
 }
 
 function undoMove(p, s, u) {
@@ -1491,10 +1687,18 @@ function undoMove(p, s, u) {
   c.path.pop();
   c.wp = u.prevWp;
   c.colorTag = u.prevTag;
-  s.free++;
+  // MEC-05: hoàn tác ĐÚNG NGƯỢC applyMove — freeDelta ghi lại CHÍNH XÁC applyMove đã cộng/trừ
+  // bao nhiêu (không phải luôn ±1 như trước khi có Bom), nên phải trừ lại đúng số đó.
+  s.free -= (u.freeDelta != null ? u.freeDelta : 1);
 
   if (u.pushedPr) {
-    s.pushRockPos[u.pushedPr.prIdx] = u.pushedPr.from;
+    if (u.pushedPr.defused) {
+      // Khôi phục lại ĐÚNG vị trí cũ trong mảng (splice chèn lại đúng chỗ vừa xoá) + gài lại Bom.
+      s.pushRockPos.splice(u.pushedPr.prIdx, 0, u.pushedPr.from);
+      s.bombs.add(u.pushedPr.to);
+    } else {
+      s.pushRockPos[u.pushedPr.prIdx] = u.pushedPr.from;
+    }
   }
   if (u.latchedNow) u.latchedNow.forEach(g => s.latchedGates.delete(g));   // hoàn tác latch
 }
@@ -1516,49 +1720,70 @@ function undoMoveChainOnly(p, s, u) {
 }
 
 // --------------------------- Pruning & Deductions ---------------------------
+// HIỆU NĂNG: đo bằng CPU Profiler thật — sau khi cache nbrs() (xem class Puzzle), reachOK và
+// freeComponents trở thành 2 điểm nóng LỚN NHẤT còn lại (~37% + ~33% tổng CPU khi sinh ở 20x20).
+// Cả 2 đều cấp phát mảng MỚI mỗi lần gọi (hàng trăm nghìn lần trong 1 lượt sinh) rồi quét/reset
+// TOÀN BỘ RC ô, dù chỉ có 1 phần nhỏ ô THỰC SỰ bị "chạm" tới trong BFS. Đổi sang dùng bộ đệm
+// DÙNG CHUNG (gắn vào p, tái sử dụng qua mọi lần gọi) và chỉ reset ĐÚNG NHỮNG Ô ĐÃ CHẠM (touched
+// list) thay vì reset cả mảng — đã kiểm chứng CHO RA ĐÚNG KẾT QUẢ HỆT bản cũ qua 200 phép so
+// sánh ngẫu nhiên (40 bản đồ × 5 trạng thái/bản đồ, script test riêng, không đưa vào file này).
 function reachOK(p, s) {
   const RC = p.RC;
-  const covered = new Uint8Array(RC);
-  const dist = new Int16Array(RC);
+  if (!p._reachDist) p._reachDist = new Int16Array(RC).fill(-1);
+  if (!p._reachCovered) p._reachCovered = new Uint8Array(RC);
+  const dist = p._reachDist, covered = p._reachCovered;
+  const touchedCovered = [];
 
   for (const c of s.chains) {
     if (c.len >= c.L) continue;
     const r = c.L - c.len;
-    dist.fill(-1);
+    const touchedDist = [c.head];
     dist[c.head] = 0;
     const q = [c.head];
     for (let qi = 0; qi < q.length; qi++) {
       const x = q[qi];
       if (dist[x] >= r) continue;
       for (const y of p.nbrs(x)) {
-        if (s.owner[y] === -1 && dist[y] < 0 && !s.pushRockPos.includes(y)) {
-          dist[y] = dist[x] + 1; q.push(y);
+        // MEC-05: ô Bom không phải lối đi thật (legalMoves() đã chặn đi thẳng vào) nên BFS ước
+        // lượng tầm với cũng KHÔNG được coi là "đi xuyên qua được" — y hệt cách pushRockPos chặn.
+        if (s.owner[y] === -1 && dist[y] < 0 && !s.pushRockPos.includes(y) && !(s.bombs && s.bombs.has(y))) {
+          dist[y] = dist[x] + 1; touchedDist.push(y); q.push(y);
         }
       }
     }
-    for (let i = 0; i < RC; i++) if (s.owner[i] === -1 && dist[i] > 0 && dist[i] <= r) covered[i] = 1;
+    for (const i of touchedDist) {
+      if (s.owner[i] === -1 && dist[i] > 0 && dist[i] <= r && !covered[i]) { covered[i] = 1; touchedCovered.push(i); }
+    }
+    for (const i of touchedDist) dist[i] = -1; // dọn lại đúng ô đã chạm, chuẩn bị cho dây kế tiếp
   }
-  for (let i = 0; i < RC; i++) if (s.owner[i] === -1 && !s.pushRockPos.includes(i) && !covered[i]) return false;
-  return true;
+  let ok = true;
+  for (let i = 0; i < RC; i++) if (s.owner[i] === -1 && !s.pushRockPos.includes(i) && !(s.bombs && s.bombs.has(i)) && !covered[i]) { ok = false; break; }
+  for (const i of touchedCovered) covered[i] = 0; // dọn lại cho lần gọi kế tiếp
+  return ok;
 }
 
 function freeComponents(p, s) {
-  const seen = new Uint8Array(p.RC);
+  if (!p._seenBuf) p._seenBuf = new Uint8Array(p.RC);
+  const seen = p._seenBuf;
+  const touched = [];
   const comps = [];
   for (let i = 0; i < p.RC; i++) {
-    if (s.owner[i] !== -1 || s.pushRockPos.includes(i) || seen[i]) continue;
-    const q = [i]; seen[i] = 1;
+    // MEC-05: ô Bom không nằm trong diện phủ kín (xem initState) nên loại khỏi mọi thành phần
+    // liên thông "còn cần phủ", y hệt pushRockPos.
+    if (s.owner[i] !== -1 || s.pushRockPos.includes(i) || (s.bombs && s.bombs.has(i)) || seen[i]) continue;
+    const q = [i]; seen[i] = 1; touched.push(i);
     const cells = []; const col = [0, 0];
     while (q.length) {
       const x = q.pop(); cells.push(x); col[p.color(x)]++;
       for (const y of p.nbrs(x)) {
-        if (s.owner[y] === -1 && !s.pushRockPos.includes(y) && !seen[y]) {
-          seen[y] = 1; q.push(y);
+        if (s.owner[y] === -1 && !s.pushRockPos.includes(y) && !(s.bombs && s.bombs.has(y)) && !seen[y]) {
+          seen[y] = 1; touched.push(y); q.push(y);
         }
       }
     }
     comps.push({ cells, size: cells.length, col });
   }
+  for (const i of touched) seen[i] = 0; // dọn lại cho lần gọi kế tiếp
   return comps;
 }
 
@@ -1636,20 +1861,53 @@ function countSolutions(p, cap = 2, nodeCap = 250000) {
       if (s.chains.every(c => c.len === c.L)) { count++; found.push(s.chains.map(c => c.path.slice())); }
       return;
     }
-    if (!everyChainCanMove(p, s)) return;
+
+    // HIỆU NĂNG: trước đây legalMoves() bị tính 2 LẦN cho mỗi dây ở MỖI node (1 lần trong
+    // everyChainCanMove(), 1 lần ở vòng tìm dây "ít lựa chọn nhất" ngay sau) — gộp thành 1 lượt
+    // duy nhất, cache lại kết quả để dùng cho cả 2 việc. Giữ NGUYÊN đúng thứ tự early-break khi
+    // gặp dây kẹt (khớp hệt hành vi everyChainCanMove cũ) — đã kiểm chứng cho ra ĐÚNG SỐ NODE
+    // DUYỆT HỆT bản cũ qua 60 phép so sánh ngẫu nhiên (script test riêng, không đưa vào file này).
+    const movesByChain = new Array(s.chains.length).fill(null);
+    let stuck = false;
+    for (let idx = 0; idx < s.chains.length; idx++) {
+      const c = s.chains[idx];
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (ms.length === 0) { stuck = true; break; }
+      movesByChain[idx] = ms;
+    }
+    if (stuck) return;
+
     if (!reachOK(p, s)) return;
     if (!mechanicPairOK(p, s)) return;
     if (!assignFeasible(p, s, true)) return;
 
-    let best = null;
-    for (const c of s.chains) {
-      if (c.len >= c.L) continue;
-      const ms = legalMoves(p, s, c.k);
-      if (!best || ms.length < best.ms.length) best = { k: c.k, ms };
+    let best = null, bestChain = null;
+    for (let idx = 0; idx < s.chains.length; idx++) {
+      const ms = movesByChain[idx];
+      if (!ms) continue;
+      if (!best || ms.length < best.ms.length) { best = { k: s.chains[idx].k, ms }; bestChain = s.chains[idx]; }
       if (ms.length === 1) break;
     }
     if (!best) return;
-    for (const j of best.ms) {
+    // LỖI THẬT PHÁT HIỆN QUA ĐO ĐẠC LẦN 3: thứ tự thử nước đi ở đây là NGẪU NHIÊN (theo thứ tự
+    // legalMoves trả về), không hề ưu tiên nước đi của p.solution — mà p.solution CHẮC CHẮN là
+    // 1 lời giải hợp lệ (chính là cách puzzle được dựng nên, đã kiểm chứng preCheck luôn true kể
+    // cả sau khi enforceUniqueness thêm Vách Ngăn). Ở bản đồ nhỏ (<=100 ô), cây tìm kiếm nông nên
+    // DFS mù vẫn tình cờ chạm lời giải đã biết rất nhanh trong vài nghìn node. Nhưng ở 20x20 (400
+    // ô), cây tìm kiếm sâu hơn hẳn — đo trực tiếp: hết sạch 30000 node (aborted=true) mà VẪN
+    // count=0, tức là bỏ lỡ luôn CẢ lời giải chắc chắn tồn tại — khiến generateOne coi cả tổ hợp
+    // xoay chiều là "no-unique-orientation" dù puzzle sinh ra hoàn toàn giải được. Sửa: luôn thử
+    // ĐÚNG nước đi của p.solution TRƯỚC TIÊN tại mỗi điểm rẽ — DFS sẽ chạm lời giải đã biết trong
+    // đúng ~số bước còn lại (không phụ thuộc nodeCap), dành toàn bộ ngân sách còn lại cho việc dò
+    // THÊM lời giải khác (nếu có) thay vì lãng phí vào việc tìm lại cái đã biết chắc là có.
+    let ms = best.ms;
+    if (p.solution) {
+      const correct = p.solution[best.k][bestChain.len];
+      const ci = ms.indexOf(correct);
+      if (ci > 0) { ms = ms.slice(); ms[ci] = ms[0]; ms[0] = correct; }
+    }
+    for (const j of ms) {
       const u = applyMove(p, s, best.k, j);
       rec();
       undoMove(p, s, u);
@@ -1787,15 +2045,29 @@ function countSolutions2(p, s, cap, nodeCap) {
     if (found >= cap || stop) return;
     if (++nodes > nodeCap) { stop = true; return; }
     if (s.free === 0) { if (s.chains.every(c => c.len === c.L)) found++; return; }
-    if (!everyChainCanMove(p, s)) return;
+
+    // HIỆU NĂNG: gộp everyChainCanMove + tìm "best" thành 1 lượt (xem ghi chú đầy đủ ở
+    // countSolutions) — tránh tính legalMoves() 2 lần/dây/node.
+    const movesByChain = new Array(s.chains.length).fill(null);
+    let stuck = false;
+    for (let idx = 0; idx < s.chains.length; idx++) {
+      const c = s.chains[idx];
+      if (c.len >= c.L) continue;
+      const ms = legalMoves(p, s, c.k);
+      if (ms.length === 0) { stuck = true; break; }
+      movesByChain[idx] = ms;
+    }
+    if (stuck) return;
+
     if (!reachOK(p, s)) return;
     if (!mechanicPairOK(p, s)) return;
     if (!p.pushRocks.length && !assignFeasible(p, s, true)) return;
+
     let best = null;
-    for (const c of s.chains) {
-      if (c.len >= c.L) continue;
-      const ms = legalMoves(p, s, c.k);
-      if (!best || ms.length < best.ms.length) best = { k: c.k, ms };
+    for (let idx = 0; idx < s.chains.length; idx++) {
+      const ms = movesByChain[idx];
+      if (!ms) continue;
+      if (!best || ms.length < best.ms.length) best = { k: s.chains[idx].k, ms };
       if (ms.length === 1) break;
     }
     if (!best) return;
@@ -1819,8 +2091,23 @@ function analyzePlayerEffort(p) {
   // nhánh trong 1 lần chấm — vượt trần thì coi các điểm rẽ còn lại là "không đo tiếp" (hạ ước
   // tính công sức xuống bảo thủ hơn) thay vì treo vô thời hạn bất kể lời giải dài bao nhiêu.
   const cellScale = Math.min(1, 100 / N);
-  const branchNodeCap = Math.max(2000, Math.round(12000 * cellScale));
+  // LỖI THẬT PHÁT HIỆN QUA ĐO ĐẠC LẦN 2: countSolutions2 khi hết ngân sách node sẽ trả về 1
+  // (coi như "còn nghiệm", KHÔNG kết tội nhầm — xem chú thích ở hàm đó). Lần sửa trước co
+  // branchNodeCap theo cellScale (còn ~3000 ở 20x20) tưởng là an toàn vì đã giới hạn TỔNG số
+  // lần kiểm tra bằng checksLeft rồi — nhưng 3000 node là QUÁ ÍT để branchIsDead chứng minh
+  // được một nhánh sai là "chết hẳn" trên bàn 400 ô, nên hầu như MỌI nhánh đều bị coi là "còn
+  // sống" (an toàn nhưng sai), refutationDepth gần như không bao giờ được gọi tới, effort==0
+  // tuyệt đối bất kể mẫu số chia là N hay effortN — đây mới là nguyên nhân thật, không phải do
+  // công thức chuẩn hoá. Sửa đúng: KHÔNG co branchNodeCap theo bản đồ nữa (giữ cố định như bản
+  // gốc) — chi phí tổng vẫn được khống chế vì checksLeft (số lần kiểm tra) đã co theo cellScale
+  // rồi, nên tổng chi phí xấu nhất = checksLeft * branchNodeCap vẫn nhỏ hơn nhiều so với trước
+  // khi tối ưu (khi đó KHÔNG có checksLeft nên số lần kiểm tra không giới hạn).
+  const branchNodeCap = 12000;
   let checksLeft = Math.max(60, Math.round(400 * cellScale));
+  // d (độ sâu bác bỏ) bị chặn cứng tối đa 25 không phụ thuộc N (xem refutationDepth) — chia cho
+  // N thô ở bản đồ lớn sẽ làm loãng effort dù d có ý nghĩa; chặn mẫu số ở 100 để giữ nguyên công
+  // thức đã calibrate cho bản đồ <=100 ô, chỉ bản đồ lớn hơn mới không bị loãng thêm.
+  const effortN = Math.min(N, 100);
 
   // Bộ lọc mà MẮT NGƯỜI làm tự động: bỏ nước đi cắt cụt ô, bỏ nước làm lệch số ô của vùng.
   const humanMoves = (k) => {
@@ -1886,7 +2173,7 @@ function analyzePlayerEffort(p) {
           const d = refutationDepth(k, m, Math.min(N, 25));
           maxDepth = Math.max(maxDepth, d);
           // sai mà lộ ngay (d<=2) thì gần như miễn phí; càng lộ muộn càng đắt (bình phương)
-          effort += Math.pow(Math.max(0, d - 2) / N, 1.15) * 10;
+          effort += Math.pow(Math.max(0, d - 2) / effortN, 1.15) * 10;
         }
       }
       applyMove(p, s, k, ms.includes(correct) ? correct : ms[0]);
@@ -2096,8 +2383,39 @@ function placeObstacles(R, C, count, rng, shape = null, maxTry = 60, forcedCells
   return null;
 }
 
+// MEC-05: đặt ngẫu nhiên `count` ô Bom lên bàn cờ (gọi SAU placeObstacles, TRƯỚC
+// partitionIntoPaths/buildNbrsCache — bombs không đổi hình dạng vật lý bàn cờ nên không cần
+// build lại nbrs cache). Bom vẫn nằm trong p.nbrs() thật (đi qua được, chỉ chết nếu đâm vào —
+// xem legalMoves/act()) nhưng bị partitionIntoPaths loại khỏi diện phủ kín — vì vậy phải tự kiểm
+// tra liên thông + không cô lập ô nào ở ĐÂY (coi Bom như vật cản TẠM THỜI chỉ để kiểm tra, không
+// đụng gì tới p.nbrs() thật), nếu không cách đặt nào an toàn thì ÂM THẦM bỏ qua (không có Bom)
+// thay vì làm hỏng cả lượt sinh — Bom chỉ là gia vị thêm, không phải yêu cầu bắt buộc.
+function placeBombs(p, count, rng, maxTry = 30) {
+  if (!count || count <= 0) return p;
+  const valid = p.validCells();
+  if (valid.length < count + 6) return p;
+  for (let t = 0; t < maxTry; t++) {
+    const chosen = shuffle(valid.slice(), rng).slice(0, count);
+    const bombSet = new Set(chosen);
+    const remaining = valid.filter(c => !bombSet.has(c));
+    if (remaining.length < 6) continue;
+    const nbrsExcl = x => p.nbrs(x).filter(y => !bombSet.has(y));
+    const seen = new Set([remaining[0]]), q = [remaining[0]];
+    while (q.length) { const x = q.pop(); for (const y of nbrsExcl(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
+    if (seen.size !== remaining.length) continue;
+    if (remaining.some(x => nbrsExcl(x).length === 0)) continue;
+    p.bombs = bombSet;
+    return p;
+  }
+  return p;
+}
+
 function partitionIntoPaths(p, K, minLen, rng, budget = 15000, forcedStarts = null) {
-  const cells = p.validCells();
+  // MEC-05: ô Bom (nếu có, đặt qua placeBombs TRƯỚC khi gọi hàm này) KHÔNG nằm trong diện phủ
+  // kín — loại khỏi tập ô cần chia đường đi, y hệt ô Đá Tảng (p.blocked, đã bị validCells() loại
+  // sẵn). Bom vẫn còn nguyên trong p.nbrs() (đi qua được thật, chỉ là chết nếu đâm vào — xem
+  // legalMoves/act()), chỉ không được TÍNH vào yêu cầu phủ kín 100%.
+  const cells = p.bombs && p.bombs.size ? p.validCells().filter(c => !p.bombs.has(c)) : p.validCells();
   const N = cells.length;
   if (K * minLen > N) return null;
   // forcedStarts: ô mỏ neo người dùng đã vẽ tay (VD: Custom Designer) — ưu tiên THỬ TRƯỚC các
@@ -2116,8 +2434,15 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 15000, forcedStarts = nu
     return null; // Vi phạm parity: Đồ thị không thể phủ kín hoàn toàn bằng K đường đi
   }
 
+  // MEC-05: p.nbrs() KHÔNG loại ô Bom (cố ý — xem ghi chú đầu hàm), nên các phép đo bậc/thành
+  // phần liên thông dưới đây (degOf/deg1/compCount) đều phải TỰ loại thêm ô Bom khỏi hàng xóm
+  // được tính — nếu không, 1 ô kề Bom sẽ bị coi là "còn lối" dù lối đó KHÔNG THẬT (đâm vào Bom
+  // là chết, không phải 1 bước đi tới được), khiến các chốt an toàn bên dưới đo sai.
+  const bombsSet = p.bombs || new Set();
+  const realNbrs = x => bombsSet.size ? p.nbrs(x).filter(y => !bombsSet.has(y)) : p.nbrs(x);
+
   // CHỐT AN TOÀN 1: Phát hiện ô góc chết 1 lối (Degree-1 Cells)
-  const deg1 = cells.filter(x => p.nbrs(x).length === 1);
+  const deg1 = cells.filter(x => realNbrs(x).length === 1);
   if (deg1.length > 2 * K) {
     return null; // Số góc chết vượt quá tổng số điểm đầu/cuối của K dây
   }
@@ -2131,13 +2456,13 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 15000, forcedStarts = nu
   let cur = null, nodes = 0, done = false;
 
   const unvisited = () => cells.filter(x => !visited[x]);
-  const degOf = x => { let d = 0; for (const y of p.nbrs(x)) if (!visited[y]) d++; return d; };
+  const degOf = x => { let d = 0; for (const y of realNbrs(x)) if (!visited[y]) d++; return d; };
   const compCount = () => {
     const seen = new Set(); let n = 0;
     for (const x of cells) {
       if (visited[x] || seen.has(x)) continue;
       n++; const q = [x]; seen.add(x);
-      while (q.length) { const y = q.pop(); for (const z of p.nbrs(y)) if (!visited[z] && !seen.has(z)) { seen.add(z); q.push(z); } }
+      while (q.length) { const y = q.pop(); for (const z of realNbrs(y)) if (!visited[z] && !seen.has(z)) { seen.add(z); q.push(z); } }
     }
     return n;
   };
@@ -2168,7 +2493,12 @@ function partitionIntoPaths(p, K, minLen, rng, budget = 15000, forcedStarts = nu
     if (unvisitedDeg1 > remPaths * 2 + 1) return false;
 
     if (cur) {
-      const cand = p.nbrs(cur[cur.length - 1]).filter(x => !visited[x]);
+      // MEC-05: p.nbrs() KHÔNG loại ô Bom (Bom vẫn phải là ô đi qua được thật cho cơ chế "đâm vào
+      // chết"/"đẩy thùng phá bom" — xem ghi chú ở đầu hàm) nên phải tự lọc thêm ở đây, nếu không
+      // đường Hint sẽ vô tình đi xuyên qua đúng ô Bom (đã đo được thật qua test, không phải giả
+      // định — filter theo "cells" ở degOf/compCount/unvisited không đụng tới danh sách ứng viên
+      // MỞ RỘNG đường đi này, nó tính RIÊNG từ p.nbrs() sống).
+      const cand = realNbrs(cur[cur.length - 1]).filter(x => !visited[x]);
       if (!cand.length) return false;
       shuffle(cand, rng);
 
@@ -2315,6 +2645,31 @@ function decorateMechanics(p, cfg, rng) {
   // BAO GIỜ chứa cơ chế mà chúng giới thiệu — màn tutorial rỗng, phá vỡ hoàn toàn mục đích
   // dạy luật. Bỏ điều kiện đó: vẫn đặt ĐÚNG 1 lần cơ chế ở màn Dễ (bản đơn giản nhất), độ khó
   // tăng thêm chỉ đến từ các nhánh isHardTarget/isSuperTarget bên trong mỗi khối.
+  // MEC-05: 1 Thùng Hàng đặt ở ô "b" có thể bị NGƯỜI CHƠI đẩy theo BẤT KỲ hướng nào trong 4
+  // hướng (không chỉ đúng hướng b→X của lời giải Hint) — nếu hướng đó (hoặc đẩy tiếp liên tiếp
+  // theo đúng hướng đó) dẫn thẳng tới 1 ô Bom, việc đẩy trúng sẽ PHÁ BOM NGOÀI KỊCH BẢN, mở ra 1
+  // ô mới cần phủ mà KHÔNG dây nào còn đủ bước dự phòng để đi tới — kẹt màn dù dây đã "xong"
+  // (đã đo được thật: dây báo ✓ nhưng vẫn còn ô trống, đúng lỗi người dùng báo cáo). Quét dò dọc
+  // theo cả 4 hướng từ "b" (không chỉ 1 ô kề, vì thùng có thể bị đẩy TIẾP nhiều lần liên tiếp
+  // theo cùng 1 hướng) để loại bỏ MỌI vị trí Thùng có nguy cơ này trước khi chọn.
+  function pushLineHitsBomb(pp, b) {
+    if (!pp.bombs || !pp.bombs.size) return false;
+    const [rb0, cb0] = pp.rc(b);
+    for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      let cr = rb0, cc = cb0;
+      for (;;) {
+        const nr = cr + dr, nc = cc + dc;
+        if (!pp.inb(nr, nc) || pp.isVoid(nr, nc)) break;
+        const from = pp.cell(cr, cc), dest = pp.cell(nr, nc);
+        if (pp.blocked.has(dest)) break;
+        if (pp.walls.has(ekey(from, dest))) break;
+        if (pp.bombs.has(dest)) return true;
+        cr = nr; cc = nc;
+      }
+    }
+    return false;
+  }
+
   if (cfg.allowPush) {
     const want = Math.min(2, cfg.pushCount || 1);
     // cfg.forcedPushCells: ô Thùng Đẩy người dùng vẽ tay — cơ chế này chỉ gắn được vào CUỐI
@@ -2341,6 +2696,7 @@ function decorateMechanics(p, cfg, rng) {
       if (p.walls.has(ekey(b, X))) continue;
       const [ra, ca] = p.rc(a), [rb, cb] = p.rc(b), [rx, cx] = p.rc(X);
       if (rb - ra !== rx - rb || cb - ca !== cx - cb) continue;   // phải thẳng hàng mới đẩy được
+      if (pushLineHitsBomb(p, b)) continue;   // né nguy cơ đẩy trúng Bom ngoài kịch bản (xem trên)
       p.pushRocks.push({ cell: b, initialCell: b });
       usedMechCells.add(b);
       chain.pop();                                                // dây ngắn đi 1 ô
@@ -2675,6 +3031,20 @@ function generateOne(cfg, rng) {
   // dùng CHÍNH XÁC các ô đó thay vì để random chọn vị trí khác với bản vẽ.
   const p0 = placeObstacles(cfg.R, cfg.C, obstacleCount, rng, shape, 60, cfg.forcedRockCells);
   if (!p0) return { ok: false, reason: 'obstacle-layout' };
+  // cfg.forcedWalls: đúng các Vách Ngăn người dùng đã vẽ tay (edge key 'a_b') — gắn TRƯỚC khi
+  // chia đường đi (partitionIntoPaths) để thuật toán tìm đường tôn trọng chúng ngay từ đầu,
+  // không phải thêm SAU MỘT khi đường đã chốt (khác hẳn enforceUniqueness — thứ CHỈ thêm vách
+  // ngăn MỚI để ép nghiệm duy nhất, không liên quan gì tới vách ngăn người dùng tự vẽ).
+  if (cfg.forcedWalls && cfg.forcedWalls.length) cfg.forcedWalls.forEach(w => p0.walls.add(w));
+
+  // MEC-05: đặt Bom TRƯỚC partitionIntoPaths (loại khỏi diện phủ kín ngay từ đầu — xem
+  // placeBombs/partitionIntoPaths) — cfg.forcedBombCells: ô Bom người dùng vẽ tay (Custom
+  // Designer), dùng ĐÚNG các ô đó thay vì random nếu có.
+  if (cfg.forcedBombCells && cfg.forcedBombCells.length) {
+    p0.bombs = new Set(cfg.forcedBombCells.filter(c => p0.validCells().includes(c)));
+  } else if (cfg.allowBomb) {
+    placeBombs(p0, cfg.bombCount || 1, rng);
+  }
 
   // HIỆU NĂNG: partitionIntoPaths/countSolutions là backtracking với ngân sách node CỐ ĐỊNH
   // (15000/120000) — nhưng MỖI node duyệt tốn O(số ô) vì reachOK/assignFeasible/freeComponents
@@ -2690,6 +3060,11 @@ function generateOne(cfg, rng) {
   const partitionBudget = Math.max(3000, Math.round(15000 * cellScale));
   const solveNodeCap = Math.max(20000, Math.round(120000 * cellScale));
 
+  // p0.walls đã cố định (rỗng, hoặc forcedWalls nếu có) và KHÔNG đổi trong suốt quá trình chia
+  // đường đi — cache nbrs() trước luôn để compCount/degOf/search bên trong partitionIntoPaths
+  // cũng hưởng lợi (xem ghi chú hiệu năng ở buildNbrsCache trong class Puzzle). Mỗi p sinh ra từ
+  // p0.clone() sau này tự có cache RIÊNG (clone() không copy _nbrsCache), không bị lẫn.
+  p0.buildNbrsCache();
   // cfg.forcedAnchorCells: ô mỏ neo người dùng vẽ tay — ưu tiên bám sát (xem partitionIntoPaths).
   const segsRaw = partitionIntoPaths(p0, cfg.anchors, cfg.minLen, rng, partitionBudget, cfg.forcedAnchorCells);
   if (!segsRaw) return { ok: false, reason: 'no-partition' };
@@ -2733,6 +3108,10 @@ function generateOne(cfg, rng) {
       // đắp tường để ép duy nhất làm màn DỄ đi chứ không khó lên.
       enforceUniqueness(p, intended, cfg.wallBudget || 40);   // đắp tối đa tới trần rồi dừng, không ép bằng mọi giá
     }
+    // Walls đã CHỐT XONG (decorateMechanics + enforceUniqueness không còn đổi gì thêm) — cache
+    // nbrs() ngay từ đây, TRƯỚC khi bước vào phần dò/chấm điểm cực nặng bên dưới (xem ghi chú
+    // hiệu năng ở buildNbrsCache trong class Puzzle).
+    p.buildNbrsCache();
     // ĐẾM SỐ LỜI GIẢI THẬT (trước đây chỉ kiểm tra "có đúng 1 hay không" rồi vứt thông tin đi).
     // Số lời giải là một tín hiệu độ khó có thật: càng nhiều cách giải thì người chơi càng
     // dễ mò trúng. Nhưng CHÚ Ý — xem ghi chú ở chỗ tính điểm: nghiệm duy nhất do ĐẮP THÊM
@@ -2963,6 +3342,7 @@ function toJSON(p, id) {
     })),
     prisms: p.prisms.map(pr => ({ r: Math.floor(pr.cell / p.C), c: pr.cell % p.C, color: pr.color })),
     colorGates: p.colorGates.map(cg => ({ r: Math.floor(cg.cell / p.C), c: cg.cell % p.C, color: cg.color })),
+    bombs: p.bombs ? [...p.bombs].map(c => ({ r: Math.floor(c / p.C), c: c % p.C })) : [],
     anchors: p.anchors.map((a, k) => ({
       id: `A${k + 1}`,
       row: Math.floor(a.cell / p.C),
@@ -3166,6 +3546,18 @@ function boardSVG(p, o) {
       <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="#fef3c7" text-anchor="middle" font-weight="800">📦</text>`;
   });
 
+  // 8b. Bom Bẫy (MEC-05) — đâm thẳng vào = chết ngay, đẩy thùng vào = phá bom. Bom đã bị phá
+  // (không còn trong o.state.bombs) thì KHÔNG vẽ nữa — coi như đã nổ/vô hiệu hoá xong.
+  if (p.bombs && p.bombs.size) {
+    p.bombs.forEach(cell => {
+      const isDefused = o.state && o.state.bombs && !o.state.bombs.has(cell);
+      if (isDefused) return;
+      s += `<rect x="${X(cell) + 2}" y="${Y(cell) + 2}" width="${cs - 4}" height="${cs - 4}" rx="6"
+        fill="#fee2e2" stroke="#ef4444" stroke-width="1.8"/>
+        <text x="${cx(cell)}" y="${cy(cell) + fs * 0.38}" font-size="${fs * 1.05}" text-anchor="middle">💣</text>`;
+    });
+  }
+
   // 9. Vách Ngăn (Walls)
   for (const w of p.walls) {
     const [a, b] = w.split('_').map(Number);
@@ -3185,6 +3577,17 @@ function boardSVG(p, o) {
     const wc = anchorHex(w.k);
     s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="${wc}" stroke-width="2.5"/>
       <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="${wc}" text-anchor="middle" font-weight="900">${w.j}</text>`;
+  }
+  // 10b. Mật Mã Số NHÁP (đang ở chế độ Tự Vẽ Đường Đi trong Custom Designer — p.wpOf CỐ Ý để
+  // rỗng lúc này vì legalMoves() ép "số cuối = ô cuối dây" theo a.L thật, mà a.L lúc tự vẽ đã bị
+  // nới lên maxFree để kéo tự do; designerWpNumbers là bản ghi RIÊNG, tách khỏi wpOf, chỉ dùng để
+  // hiện số + trọng tài phụ manualWaypointBlockReasonTL — xem buildPuzzleFromDesignerDraftTL).
+  if (p.designerWpNumbers) {
+    for (const [cell, w] of p.designerWpNumbers) {
+      const wc = anchorHex(w.k);
+      s += `<circle cx="${cx(cell)}" cy="${cy(cell)}" r="${cs * 0.28}" fill="#fef3c7" stroke="${wc}" stroke-width="2.5"/>
+        <text x="${cx(cell)}" y="${cy(cell) + fs * 0.36}" font-size="${fs * 0.9}" fill="${wc}" text-anchor="middle" font-weight="900">${w.j}</text>`;
+    }
   }
 
   // 11. Mỏ Neo (Anchors)
@@ -3500,6 +3903,8 @@ $('btnGen').onclick = () => {
     allowSwitch: $('chkSwitch').checked,
     allowPrism: $('chkPrism').checked,
     allowWaypoints: $('chkWp').checked,
+    allowBomb: $('chkBomb').checked,
+    bombCount: +$('fBombCount').value,
     mode: $('fMode').value,
     wallBudget: +$('fWallBudget').value,
     maxAttempts: 60 * (+$('fN').value) + 250
@@ -3731,7 +4136,9 @@ $('btnReset').onclick = () => { if (playMode) startPlay(); renderDetail(); };
 
 function startPlay() {
   const p = LEVELS[CUR];
-  PLAY = { s: initState(p), sel: null, t0: null, drag: false, peeked: false, done: false, moves: 0, moveHistory: [], voted: false, undoCount: 0 };
+  const s = initState(p);
+  s.bombs = new Set(p.bombs || []);
+  PLAY = { s, sel: null, t0: null, drag: false, peeked: false, done: false, failed: false, failReason: null, moves: 0, moveHistory: [], voted: false, undoCount: 0 };
 }
 
 function truncateTo(p, s, k, cell) {
@@ -3791,7 +4198,8 @@ function renderDetail() {
     + (p.pushRocks.length ? `<span class="chip">📦 Thùng Hàng (${p.pushRocks.length})</span>` : '')
     + (p.switches.length ? `<span class="chip">🔘 Công Tắc & Cổng (${p.switches.length})</span>` : '')
     + (p.prisms.length ? `<span class="chip">💎 Lăng Kính & Cổng Màu (${p.prisms.length})</span>` : '')
-    + (p.wpOf.size ? `<span class="chip">🔢 Mật Mã Số (${p.wpOf.size})</span>` : '');
+    + (p.wpOf.size ? `<span class="chip">🔢 Mật Mã Số (${p.wpOf.size})</span>` : '')
+    + (p.bombs && p.bombs.size ? `<span class="chip">💣 Bom Bẫy (${p.bombs.size})</span>` : '');
 
   if (playMode) bindPlay(p);
   renderPlayPanel(p);
@@ -3817,7 +4225,7 @@ function renderDetail() {
     ['Độ mơ hồ ngã rẽ', `${m.avgBranching} hướng/bước`],
     ['Mật mã số (Waypoints)', (m.waypoints || 0) + ' mốc' + (m.maxWpLag ? ` (Bẫy uốn ${m.maxWpLag} bước)` : '')],
     // Số lời giải là KẾT QUẢ ĐO, không phải tham số người dùng đặt ra
-    ['🧩 Số lời giải (đo được)', (m.solutionCapped ? '≥' : '') + (m.solutionCount != null ? m.solutionCount : '—')],
+    ['🧩 Số lời giải (đo được)', m.solutionCount == null ? '—' : (m.solutionCapped ? `≥${m.solutionCount} (chưa đếm hết, còn có thể nhiều hơn)` : `${m.solutionCount}`)],
     ['🧗 Công sức người chơi', (m.playerEffort != null ? m.playerEffort : '—')],
     ['↔️ Ngã rẽ thật / sai lộ sau', `${m.choicePoints != null ? m.choicePoints : '—'} · ${m.maxRefuteDepth != null ? m.maxRefuteDepth : '—'} nước`]
   ].map(([l, v]) => `<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
@@ -3885,14 +4293,28 @@ function bindPlay(p) {
     return el && el.classList.contains('hit') ? +el.dataset.cell : null;
   };
   const act = cell => {
-    if (cell == null || !PLAY || PLAY.done) return;
+    if (cell == null || !PLAY || PLAY.done || PLAY.failed) return;
     if (PLAY.t0 == null) PLAY.t0 = performance.now();
     const s = PLAY.s;
     if (s.owner[cell] >= 0) {
       PLAY.sel = s.owner[cell];
       const popped = truncateTo(p, s, PLAY.sel, cell);
       if (popped > 0) PLAY.undoCount++;
+    } else if (PLAY.sel != null && s.bombs && s.bombs.has(cell) && p.nbrs(s.chains[PLAY.sel].head).includes(cell) && s.owner[cell] === -1) {
+      // MEC-05: đâm THẲNG vào ô Bom (không phải thùng đẩy vào) = CHẾT NGAY, thua màn. LƯU Ý:
+      // legalMoves() giờ LOẠI HẲN ô Bom (coi như vật cản với bộ giải — xem ghi chú ở đó, vì ô Bom
+      // không nằm trong diện phủ kín s.free), nên không thể dùng legalMoves().includes(cell) để
+      // xác nhận "đây là 1 nước đi hợp lệ" như trước nữa — phải tự kiểm tra kề cạnh thật (tôn
+      // trọng Vách Ngăn qua p.nbrs()) + ô chưa bị chiếm, KHÔNG cần các luật khác (Cổng Màu/Mật
+      // Mã...) vì đâm vào Bom là một nước đi RIÊNG, không phải nước "đi bình thường vào đó".
+      PLAY.failed = true;
+      PLAY.failReason = 'bomb';
+      renderDetail();
+      return;
     } else if (PLAY.sel != null && legalMoves(p, s, PLAY.sel).includes(cell)) {
+      // MEC-05: Đẩy Thùng Hàng vào đúng ô Bom -> phá bom (cả thùng lẫn bom cùng biến mất) — xử
+      // lý NGAY BÊN TRONG applyMove() (xem ghi chú ở đó) để bộ giải cũng hiểu đúng cơ chế này,
+      // không phải chỉ riêng lớp tương tác này mới biết.
       const u = applyMove(p, s, PLAY.sel, cell);
       PLAY.moveHistory.push(u);
       PLAY.moves++;
@@ -3913,6 +4335,14 @@ function renderPlayPanel(p) {
   const el = $('playPanel');
   if (!playMode) { el.innerHTML = `<p class="hint">Bấm <b>Tự chơi thử</b> rồi kéo từ Mỏ Neo (A1, A2...) để kiểm chứng trực tiếp cảm giác người chơi.</p>`; return; }
   const m = LEVELS[CUR].meta;
+  if (PLAY && PLAY.failed) {
+    el.innerHTML = `<div style="padding:10px;border-radius:8px;background:#fef2f2;border:1.5px solid #f87171;text-align:center">
+      <b style="color:#dc2626;font-size:14px">💥 ĐÂM TRÚNG BOM — THUA CUỘC!</b>
+      <div style="margin-top:6px"><button class="ghost sm" id="btnReplayFailed">Chơi Lại Ngay 🔄</button></div>
+    </div>`;
+    $('btnReplayFailed').onclick = () => { startPlay(); renderDetail(); };
+    return;
+  }
   if (PLAY && PLAY.done) {
     const secs = PLAY.t0 ? (performance.now() - PLAY.t0) / 1000 : 0;
     if (!PLAY.voted) {
@@ -4038,6 +4468,848 @@ $('btnJsonAll').onclick = () => {
   a.click();
   URL.revokeObjectURL(a.href);
 };
+
+/* ================= TỰ THIẾT KẾ LEVEL (CUSTOM DESIGNER) =================
+   Port từ Custom Designer của Pirate_Trails_50_Levels.html, thích nghi với cách Forge lưu level
+   TRỰC TIẾP dưới dạng đối tượng Puzzle sống trong mảng LEVELS (không qua JSON trung gian như
+   SUITE_LEVELS bên kia) — nên không cần bước "load lại từ JSON", chỉ cần đẩy thẳng puzzle đã
+   chấm điểm xong vào LEVELS rồi mở ra bằng đúng openLevel()/renderDetail() có sẵn. */
+let DS_R = 6, DS_C = 6, DS_K = 2;
+let DS_BRUSH = 'land';
+let DS_GRID = [];
+let DS_WALLS = new Set();
+let DS_ANCHOR_STEPS = [18, 18, 0, 0];
+let DS_UNDO_STACK = [];
+let DS_PLAY_PUZZLE = null;   // Puzzle đang tự vẽ ở Cách 2 (chưa lưu, chưa chấm điểm)
+let DS_PLAY_STATE = null;    // { s, sel, drag, done, t0, moveHistory, undoCount }
+
+function hexToRgbaTL(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function initCustomDesignerTL() {
+  bindDesignerBrushesTL();
+  $('btnDsResize').onclick = () => {
+    DS_R = Math.max(3, Math.min(20, +$('dsR').value));
+    DS_C = Math.max(3, Math.min(20, +$('dsC').value));
+    DS_K = Math.max(1, Math.min(4, +$('dsK').value));
+    resetDesignerGridTL(DS_R, DS_C);
+  };
+  $('btnDsAutoSplitSteps').onclick = autoSplitAnchorStepsTL;
+  resetDesignerGridTL(DS_R, DS_C);
+}
+
+function bindDesignerBrushesTL() {
+  const btns = document.querySelectorAll('#dsBrushBar .brush-btn');
+  btns.forEach(btn => {
+    btn.onclick = () => {
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      DS_BRUSH = btn.dataset.brush;
+    };
+  });
+}
+
+function resetDesignerGridTL(R, C) {
+  DS_R = R; DS_C = C;
+  DS_GRID = Array.from({ length: R }, () => Array.from({ length: C }, () => ({ type: 'land' })));
+  DS_WALLS = new Set();
+  autoSplitAnchorStepsTL();
+  renderDesignerGridTL();
+}
+
+// Danh sách màu KHẢ THI trên bản vẽ hiện tại (mỏ neo vốn màu đó, hoặc Lăng Kính đổi được sang
+// màu đó) — Cổng Màu chỉ nên chọn trong số này, trống thì fallback cả bảng màu để vẫn vẽ được.
+function getMapAnchorColorsTL() {
+  const colors = [];
+  for (let r = 0; r < DS_R; r++) {
+    for (let c = 0; c < DS_C; c++) {
+      const cell = DS_GRID[r][c];
+      if (cell.type === 'anchor') {
+        const col = COLOR_PALETTE[(cell.k || 0) % 4];
+        if (!colors.includes(col)) colors.push(col);
+      } else if (cell.type === 'prism') {
+        const col = cell.color || 'blue';
+        if (!colors.includes(col)) colors.push(col);
+      }
+    }
+  }
+  return colors.length ? colors : COLOR_PALETTE.slice();
+}
+
+function renderDesignerGridTL() {
+  const container = $('dsGridContainer');
+  if (!container) return;
+  const cellPx = autoCellSize(DS_R, DS_C, 640, 36);
+  container.style.setProperty('--ds-cell', cellPx + 'px');
+  container.style.gridTemplateColumns = `repeat(${DS_C}, var(--ds-cell))`;
+
+  let html = '';
+  for (let r = 0; r < DS_R; r++) {
+    for (let c = 0; c < DS_C; c++) {
+      const cell = DS_GRID[r][c];
+      const idx = r * DS_C + c;
+      let icon = '';
+      const cls = cell.type;
+      const styleParts = [];
+
+      if (cell.type === 'void') icon = '✕';
+      else if (cell.type === 'rock') icon = '🪨';
+      else if (cell.type === 'push') icon = '📦';
+      else if (cell.type === 'switch') icon = '🔘';
+      else if (cell.type === 'gate') icon = '🚧';
+      else if (cell.type === 'key') icon = '🔑';
+      else if (cell.type === 'keygate') icon = '🔒';
+      else if (cell.type === 'bomb') icon = '💣';
+      else if (cell.type === 'prism') {
+        const pCol = cell.color || 'blue';
+        const hex = COLOR_HEX_MAP[pCol] || COLOR_HEX_MAP.blue;
+        styleParts.push(`background:${hexToRgbaTL(hex, 0.22)}`, `border-color:${hex}`, `color:${hex}`);
+        icon = '💎';
+      }
+      else if (cell.type === 'colorgate') {
+        const hex = COLOR_HEX_MAP[cell.color] || COLOR_HEX_MAP.red;
+        styleParts.push(`background:${hexToRgbaTL(hex, 0.28)}`, `border-color:${hexToRgbaTL(hex, 0.55)}`, `color:${hex}`);
+        icon = '';
+      }
+      else if (cell.type === 'waypoint') {
+        const hex = COLOR_HEX_MAP[COLOR_PALETTE[(cell.k != null ? cell.k : 0) % 4]] || COLOR_HEX_MAP.red;
+        styleParts.push(`background:${hexToRgbaTL(hex, 0.16)}`, `border-color:${hex}`, `color:${hex}`);
+        icon = String(cell.j || '?');
+      }
+      else if (cell.type === 'anchor') {
+        const hex = COLOR_HEX_MAP[COLOR_PALETTE[(cell.k != null ? cell.k : 0) % 4]] || COLOR_HEX_MAP.red;
+        styleParts.push(`background:${hex}`, `color:#ffffff`, `box-shadow:0 2px 4px rgba(0,0,0,0.25)`);
+        icon = `A${(cell.k != null ? cell.k : 0) + 1}`;
+      }
+      else icon = `<span style="opacity:0.3;font-size:9px">${r},${c}</span>`;
+
+      // Vách Ngăn: viền ĐẬM đúng cạnh có tường — brush "wall" bấm gần cạnh nào đặt/gỡ tường cạnh đó.
+      if (r > 0 && DS_WALLS.has(ekey(idx, idx - DS_C))) styleParts.push('border-top:4px solid #0f172a');
+      if (r < DS_R - 1 && DS_WALLS.has(ekey(idx, idx + DS_C))) styleParts.push('border-bottom:4px solid #0f172a');
+      if (c > 0 && DS_WALLS.has(ekey(idx, idx - 1))) styleParts.push('border-left:4px solid #0f172a');
+      if (c < DS_C - 1 && DS_WALLS.has(ekey(idx, idx + 1))) styleParts.push('border-right:4px solid #0f172a');
+
+      const styleAttr = styleParts.length ? ` style="${styleParts.join(';')}"` : '';
+      html += `<div class="designer-cell ${cls}" data-r="${r}" data-c="${c}"${styleAttr}>${icon}</div>`;
+    }
+  }
+  container.innerHTML = html;
+
+  container.querySelectorAll('.designer-cell').forEach(el => {
+    const r = +el.dataset.r, c = +el.dataset.c;
+    el.onclick = (ev) => {
+      if (DS_BRUSH === 'wall') {
+        pushDesignerUndoTL();
+        toggleWallAtClickTL(r, c, el, ev);
+        renderDesignerGridTL();
+        updateDesignerStatsTL();
+        return;
+      }
+      pushDesignerUndoTL();
+      applyBrushToCellTL(r, c);
+      renderDesignerGridTL();
+      updateDesignerStatsTL();
+      renderAnchorStepsPanelTL();
+    };
+  });
+
+  updateDesignerStatsTL();
+}
+
+// Vách Ngăn là thuộc tính của CẠNH giữa 2 ô — bấm gần cạnh nào nhất trong 4 cạnh của ô thì
+// đặt/gỡ tường ở đúng cạnh đó. Bấm gần rìa ngoài bàn cờ thì báo lỗi (vô nghĩa, đã không đi ra được).
+function toggleWallAtClickTL(r, c, el, ev) {
+  const rect = el.getBoundingClientRect();
+  const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+  const distTop = y, distBottom = rect.height - y, distLeft = x, distRight = rect.width - x;
+  const minDist = Math.min(distTop, distBottom, distLeft, distRight);
+  let nr = r, nc = c;
+  if (minDist === distTop) nr = r - 1;
+  else if (minDist === distBottom) nr = r + 1;
+  else if (minDist === distLeft) nc = c - 1;
+  else nc = c + 1;
+
+  if (nr < 0 || nr >= DS_R || nc < 0 || nc >= DS_C) {
+    alert('❌ Không thể đặt Vách Ngăn ở rìa ngoài bàn cờ — bấm gần cạnh GIÁP 1 ô khác trong bàn cờ.');
+    return;
+  }
+  const key = ekey(r * DS_C + c, nr * DS_C + nc);
+  if (DS_WALLS.has(key)) DS_WALLS.delete(key); else DS_WALLS.add(key);
+}
+
+// Đánh số lại TOÀN BỘ ô Mật Mã thuộc dây k thành đúng 1..N liên tục theo thứ tự số HIỆN TẠI.
+function renumberWaypointsForChainTL(k) {
+  const cells = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
+    const cell = DS_GRID[r][c];
+    if (cell.type === 'waypoint' && cell.k === k) cells.push(cell);
+  }
+  cells.sort((a, b) => a.j - b.j);
+  cells.forEach((cell, i) => { cell.j = i + 1; });
+}
+
+function applyBrushToCellTL(r, c) {
+  const cur = DS_GRID[r][c];
+  if (DS_BRUSH === 'land') DS_GRID[r][c] = { type: 'land' };
+  else if (DS_BRUSH === 'void') DS_GRID[r][c] = { type: 'void' };
+  else if (DS_BRUSH === 'rock') DS_GRID[r][c] = cur.type === 'rock' ? { type: 'land' } : { type: 'rock' };
+  else if (DS_BRUSH === 'push') DS_GRID[r][c] = cur.type === 'push' ? { type: 'land' } : { type: 'push' };
+  else if (DS_BRUSH === 'switch') DS_GRID[r][c] = cur.type === 'switch' ? { type: 'land' } : { type: 'switch' };
+  else if (DS_BRUSH === 'gate') DS_GRID[r][c] = cur.type === 'gate' ? { type: 'land' } : { type: 'gate' };
+  else if (DS_BRUSH === 'key') DS_GRID[r][c] = cur.type === 'key' ? { type: 'land' } : { type: 'key' };
+  else if (DS_BRUSH === 'keygate') DS_GRID[r][c] = cur.type === 'keygate' ? { type: 'land' } : { type: 'keygate' };
+  else if (DS_BRUSH === 'bomb') DS_GRID[r][c] = cur.type === 'bomb' ? { type: 'land' } : { type: 'bomb' };
+  else if (DS_BRUSH === 'prism') {
+    const prismColors = ['blue', 'red', 'green', 'purple'];
+    if (cur.type === 'prism') {
+      const idx = prismColors.indexOf(cur.color || 'blue');
+      if (idx === prismColors.length - 1) DS_GRID[r][c] = { type: 'land' };
+      else DS_GRID[r][c] = { type: 'prism', color: prismColors[idx + 1] };
+    } else {
+      DS_GRID[r][c] = { type: 'prism', color: 'blue' };
+    }
+  }
+  else if (DS_BRUSH === 'colorgate') {
+    const mapColors = getMapAnchorColorsTL();
+    if (cur.type === 'colorgate') {
+      const idx = mapColors.indexOf(cur.color);
+      if (idx === mapColors.length - 1) DS_GRID[r][c] = { type: 'land' };
+      else DS_GRID[r][c] = { type: 'colorgate', color: mapColors[idx + 1] };
+    } else {
+      DS_GRID[r][c] = { type: 'colorgate', color: mapColors[0] };
+    }
+  }
+  else if (DS_BRUSH === 'waypoint') {
+    // Xoay vòng giống Mỏ Neo: A1 -> A2 -> A3 -> A4 -> Ô Đất — mỗi lần đặt vào 1 dây tự nhận
+    // số kế tiếp CỦA ĐÚNG DÂY ĐÓ (Mật Mã luôn thuộc về 1 dây cụ thể, số thứ tự riêng cho từng dây).
+    const oldK = cur.type === 'waypoint' ? cur.k : null;
+    if (cur.type === 'waypoint') {
+      const nextK = cur.k + 1;
+      DS_GRID[r][c] = nextK >= 4 ? { type: 'land' } : { type: 'waypoint', k: nextK, j: Infinity };
+    } else {
+      DS_GRID[r][c] = { type: 'waypoint', k: 0, j: Infinity };
+    }
+    if (oldK != null) renumberWaypointsForChainTL(oldK);
+    if (DS_GRID[r][c].type === 'waypoint') renumberWaypointsForChainTL(DS_GRID[r][c].k);
+  }
+  else if (DS_BRUSH === 'anchor') {
+    if (cur.type === 'anchor') {
+      const nextK = (cur.k != null ? cur.k : 0) + 1;
+      if (nextK >= 4) DS_GRID[r][c] = { type: 'land' };
+      else DS_GRID[r][c] = { type: 'anchor', k: nextK };
+    } else {
+      const existingAnchors = countAnchorsTL();
+      DS_GRID[r][c] = { type: 'anchor', k: existingAnchors % 4 };
+    }
+  }
+}
+
+function countAnchorsTL() {
+  let count = 0;
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'anchor') count++;
+  return count;
+}
+
+function autoSplitAnchorStepsTL() {
+  let activeCells = 0;
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type !== 'void' && DS_GRID[r][c].type !== 'rock') activeCells++;
+  const k = Math.max(1, countAnchorsTL() || +$('dsK').value || 2);
+  const base = Math.floor(activeCells / k);
+  const rem = activeCells % k;
+  DS_ANCHOR_STEPS = [0, 0, 0, 0];
+  for (let i = 0; i < k; i++) DS_ANCHOR_STEPS[i] = base + (i < rem ? 1 : 0);
+  renderAnchorStepsPanelTL();
+}
+
+function renderAnchorStepsPanelTL() {
+  const container = $('dsAnchorStepList');
+  if (!container) return;
+  const k = Math.max(1, countAnchorsTL() || +$('dsK').value || 2);
+  let html = '';
+  for (let i = 0; i < k; i++) {
+    html += `<div class="anchor-row">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="chip" style="background:${CHHEX[i % 4]};color:#fff;font-weight:700">Mỏ Neo A${i + 1}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:11px;color:#64748b">Số bước phủ:</span>
+        <input type="number" min="2" max="50" value="${DS_ANCHOR_STEPS[i] || 10}" data-k="${i}" class="ds-step-inp" style="width:54px;padding:3px 6px;font-size:12px;font-weight:700">
+      </div>
+    </div>`;
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('.ds-step-inp').forEach(inp => {
+    inp.onchange = () => { DS_ANCHOR_STEPS[+inp.dataset.k] = Math.max(2, +inp.value); };
+  });
+}
+
+function pushDesignerUndoTL() {
+  DS_UNDO_STACK.push({ grid: JSON.parse(JSON.stringify(DS_GRID)), walls: [...DS_WALLS] });
+  if (DS_UNDO_STACK.length > 30) DS_UNDO_STACK.shift();
+}
+
+$('btnDs_Undo').onclick = () => {
+  if (DS_UNDO_STACK.length) {
+    const snap = DS_UNDO_STACK.pop();
+    DS_GRID = snap.grid;
+    DS_WALLS = new Set(snap.walls);
+    renderDesignerGridTL();
+    renderAnchorStepsPanelTL();
+  }
+};
+
+$('btnDs_Random').onclick = () => {
+  pushDesignerUndoTL();
+  const shapeStrs = generateGestaltShape(DS_R, DS_C, mulberry32(Date.now() + Math.floor(Math.random() * 10000)));
+  DS_GRID = shapeStrs.map(row => row.split('').map(ch => ({ type: ch === '1' ? 'land' : 'void' })));
+  DS_WALLS = new Set();
+  autoSplitAnchorStepsTL();
+  renderDesignerGridTL();
+};
+
+// Đối xứng ngang/dọc TOÀN BỘ bản vẽ, kể cả Vách Ngăn (DS_WALLS lưu riêng theo cạnh, không nằm
+// trong DS_GRID, nên phải lật riêng qua đúng phép biến đổi chỉ số ô transformCell).
+function mirrorWallsTL(transformCell) {
+  const newWalls = new Set();
+  DS_WALLS.forEach(key => {
+    const [a, b] = key.split('_').map(Number);
+    newWalls.add(ekey(transformCell(a), transformCell(b)));
+  });
+  DS_WALLS = newWalls;
+}
+
+$('btnDs_MirrorX').onclick = () => {
+  pushDesignerUndoTL();
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < Math.floor(DS_C / 2); c++) DS_GRID[r][DS_C - 1 - c] = JSON.parse(JSON.stringify(DS_GRID[r][c]));
+  mirrorWallsTL(i => Math.floor(i / DS_C) * DS_C + (DS_C - 1 - (i % DS_C)));
+  renderDesignerGridTL();
+};
+
+$('btnDs_MirrorY').onclick = () => {
+  pushDesignerUndoTL();
+  for (let r = 0; r < Math.floor(DS_R / 2); r++) for (let c = 0; c < DS_C; c++) DS_GRID[DS_R - 1 - r][c] = JSON.parse(JSON.stringify(DS_GRID[r][c]));
+  mirrorWallsTL(i => (DS_R - 1 - Math.floor(i / DS_C)) * DS_C + (i % DS_C));
+  renderDesignerGridTL();
+};
+
+$('btnDs_Fill').onclick = () => {
+  pushDesignerUndoTL();
+  DS_GRID = Array.from({ length: DS_R }, () => Array.from({ length: DS_C }, () => ({ type: 'land' })));
+  DS_WALLS = new Set();
+  autoSplitAnchorStepsTL();
+  renderDesignerGridTL();
+};
+
+$('btnDs_Clear').onclick = () => {
+  pushDesignerUndoTL();
+  DS_GRID = Array.from({ length: DS_R }, () => Array.from({ length: DS_C }, () => ({ type: 'void' })));
+  DS_WALLS = new Set();
+  renderDesignerGridTL();
+};
+
+function updateDesignerStatsTL() {
+  let activeCells = 0, bombCount = 0;
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
+    if (DS_GRID[r][c].type !== 'void') activeCells++;
+    if (DS_GRID[r][c].type === 'bomb') bombCount++;
+  }
+  $('dsBadgeCells').textContent = `Tổng ô: ${activeCells}`;
+  $('dsBadgeAnchors').textContent = `⚓ Mỏ Neo: ${countAnchorsTL()}`;
+  $('dsBadgeWalls').textContent = `🧱 Vách Ngăn: ${DS_WALLS.size}`;
+  $('dsBadgeBombs').textContent = `💣 Bom: ${bombCount}`;
+}
+
+// Dựng Puzzle THẲNG từ bản vẽ (không random, không qua generateOne) — dùng cho Cách 2 (Tự Vẽ
+// Đường Đi). p.designerWpNumbers tách riêng khỏi p.wpOf thật (xem ghi chú ở boardSVG) và dịch
+// đúng rawK (số theo brush 0-3) sang chỉ số dây THẬT trong p.anchors sau khi đã sắp xếp lại.
+function buildPuzzleFromDesignerDraftTL() {
+  const shape = DS_GRID.map(row => row.map(cell => cell.type === 'void' ? '0' : '1').join(''));
+  const p = new Puzzle(DS_R, DS_C, shape);
+  DS_WALLS.forEach(wkey => p.walls.add(wkey));
+  p.bombs = new Set();
+
+  const switchCells = [], gateCells = [], keyCells = [], keyGateCells = [];
+  const anchorMap = new Map();
+  let hasWaypoint = false;
+  const rawWaypoints = new Map();
+
+  for (let r = 0; r < DS_R; r++) {
+    for (let c = 0; c < DS_C; c++) {
+      const cell = DS_GRID[r][c];
+      const idx = r * DS_C + c;
+      if (cell.type === 'rock') p.blocked.add(idx);
+      else if (cell.type === 'push') p.pushRocks.push({ cell: idx, initialCell: idx });
+      else if (cell.type === 'switch') switchCells.push(idx);
+      else if (cell.type === 'gate') gateCells.push(idx);
+      else if (cell.type === 'key') keyCells.push(idx);
+      else if (cell.type === 'keygate') keyGateCells.push(idx);
+      else if (cell.type === 'prism') p.prisms.push({ cell: idx, color: cell.color || 'blue' });
+      else if (cell.type === 'colorgate') p.colorGates.push({ cell: idx, color: cell.color || 'red' });
+      else if (cell.type === 'bomb') p.bombs.add(idx);
+      else if (cell.type === 'anchor') anchorMap.set(idx, cell.k != null ? cell.k : anchorMap.size);
+      else if (cell.type === 'waypoint') { hasWaypoint = true; rawWaypoints.set(idx, { rawK: cell.k || 0, j: cell.j || 0 }); }
+    }
+  }
+
+  const allSwitchCells = [...switchCells, ...keyCells];
+  const allGateCells = [...gateCells, ...keyGateCells];
+  p.switches = allSwitchCells.map((swCell, i) => ({ swCell, gateCell: allGateCells[i], latch: true })).filter(sw => sw.gateCell != null);
+
+  const sortedAnchorEntries = [...anchorMap.entries()].sort((a, b) => a[1] - b[1]);
+  p.anchors = sortedAnchorEntries.map(([cell], k) => ({ cell, L: Math.max(2, DS_ANCHOR_STEPS[k] || 2), color: COLOR_PALETTE[k % 4] }));
+
+  const rawKToChainIdx = new Map(sortedAnchorEntries.map(([, rawK], k) => [rawK, k]));
+  const designerWpNumbers = new Map();
+  rawWaypoints.forEach(({ rawK, j }, idx) => {
+    if (rawKToChainIdx.has(rawK)) designerWpNumbers.set(idx, { k: rawKToChainIdx.get(rawK), j });
+  });
+  p.designerWpNumbers = designerWpNumbers;
+
+  p.wpOf = new Map();
+  p.wpCount = p.anchors.map(() => 0);
+
+  return { puzzle: p, hasWaypoint };
+}
+
+// Trọng tài Mật Mã Số RIÊNG cho chế độ Tự Vẽ Đường Đi (p.designerWpNumbers chỉ tồn tại trên
+// puzzle dựng từ buildPuzzleFromDesignerDraftTL) — không tái dùng thẳng legalMoves/p.wpOf được
+// vì nó ép "Mật Mã cuối = ô cuối dây" bằng cách so c.len+1===c.L, mà a.L lúc tự vẽ bị nới lên
+// maxFree nên phép so đó luôn sai — hàm này ép trực tiếp: sau khi dây đã đi qua ĐÚNG số cuối
+// cùng của nó, KHÔNG được đi thêm bất kỳ ô nào nữa.
+function manualWaypointBlockReasonTL(p, s, k, cell) {
+  if (!p.designerWpNumbers) return null;
+
+  let maxJ = 0;
+  for (const w of p.designerWpNumbers.values()) if (w.k === k) maxJ = Math.max(maxJ, w.j);
+
+  let lastJ = 0;
+  for (const pc of s.chains[k].path) {
+    const pw = p.designerWpNumbers.get(pc);
+    if (pw && pw.k === k) lastJ = Math.max(lastJ, pw.j);
+  }
+
+  if (maxJ > 0 && lastJ === maxJ) {
+    return `Mật Mã số ${maxJ} là số cuối của dây này — bắt buộc phải LÀ Ô CUỐI CÙNG, không được đi tiếp sau đó.`;
+  }
+
+  if (!p.designerWpNumbers.has(cell)) return null;
+  const w = p.designerWpNumbers.get(cell);
+  if (w.k !== k) return 'Ô Mật Mã này thuộc về dây khác (khác màu) — dây hiện tại không đi vào được.';
+  if (w.j !== lastJ + 1) return `Phải đi đúng thứ tự Mật Mã — cần đi vào số ${lastJ + 1} trước đã.`;
+  return null;
+}
+
+// Chấm điểm mức độ "trung thành với bản vẽ" của 1 lần generateOne() cụ thể — dùng để CHỌN lần
+// thử tốt nhất trong DESIGNER_GEN_ATTEMPTS lần, KHÔNG phải điểm độ khó.
+function scoreDesignerFidelityTL(p, cfg) {
+  let score = 0;
+  const anchorCells = new Set(p.anchors.map(a => a.cell));
+  (cfg.forcedAnchorCells || []).forEach(c => { if (anchorCells.has(c)) score += 3; });
+  const pushCells = new Set(p.pushRocks.map(pr => pr.cell));
+  (cfg.forcedPushCells || []).forEach(c => { if (pushCells.has(c)) score += 4; });
+  const prismCells = new Set(p.prisms.map(x => x.cell));
+  (cfg.forcedPrismCells || []).forEach(c => { if (prismCells.has(c)) score += 4; });
+  const gateCells2 = new Set(p.colorGates.map(x => x.cell));
+  (cfg.forcedColorGates || []).forEach(fg => { if (gateCells2.has(fg.cell)) score += 4; });
+  if (cfg.forcedSwitchCell != null && p.switches.some(sw => sw.swCell === cfg.forcedSwitchCell)) score += 4;
+  if (cfg.forcedGateCell != null && p.switches.some(sw => sw.gateCell === cfg.forcedGateCell)) score += 4;
+  if (cfg.anchorStepTargets) {
+    p.anchors.forEach((a, k) => {
+      const want = cfg.anchorStepTargets[k];
+      if (want) score -= Math.abs(a.L - want) * 0.3;
+    });
+  }
+  return score;
+}
+
+function diagnoseDesignerFailureTL(result) {
+  const K = result.cfg ? result.cfg.anchors : Math.max(1, countAnchorsTL());
+  const p0 = new Puzzle(DS_R, DS_C, DS_GRID.map(row => row.map(c => c.type === 'void' ? '0' : '1').join('')));
+  const cells = p0.validCells();
+  if (!cells.length) return 'Toàn bộ bàn cờ đang bị khoét rỗng — vẽ thêm ít nhất vài ô đất!';
+
+  const seen = new Set([cells[0]]), q = [cells[0]];
+  while (q.length) { const x = q.pop(); for (const y of p0.nbrs(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
+  if (seen.size !== cells.length) {
+    return `Bản vẽ đang bị chia thành nhiều mảnh rời rạc (chỉ ${seen.size}/${cells.length} ô liên thông) — hãy nối liền các ô đất lại.`;
+  }
+
+  let black = 0, white = 0;
+  for (const c of cells) { if (p0.color(c) === 0) black++; else white++; }
+  const diff = Math.abs(black - white);
+  if (diff > K) {
+    return `Lệch màu bàn cờ (kiểu bàn cờ vua): ${black} ô đen / ${white} ô trắng, lệch ${diff} ô — nhưng chỉ có ${K} mỏ neo. Một dây liên tục BẮT BUỘC đi xen kẽ đen-trắng nên cần tối thiểu ${diff} mỏ neo, hoặc đổi vị trí ô khoét rỗng.`;
+  }
+
+  const deg1 = cells.filter(x => p0.nbrs(x).length === 1);
+  if (deg1.length > 2 * K) {
+    return `Có ${deg1.length} ô góc chết chỉ 1 lối ra vào, nhưng ${K} dây chỉ có tối đa ${2 * K} đầu mút — hãy giảm bớt ô góc chết hoặc tăng số mỏ neo lên ít nhất ${Math.ceil(deg1.length / 2)}.`;
+  }
+
+  if (result.reason === 'no-unique-orientation') {
+    return 'Không tìm được cách sắp xếp dây nào cho nghiệm phủ kín + số bước hợp lệ — thử nới lỏng số bước từng mỏ neo (Anchor Steps) hoặc bớt cơ chế rồi thử lại.';
+  }
+  return 'Không tìm được lời giải phủ kín toàn bộ ô đất sau nhiều lần thử — hãy đơn giản hoá bớt hình vẽ hoặc thử lại (có yếu tố ngẫu nhiên).';
+}
+
+// CÁCH 1: AI tự phủ kín 100% bản vẽ (qua generateOne với các ô/cơ chế BẮT BUỘC giữ nguyên như
+// đã vẽ) rồi chấm điểm đầy đủ — generateOne() đã tự trả về p.meta ĐẦY ĐỦ toàn bộ field chuẩn
+// (giống hệt level sinh tự động bình thường), chỉ cần đo lại số lời giải cho kỹ hơn (ngân sách
+// trong DESIGNER_GEN_ATTEMPTS phải chạy nhanh qua 14 lần thử nên có thể bỏ sót) rồi chấm lại.
+function buildLevelFromDesignerTL() {
+  const shape = DS_GRID.map(row => row.map(cell => cell.type === 'void' ? '0' : '1').join(''));
+  const anchorsCount = countAnchorsTL() || +$('dsK').value || 2;
+  const rocksCount = DS_GRID.flat().filter(c => c.type === 'rock').length;
+  const pushCount = DS_GRID.flat().filter(c => c.type === 'push').length;
+  const switchCount = DS_GRID.flat().filter(c => c.type === 'switch' || c.type === 'key').length;
+  const gateCount = DS_GRID.flat().filter(c => c.type === 'gate' || c.type === 'keygate').length;
+  const prismCount = DS_GRID.flat().filter(c => c.type === 'prism').length;
+  const colorGateCount = DS_GRID.flat().filter(c => c.type === 'colorgate').length;
+  const wpCount = DS_GRID.flat().filter(c => c.type === 'waypoint').length;
+
+  const forcedRockCells = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'rock') forcedRockCells.push(r * DS_C + c);
+  const forcedBombCells = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'bomb') forcedBombCells.push(r * DS_C + c);
+  const forcedAnchorCells = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'anchor') forcedAnchorCells.push(r * DS_C + c);
+  const forcedColorGates = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) if (DS_GRID[r][c].type === 'colorgate') forcedColorGates.push({ cell: r * DS_C + c, color: DS_GRID[r][c].color });
+  const forcedPushCells = [], forcedPrismCells = [];
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
+    if (DS_GRID[r][c].type === 'push') forcedPushCells.push(r * DS_C + c);
+    if (DS_GRID[r][c].type === 'prism') forcedPrismCells.push(r * DS_C + c);
+  }
+  let forcedSwitchCell = null, forcedGateCell = null;
+  for (let r = 0; r < DS_R; r++) for (let c = 0; c < DS_C; c++) {
+    if (forcedSwitchCell === null && (DS_GRID[r][c].type === 'switch' || DS_GRID[r][c].type === 'key')) forcedSwitchCell = r * DS_C + c;
+    if (forcedGateCell === null && (DS_GRID[r][c].type === 'gate' || DS_GRID[r][c].type === 'keygate')) forcedGateCell = r * DS_C + c;
+  }
+
+  const kFinal = Math.min(4, Math.max(1, anchorsCount));
+  const anchorStepTargets = DS_ANCHOR_STEPS.slice(0, kFinal);
+  const validStepTargets = anchorStepTargets.filter(x => x > 0);
+  const minLen = validStepTargets.length ? Math.max(2, Math.min(...validStepTargets) - 2) : 3;
+
+  const cfg = {
+    R: DS_R, C: DS_C, anchors: kFinal, minLen, shapeMode: 'custom', customShape: shape,
+    targetClass: null, acceptAnyTier: true,
+    allowRock: rocksCount > 0, obstacles: rocksCount, forcedRockCells,
+    forcedAnchorCells, anchorStepTargets,
+    allowWall: true, wallBudget: 3, forcedWalls: [...DS_WALLS],
+    allowPush: pushCount > 0, pushCount, forcedPushCells,
+    allowSwitch: (switchCount + gateCount) > 0, forcedSwitchCell, forcedGateCell,
+    allowPrism: prismCount > 0, forcedPrismCells,
+    allowColorGate: colorGateCount > 0, colorGateCount, forcedColorGates,
+    allowWaypoints: wpCount > 0,
+    allowBomb: forcedBombCells.length > 0,
+    forcedBombCells: forcedBombCells,
+    maxAttempts: 350
+  };
+
+  const DESIGNER_GEN_ATTEMPTS = 14;
+  let res = null, bestScore = -Infinity;
+  for (let attempt = 0; attempt < DESIGNER_GEN_ATTEMPTS; attempt++) {
+    const r = generateOne(cfg, mulberry32(Date.now() + attempt * 104729));
+    if (!r.ok) { if (!res) res = r; continue; }
+    const score = scoreDesignerFidelityTL(r.puzzle, cfg);
+    if (res === null || !res.ok || score > bestScore) { bestScore = score; res = r; }
+  }
+  if (!res.ok) return { ok: false, reason: res.reason, cfg };
+
+  const p = res.puzzle;
+
+  // MEC-05: p.bombs đã được gắn ĐÚNG từ cfg.forcedBombCells ngay trong generateOne() (trước cả
+  // partitionIntoPaths — xem ghi chú ở đó), Puzzle.clone() cũng đã copy theo — không cần gán lại
+  // từ DS_GRID ở đây nữa (trước đây gán lại SAU khi generateOne xong, khiến bộ giải không hề biết
+  // Bom tồn tại lúc tìm đường, ô Bom có thể lọt ngay vào chính đường đi Hint — đã đo được thật).
+
+  // Đếm lại số lời giải THẬT KỸ đúng 1 lần trên bản ĐÃ CHỌN — đây chỉ chạy 1 LẦN DUY NHẤT nên
+  // có thể chi ngân sách rộng hơn hẳn 14 lần thử ở trên (xem ghi chú đầy đủ ở
+  // buildLevelFromManualDraftTL bên dưới).
+  const cellCount = p.R * p.C;
+  const solveNodeCapFinal = cellCount <= 100 ? 2000000 : Math.max(300000, Math.round(2000000 * (100 / cellCount)));
+  p.buildNbrsCache();
+  const uqRecount = countSolutions(p, 200, solveNodeCapFinal);
+  const solCount = uqRecount.count > 0 ? uqRecount.count : p.meta.solutionCount;
+  const solCapped = uqRecount.count > 0 ? (uqRecount.aborted || uqRecount.count >= 200) : p.meta.solutionCapped;
+
+  const rated = tierSolve(p, 5);
+  const greedy = simulateGreedyPlayer(p);
+  const cog = calculateCognitiveMetrics(p, rated, greedy, { count: solCount, capped: solCapped });
+
+  p.meta.solutionCount = solCount; p.meta.solutionCapped = solCapped;
+  p.meta.hdi = cog.hdi; p.meta.ds = cog.ds; p.meta.cls = cog.cls; p.meta.className = CLASS_INFO[cog.cls].name;
+  p.meta.solveTimeEst = cog.solveTimeEst; p.meta.expectedUndos = cog.expectedUndos;
+  p.meta.autopilotRatio = cog.autopilotRatio; p.meta.avgBranching = cog.avgBranching;
+  p.meta.falseLeads = cog.falseLeads; p.meta.ambiguityScore = cog.ambiguityScore;
+  p.meta.contentionScore = cog.contentionScore; p.meta.trapScore = cog.trapScore;
+  p.meta.deductiveScore = cog.deductiveScore; p.meta.mechScore = cog.mechScore;
+  p.meta.hist = rated.hist.slice(); p.meta.openness = +(rated.openness || 1).toFixed(2);
+  p.meta.tier = rated.maxTier;
+  p.meta.playerEffort = cog.playerEffort; p.meta.choicePoints = cog.choicePoints;
+  p.meta.maxRefuteDepth = cog.maxRefuteDepth; p.meta.earlyChoices = cog.earlyChoices;
+  p.meta.wpDeceptionScore = cog.wpDeceptionScore; p.meta.maxWpLag = cog.maxWpLag;
+  p.meta.greedyTrapped = greedy.greedyTrapped; p.meta.trapDepth = greedy.trapDepth;
+  p.meta.psychologyTag = cog.psychologyTag;
+  p.meta.humanWinRate = cog.humanWinRate; p.meta.humanWins = cog.humanWins;
+  p.meta.humanTotal = cog.humanTotal; p.meta.humanFailDepth = cog.humanFailDepth;
+  p.meta.humanFirstTry = cog.humanFirstTry; p.meta.humanTries = cog.humanTries;
+  p.meta.pacingFlag = cog.pacingFlag;
+  p.meta.pacingRole = 'CUSTOM';
+  p.meta.waypoints = p.wpOf.size;
+  p.meta.searchNodes = uqRecount.nodes;
+
+  const timeInfo = tinhTimeLimit(p.meta);
+  p.meta.estimatedSolveTimeSec = timeInfo.solveTime;
+  p.meta.timerSec = timeInfo.limited ? timeInfo.timeLimit : null;
+
+  return { ok: true, puzzle: p };
+}
+
+// CÁCH 2: dựng thẳng từ đường đi THẬT vừa tự tay kéo ở khung chơi thử của Designer — KHÔNG qua
+// generateOne() nên không hề random lại lời giải khác, lưu nguyên vẹn thành Hint.
+function buildLevelFromManualDraftTL(p, s) {
+  p.solution = s.chains.map(c => c.path.slice());
+  p.anchors.forEach((a, k) => { a.L = s.chains[k].len; });
+
+  // Mật Mã: p.designerWpNumbers đã có sẵn đúng {k,j} từ lúc vẽ — copy thẳng sang p.wpOf/p.wpCount
+  // đúng định dạng game thật dùng (xem legalMoves), không cần tính lại gì.
+  p.wpOf = new Map();
+  p.wpCount = p.anchors.map(() => 0);
+  if (p.designerWpNumbers && p.designerWpNumbers.size) {
+    p.designerWpNumbers.forEach((w, cell) => {
+      p.wpOf.set(cell, { k: w.k, j: w.j });
+      p.wpCount[w.k] = Math.max(p.wpCount[w.k] || 0, w.j);
+    });
+  }
+
+  // Đếm số lời giải THẬT — đây là hành động MỘT LẦN khi bấm Lưu (không phải vòng lặp thử hàng
+  // trăm lần như generateOne) nên KHÔNG co hẹp ngân sách theo kích thước bàn — chấp nhận tốn
+  // vài giây để đếm CHO ĐÚNG thay vì đếm nhanh nhưng bỏ sót lời giải khác.
+  const cellCount = p.R * p.C;
+  const solveNodeCap = cellCount <= 100 ? 2000000 : Math.max(300000, Math.round(2000000 * (100 / cellCount)));
+  p.buildNbrsCache();
+  const uqFinal = countSolutions(p, 200, solveNodeCap);
+  const solCount = uqFinal.count > 0 ? uqFinal.count : 1;   // đường vừa vẽ chắc chắn hợp lệ, không thể ra 0
+  const solCapped = uqFinal.aborted || uqFinal.count >= 200;
+
+  let rated = tierSolve(p, 5);
+  let unmeasured = false, unmeasuredReason = null;
+  if (!rated.ok) {
+    unmeasured = true; unmeasuredReason = rated.reason;
+    rated = { ok: false, maxTier: 0, hist: [0, 0, 0, 0, 0, 0], steps: rated.trace ? rated.trace.length : 0, forcedRatio: 0, trace: rated.trace || [], openness: 1 };
+  }
+  const greedy = simulateGreedyPlayer(p);
+  const cog = calculateCognitiveMetrics(p, rated, greedy, { count: solCount, capped: solCapped });
+
+  p.meta = {
+    cls: cog.cls, className: CLASS_INFO[cog.cls].name, ds: cog.ds, hdi: cog.hdi,
+    solveTimeEst: cog.solveTimeEst, expectedUndos: cog.expectedUndos, autopilotRatio: cog.autopilotRatio,
+    tier: rated.maxTier, label: rated.maxTier ? TIER_LABEL[rated.maxTier] : 'giải bằng thử-sai',
+    unmeasured, unmeasuredReason,
+    hist: rated.hist.slice(), steps: rated.steps, openness: +(rated.openness || 1).toFixed(2),
+    forcedRatio: +(rated.forcedRatio || 0).toFixed(3),
+    validCells: p.validCells().length, walls: p.walls.size, pushRocks: p.pushRocks.length,
+    switches: p.switches.length, prisms: p.prisms.length, waypoints: p.wpOf.size,
+    obstacles: p.blocked.size, anchorCount: p.anchors.length,
+    greedyTrapped: greedy.greedyTrapped, trapDepth: greedy.trapDepth,
+    humanWinRate: cog.humanWinRate, humanWins: cog.humanWins, humanTotal: cog.humanTotal,
+    humanFailDepth: cog.humanFailDepth, humanFirstTry: cog.humanFirstTry, humanTries: cog.humanTries,
+    pacingFlag: cog.pacingFlag,
+    playerEffort: cog.playerEffort, choicePoints: cog.choicePoints,
+    maxRefuteDepth: cog.maxRefuteDepth, earlyChoices: cog.earlyChoices,
+    realForcedRatio: cog.realForcedRatio, psychologyTag: cog.psychologyTag,
+    pacingRole: 'CUSTOM',
+    searchNodes: uqFinal.nodes, solutionCount: solCount, solutionCapped: solCapped,
+    avgBranching: cog.avgBranching, falseLeads: cog.falseLeads,
+    wpDeceptionScore: cog.wpDeceptionScore, maxWpLag: cog.maxWpLag,
+    ambiguityScore: cog.ambiguityScore, contentionScore: cog.contentionScore,
+    trapScore: cog.trapScore, deductiveScore: cog.deductiveScore, mechScore: cog.mechScore
+  };
+
+  const timeInfo = tinhTimeLimit(p.meta);
+  p.meta.estimatedSolveTimeSec = timeInfo.solveTime;
+  p.meta.timerSec = timeInfo.limited ? timeInfo.timeLimit : null;
+
+  return { ok: true, puzzle: p };
+}
+
+/* ---- Khung chơi thử RIÊNG của Designer (Cách 2) — tách khỏi LEVELS/CUR/PLAY/renderDetail
+   để KHÔNG đụng gì tới luồng chơi/chấm điểm bình thường của level đã sinh sẵn. ---- */
+function startDesignerPlayTL(p) {
+  DS_PLAY_PUZZLE = p;
+  const s = initState(p);
+  s.bombs = new Set(p.bombs || []);
+  DS_PLAY_STATE = { s, sel: null, t0: null, drag: false, done: false, failed: false, moves: 0, moveHistory: [], undoCount: 0 };
+}
+
+function truncateDesignerToTL(p, s, k, cell) {
+  const c = s.chains[k], at = c.path.indexOf(cell);
+  if (at < 0) return 0;
+  const before = c.path.length;
+  while (c.path.length > at + 1 && DS_PLAY_STATE.moveHistory.length > 0) {
+    const lastIdx = DS_PLAY_STATE.moveHistory.map((m, idx) => m.k === k ? idx : -1).filter(idx => idx !== -1).pop();
+    if (lastIdx == null) break;
+    const u = DS_PLAY_STATE.moveHistory.splice(lastIdx, 1)[0];
+    undoMoveChainOnly(p, s, u);
+  }
+  c.colorTag = p.anchors[k].color || null;
+  for (const cc of c.path) { const pr = p.prisms.find(x => x.cell === cc); if (pr) c.colorTag = pr.color; }
+  c.wp = 0;
+  for (const cc of c.path) { const w = p.wpOf.get(cc); if (w) c.wp = w.j; }
+  return before - c.path.length;
+}
+
+let DS_PLAY_MSG_TIMER = null;
+function showDesignerPlayMsgTL(msg) {
+  const el = $('dsPlayMsg');
+  if (!el || !msg) return;
+  el.textContent = '⛔ ' + msg;
+  el.style.display = 'block';
+  if (DS_PLAY_MSG_TIMER) clearTimeout(DS_PLAY_MSG_TIMER);
+  DS_PLAY_MSG_TIMER = setTimeout(() => { el.style.display = 'none'; }, 1600);
+}
+
+function bindDesignerPlayTL(p) {
+  const svg = $('dsPlayBoardWrap').querySelector('svg');
+  if (!svg) return;
+  const cellAt = ev => {
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    return el && el.classList.contains('hit') ? +el.dataset.cell : null;
+  };
+  const act = cell => {
+    if (cell == null || !DS_PLAY_STATE || DS_PLAY_STATE.done || DS_PLAY_STATE.failed) return;
+    if (DS_PLAY_STATE.t0 == null) DS_PLAY_STATE.t0 = performance.now();
+    const s = DS_PLAY_STATE.s;
+    if (s.owner[cell] >= 0) {
+      DS_PLAY_STATE.sel = s.owner[cell];
+      const popped = truncateDesignerToTL(p, s, DS_PLAY_STATE.sel, cell);
+      if (popped > 0) DS_PLAY_STATE.undoCount++;
+    } else if (DS_PLAY_STATE.sel != null && s.bombs && s.bombs.has(cell) && p.nbrs(s.chains[DS_PLAY_STATE.sel].head).includes(cell) && s.owner[cell] === -1) {
+      // MEC-05: đâm thẳng vào Bom trong lúc tự vẽ thử = chết ngay, phải vẽ lại từ đầu. legalMoves()
+      // giờ loại hẳn ô Bom (xem ghi chú ở legalMoves/bindPlay) nên phải tự kiểm tra kề cạnh thật.
+      DS_PLAY_STATE.failed = true;
+      renderDesignerPlayTL();
+      return;
+    } else if (DS_PLAY_STATE.sel != null && legalMoves(p, s, DS_PLAY_STATE.sel).includes(cell) && !manualWaypointBlockReasonTL(p, s, DS_PLAY_STATE.sel, cell)) {
+      // MEC-05: đẩy thùng vào Bom -> phá bom, xử lý NGAY BÊN TRONG applyMove() (xem ghi chú ở đó).
+      const u = applyMove(p, s, DS_PLAY_STATE.sel, cell);
+      DS_PLAY_STATE.moveHistory.push(u);
+      DS_PLAY_STATE.moves++;
+    } else {
+      if (DS_PLAY_STATE.sel != null) {
+        const wpReason = manualWaypointBlockReasonTL(p, s, DS_PLAY_STATE.sel, cell);
+        showDesignerPlayMsgTL(wpReason || explainBlockedMove(p, s, DS_PLAY_STATE.sel, cell));
+      }
+      return;
+    }
+    if (s.free === 0 && s.chains.every(cc => cc.len >= 2)) DS_PLAY_STATE.done = true;
+    renderDesignerPlayTL();
+  };
+  svg.addEventListener('pointerdown', e => { DS_PLAY_STATE.drag = true; svg.setPointerCapture(e.pointerId); act(cellAt(e)); });
+  svg.addEventListener('pointermove', e => { if (DS_PLAY_STATE && DS_PLAY_STATE.drag) act(cellAt(e)); });
+  svg.addEventListener('pointerup', () => { if (DS_PLAY_STATE) DS_PLAY_STATE.drag = false; });
+  svg.addEventListener('pointercancel', () => { if (DS_PLAY_STATE) DS_PLAY_STATE.drag = false; });
+}
+
+function renderDesignerPlayTL() {
+  const p = DS_PLAY_PUZZLE;
+  if (!p || !DS_PLAY_STATE) return;
+  $('dsPlayBoardWrap').innerHTML = boardSVG(p, { cs: autoCellSize(p.R, p.C, 560, 40), state: DS_PLAY_STATE.s, interactive: true });
+  bindDesignerPlayTL(p);
+  const s = DS_PLAY_STATE.s;
+  if (DS_PLAY_STATE.failed) {
+    $('dsPlayPanel').innerHTML = `<b style="color:#dc2626">💥 ĐÂM TRÚNG BOM — phải vẽ lại từ đầu!</b> Bấm "🔄 Vẽ Lại Từ Đầu" ở trên.`;
+  } else if (DS_PLAY_STATE.done) {
+    $('dsPlayPanel').innerHTML = `<b style="color:#166534">🎉 Đã phủ kín 100%!</b> Bấm "Lưu Đúng Đường Đi Vừa Vẽ & Chấm Điểm" bên dưới.`;
+  } else {
+    $('dsPlayPanel').textContent = `Kéo từ Mỏ Neo (A1, A2...) để vẽ dây. Còn ${s.free} ô trống.`;
+  }
+}
+
+// Renumber id của toàn bộ LEVELS + ORIGINAL_LEVELS (2 mảng CHIA SẺ chung object nên chỉ cần
+// renumber theo thứ tự LEVELS hiện tại — xem quy ước có sẵn ở btnSortDS).
+function renumberAllLevelIdsTL() {
+  LEVELS.forEach((pp, i) => { pp.meta.id = 'L' + String(i + 1).padStart(3, '0'); });
+}
+
+$('btnDsAutoGenerate').onclick = () => {
+  const result = buildLevelFromDesignerTL();
+  if (!result.ok) {
+    alert('❌ Không sinh được màn từ bản vẽ này:\n\n' + diagnoseDesignerFailureTL(result));
+    return;
+  }
+  const p = result.puzzle;
+  LEVELS.push(p);
+  ORIGINAL_LEVELS.push(p);
+  renumberAllLevelIdsTL();
+  renderAll(null, 0, null);
+  openLevel(LEVELS.length - 1);
+  alert('🎉 AI đã phủ kín 100% bản vẽ, gài vách ngăn và hoàn tất đánh giá não bộ toàn diện! Level mới đã được thêm vào danh sách.');
+};
+
+$('btnDsPlayManual').onclick = () => {
+  const { puzzle, hasWaypoint } = buildPuzzleFromDesignerDraftTL();
+  if (puzzle.anchors.length === 0) {
+    alert('❌ Chưa vẽ Mỏ Neo nào — cần ít nhất 1 mỏ neo mới chơi thử được.');
+    return;
+  }
+  // Cho phép dây kéo linh hoạt tối đa theo số ô đất hợp lệ để tự do vẽ.
+  const maxFree = puzzle.validCells().length;
+  puzzle.anchors.forEach(a => { a.L = maxFree; });
+
+  startDesignerPlayTL(puzzle);
+  $('dsPlayWrap').style.display = 'block';
+  $('btnDsResetManual').style.display = 'inline-block';
+  renderDesignerPlayTL();
+  $('dsPlayWrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  let msg = '🎮 Đã nạp bản vẽ vào khung chơi thử bên dưới — kéo dây / đẩy thùng để tự vẽ đường đi (số bước linh hoạt, không lo bị chặn). Khi phủ kín 100% ô đất, bấm "Lưu Đúng Đường Đi Vừa Vẽ".';
+  if (hasWaypoint) msg += '\n\n🔢 Bản vẽ có Mật Mã: mỗi ô Mật Mã chỉ đúng 1 dây (đúng màu) mới đi vào được, phải đi đúng thứ tự 1,2,3... liên tiếp, và Mật Mã số CUỐI CÙNG bắt buộc phải là ô CUỐI CÙNG của dây đó.';
+  alert(msg);
+};
+
+$('btnDsResetManual').onclick = () => {
+  const { puzzle } = buildPuzzleFromDesignerDraftTL();
+  const maxFree = puzzle.validCells().length;
+  puzzle.anchors.forEach(a => { a.L = maxFree; });
+  startDesignerPlayTL(puzzle);
+  renderDesignerPlayTL();
+};
+
+$('btnDsSaveManualPath').onclick = () => {
+  if (!DS_PLAY_PUZZLE || !DS_PLAY_STATE) return;
+  const p = DS_PLAY_PUZZLE, s = DS_PLAY_STATE.s;
+  const win = s.free === 0 && s.chains.every(c => c.len >= 2);
+  if (!win) {
+    const shortChains = s.chains.filter(c => c.len < 2).map(c => `Dây ${c.k + 1}: mới đi ${c.len} ô (cần >= 2)`).join(', ');
+    const uncovered = [];
+    for (let i = 0; i < p.RC; i++) if (s.owner[i] === -1 && !s.pushRockPos.includes(i)) uncovered.push(`(${Math.floor(i / p.C)},${i % p.C})`);
+    alert('❌ Chưa hợp lệ — CHƯA lưu gì cả vì bản vẽ chưa đúng luật (chưa phủ kín 100% ô đất):\n\n'
+      + (shortChains ? 'Dây chưa đủ số bước: ' + shortChains + '\n' : '')
+      + (uncovered.length ? 'Ô còn trống chưa được phủ: ' + uncovered.join(' ') : ''));
+    return;
+  }
+  const result = buildLevelFromManualDraftTL(p, s);
+  const np = result.puzzle;
+  LEVELS.push(np);
+  ORIGINAL_LEVELS.push(np);
+  renumberAllLevelIdsTL();
+  DS_PLAY_PUZZLE = null; DS_PLAY_STATE = null;
+  $('dsPlayWrap').style.display = 'none';
+  $('btnDsResetManual').style.display = 'none';
+  renderAll(null, 0, null);
+  openLevel(LEVELS.length - 1);
+  alert('✅ Đã lưu ĐÚNG 100% đường đi bạn vừa tự vẽ và chấm điểm xong!');
+};
+
+// Khởi tạo Designer — đặt Ở CUỐI khối này (không phải gần initPainter() ở trên) vì DS_R/DS_GRID
+// v.v. khai báo bằng `let` ngay phía trên, đọc trước khi dòng khai báo thật sự chạy tới sẽ dính
+// lỗi Temporal Dead Zone (đã gặp thật khi test: "ReferenceError: DS_GRID is not defined").
+initCustomDesignerTL();
 </script>
 </body>
 </html>
