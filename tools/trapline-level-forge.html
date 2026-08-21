@@ -501,15 +501,24 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   const isIntuitiveWin = greedy.greedyWon;
 
   // 1. Trụ cột 1: Độ Mơ Hồ Thực Tế (Chỉ gây khó khi có bẫy dẫn sai đường)
-  let ambiguityScore = Math.max(0, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 1.5));
+  // Chặn trần 5 cho vế rẽ nhánh — trước đây KHÔNG có trần, có thể áp đảo các trụ cột khác ở bàn
+  // lớn/nhiều lối nếu wAmbiguity trôi cao (xem cùng lý do đã sửa ở Pirate_Trails_50_Levels.html).
+  let ambiguityScore = Math.max(0, Math.min(5, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 1.5)));
   if (brain.falseLeads > 0) ambiguityScore += Math.min(2.2, (brain.falseLeads / N) * 2.0);
 
   // 2. Trụ cột 2: Độ Phức Tạp Không Gian Topo (Chỉ cao khi có xoắn ốc ôm mỏ neo của nhau)
+  // K=1: không có dây khác để đan xen, và L/N ≈ 1 LUÔN ĐÚNG (mọi dây phải phủ kín 100%) nên
+  // công thức cũ luôn ra hằng số 1.5, không phân biệt được màn dễ/khó — xem giải thích đầy đủ
+  // (đã thử 2 hướng thay thế, cả 2 đều là hằng số toán học) ở Pirate_Trails_50_Levels.html.
+  // Tín hiệu thật duy nhất còn lại: tỉ lệ bàn cờ bị khoét rỗng/đá tảng so với hình chữ nhật bao
+  // ngoài — bàn trống thì dây chỉ "quét" đơn giản, bàn khoét nhiều buộc dây len lỏi ngoằn ngoèo.
   let spatialComplexityScore = 0;
   if (K > 1) {
     spatialComplexityScore = (topo.knotScore * 1.2) + Math.min(2.0, (topo.intertwineCount / N) * 2.5);
   } else {
-    spatialComplexityScore = Math.min(1.5, (p.anchors[0] ? (p.anchors[0].L / N) * 1.5 : 0));
+    const boundingArea = Math.max(1, p.RC);
+    const obstacleRatio = Math.max(0, (boundingArea - N) / boundingArea);
+    spatialComplexityScore = Math.min(2.5, obstacleRatio * 4.5);
   }
 
   // 3. Trụ cột 3: Bẫy Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước - YẾU TỐ QUYẾT ĐỊNH ĐỘ KHÓ VỚI CON NGƯỜI
@@ -529,7 +538,16 @@ function calculateCognitiveMetrics(p, rated, greedy) {
   }
 
   // 5. Cơ chế vật cản
-  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0) + (p.walls.size * 0.3);
+  // Color Gate: trước đây HOÀN TOÀN không được tính điểm dù tool này đã có dữ liệu p.colorGates
+  // (this.colorGates trong Puzzle) — game thật (GameScene.js) và Studio chính đều dùng cơ chế
+  // này, nên phải cộng điểm ở đây cho khớp. Trọng số mỗi ô NHỎ (0.15) vì Color Gate thường đi
+  // theo hàng loạt cùng 1 Prism (1 lăng kính sinh ra nhiều ô cổng màu liên tiếp dọc đường đi),
+  // Prism mới là cơ chế "quyết định" (đã có trọng số 1.0 ở trên) — có chặn trần (2.0) để không
+  // bị thổi phồng khi số ô cổng màu lớn.
+  // Lưu ý: tool này KHÔNG có cơ chế Bomb (p.bombs không tồn tại) — không có gì để tính ở đây.
+  // ⚠️ Trọng số Color Gate là số KHỞI ĐIỂM — cần hiệu chỉnh lại bằng playtest thật.
+  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0) + (p.walls.size * 0.3)
+    + Math.min(2.0, p.colorGates.length * 0.15);
 
   // Tổng hợp Human Difficulty Index (HDI)
   let hdi = 1.0 + ambiguityScore + spatialComplexityScore + trapScore + wpScore + mechScore;
@@ -582,7 +600,7 @@ function calculateCognitiveMetrics(p, rated, greedy) {
     ambiguityScore: +ambiguityScore.toFixed(2),
     contentionScore: +spatialComplexityScore.toFixed(2),
     trapScore: +trapScore.toFixed(2),
-    deductiveScore: +deductiveScore.toFixed(2),
+    deductiveScore: +ds.toFixed(2),
     mechScore: +mechScore.toFixed(2)
   };
 }

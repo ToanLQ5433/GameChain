@@ -511,7 +511,7 @@ export default class ShopScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(101);
         group.add([check, doneTxt]);
         this.tweens.add({ targets: check, scale: 1, duration: 220, ease: 'Back.Out' });
-        playSound('win', this.save.soundMuted);
+        playSound('purchase', this.save.soundMuted);
         onConfirm();
         this.time.delayedCall(750, close);
       });

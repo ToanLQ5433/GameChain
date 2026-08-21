@@ -221,6 +221,23 @@ progress{width:220px;height:10px}
 .level-list-item.solved {
   border-left: 4px solid #16a34a;
 }
+.level-list-item.dragging {
+  opacity: 0.35;
+}
+.level-list-item.drag-over {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px #2563eb inset;
+  background: #eff6ff;
+}
+.level-list-item .drag-handle {
+  cursor: grab;
+  color: #94a3b8;
+  font-size: 12px;
+  user-select: none;
+}
+.level-list-item .drag-handle:active {
+  cursor: grabbing;
+}
 
 .sub-tabs {
   display: flex;
@@ -474,6 +491,12 @@ progress{width:220px;height:10px}
     <div class="row" style="gap:8px">
       <button class="ghost sm" id="btnImportSuiteJson">📤 Nhập JSON (Suite / Màn)</button>
       <button class="primary sm" id="btnExportAllJson">📥 Tải Unity JSON (1 file duy nhất)</button>
+      <div class="row" style="gap:4px;align-items:center" title="Chỉ tải 1 đoạn level cụ thể (VD 1-15, hoặc 1-50) thay vì tải toàn bộ Suite — số theo đúng thứ tự L01, L02... hiện tại.">
+        <input id="exportRangeFrom" type="number" min="1" placeholder="Từ" style="width:52px;padding:6px 6px;font-size:12px;border:1px solid var(--axis);border-radius:6px">
+        <span style="font-size:11px;color:#64748b">–</span>
+        <input id="exportRangeTo" type="number" min="1" placeholder="Đến" style="width:52px;padding:6px 6px;font-size:12px;border:1px solid var(--axis);border-radius:6px">
+        <button class="ghost sm" id="btnExportRangeJson">📥 Tải Theo Khoảng</button>
+      </div>
       <button class="ghost sm" id="btnRecalcAllTimers">🕐 Tính Lại Level Timer (Cả Suite)</button>
       <button class="ghost sm" id="btnResetProgress">🔄 Xóa Tiến Trình Chơi</button>
       <button class="ghost sm" id="btnDiscardDraft">🗑️ Bỏ Bản Nháp, Về 53 Màn Gốc</button>
@@ -513,6 +536,25 @@ progress{width:220px;height:10px}
         <div class="ch-tab" data-ch="3">Ch.3: Kho Báu Thủy Tinh (10)</div>
         <div class="ch-tab" data-ch="4">Ch.4: Cơ Quan Cổ Đại (11)</div>
         <div class="ch-tab" data-ch="5">Ch.5: Mật Mã Hải Vương (10)</div>
+      </div>
+      <div class="row" style="gap:6px;margin-bottom:10px" title="Đổi vị trí MÀN ĐANG CHỌN với màn ngay trước/sau trong toàn bộ Suite (không chỉ trong chương đang lọc). Số id (L01, L02...) tự đánh số lại theo vị trí mới, hạng Chương không đổi.">
+        <button class="ghost sm" id="btnMoveLevelUp" style="flex:1">⬆️ Đổi Lên</button>
+        <button class="ghost sm" id="btnMoveLevelDown" style="flex:1">⬇️ Đổi Xuống</button>
+      </div>
+      <div class="row" style="gap:4px;margin-bottom:4px" title="Gắn tay độ khó cho MÀN ĐANG CHỌN — ghi đè lên đánh giá tự động (HDI) của công cụ. Dùng khi bạn thấy công cụ tự chấm không đúng ý bạn.">
+        <button class="ghost sm" id="btnTagNormal" style="flex:1;font-size:10px;padding:5px 2px">🟢 Normal</button>
+        <button class="ghost sm" id="btnTagHard" style="flex:1;font-size:10px;padding:5px 2px">🟠 Hard</button>
+        <button class="ghost sm" id="btnTagSuper" style="flex:1;font-size:10px;padding:5px 2px">🔴 Super</button>
+        <button class="ghost sm" id="btnTagAuto" title="Bỏ tag tay, dùng lại đánh giá tự động (HDI)" style="flex:0 0 auto;font-size:10px;padding:5px 8px">↩️</button>
+      </div>
+      <div class="row" style="gap:4px;margin-bottom:10px" title="Đổi tên MÀN ĐANG CHỌN (chỉ đổi tên/description, không đổi bất kỳ dữ liệu nào khác của màn).">
+        <input id="dsRenameInput" type="text" placeholder="Tên mới cho màn đang chọn..." style="flex:1;padding:6px 8px;font-size:11px;font-weight:600;border:1.5px solid #cbd5e1;border-radius:6px;min-width:0">
+        <button class="ghost sm" id="btnRenameLevel" style="flex:0 0 auto;font-size:10px;padding:6px 8px">✏️ Đổi Tên</button>
+      </div>
+      <div class="note" id="levelToolsNote" style="margin:0 0 10px;font-size:11px;position:relative;padding-right:30px">
+        <button id="btnToggleLevelToolsNote" title="Thu nhỏ ghi chú" style="position:absolute;top:6px;right:6px;width:20px;height:20px;padding:0;font-size:10px;line-height:18px;border-radius:4px">▲</button>
+        <span id="levelToolsNoteCollapsedHint" style="display:none;font-weight:700">📌 Ghi chú thao tác (bấm ▼ để mở lại)</span>
+        <span id="levelToolsNoteText">Kéo (☰) hoặc dùng 2 nút "Đổi Lên/Xuống" để đổi thứ tự màn. Dùng 3 nút Normal/Hard/Super để tự gắn tag độ khó cho màn đang chọn (ghi đè đánh giá tự động) — nhãn 📌 nghĩa là tag tay, không phải công cụ tự chấm. Sửa ô tên rồi bấm "✏️ Đổi Tên" để đổi tên màn đang chọn. VD muốn đổi L01 ↔ L02: chọn L01 rồi bấm "Đổi Xuống" (hoặc chọn L02 rồi bấm "Đổi Lên").</span>
       </div>
       <div style="max-height: calc(100vh - 280px); overflow-y: auto; padding-right: 4px" id="levelsListContainer"></div>
     </section>
@@ -857,6 +899,29 @@ const CLASS_INFO = [
   { id: 4, key: 'SUPER', name: '4 · Siêu Khó (Mastery)', dsMax: Infinity, desc: 'Quá tải bộ nhớ ngắn hạn, ngõ cụt trễ sâu (>=4 bước), giải 75-180s+.' }
 ];
 
+// Nhãn độ khó HIỂN THỊ, gộp về đúng 3 bậc 'normal'/'hard'/'superhard' mà dev cần đọc trong JSON
+// Unity (CLASS_INFO có 4 bậc nội bộ: Dễ/Thường gộp chung vào 'normal'). Ưu tiên tag NGƯỜI DÙNG tự
+// gắn tay (lvl.difficultyTag) — công cụ tự chấm bằng HDI (calculateCognitiveMetrics) không phải
+// lúc nào cũng đúng ý người thiết kế màn, nên tag tay LUÔN thắng và không bao giờ bị tính lại tự
+// động ghi đè lên (chỉ mất khi tự bấm nút "↩️ Bỏ tag"). Dùng hàm này ở MỌI nơi hiển thị badge độ
+// khó (danh sách bên trái, khung Info giữa) và cả lúc xuất JSON Unity — để tag tay không bị lệch
+// giữa các nơi hiển thị và giữa file xuất ra ngoài.
+function getDifficultyTag(lvl) {
+  if (lvl.difficultyTag === 'normal' || lvl.difficultyTag === 'hard' || lvl.difficultyTag === 'superhard') {
+    return { tag: lvl.difficultyTag, isManual: true };
+  }
+  const clsName = (lvl.cognitiveMetrics && lvl.cognitiveMetrics.difficultyClass) ? lvl.cognitiveMetrics.difficultyClass : 'Normal';
+  if (clsName.includes('Siêu')) return { tag: 'superhard', isManual: false };
+  if (clsName.includes('Khó')) return { tag: 'hard', isManual: false };
+  return { tag: 'normal', isManual: false };
+}
+
+function difficultyTagMeta(tag) {
+  if (tag === 'superhard') return { label: '🔴 Super Hard', shortLabel: '🔴 Super', color: '#fef2f2;color:#991b1b;border-color:#fca5a5' };
+  if (tag === 'hard') return { label: '🟠 Hard', shortLabel: '🟠 Hard', color: '#fffbeb;color:#92400e;border-color:#fde68a' };
+  return { label: '🟢 Normal', shortLabel: '🟢 Normal', color: '#f0fdf4;color:#166534;border-color:#86efac' };
+}
+
 // =====================================================================
 // LEVEL TIMER — ước tính T_giải_trung_bình từ chính dữ liệu Solver đã đo
 // trong meta (hist, anchorCount, openness) — không cần playtest tay từng màn.
@@ -879,9 +944,17 @@ const TIME_BASE = {
 
 // Hệ số nhân + sàn tối thiểu theo hạng (khớp CLASS_INFO: 1=Dễ 2=Thường 3=Khó 4=Siêu Khó)
 // ⚠️ Cũng là số khởi điểm — hiệu chỉnh lại theo playtest thật.
+// Hạng Dễ (EASY): trước đây KHÔNG có Level Timer (mult/floor = null, đúng GDD mục 2.6 cũ) — đổi
+// theo yêu cầu mới: mọi màn Dễ giờ CŨNG phải có Timer, tầm khoảng 20s. mult=1.0 (thấp hơn hẳn 3
+// hạng còn lại, cố ý) vì hạng Dễ theo đúng định nghĩa là "greedy/autopilot thắng ngay, không có
+// ngã rẽ sai thật" (xem isIntuitiveWin ở calculateCognitiveMetrics) — người chơi thực tế không
+// cần bù thời gian cho việc chọn sai rồi xoá lại như 3 hạng trên, chỉ cần cộng thêm khoảng phản
+// xạ/nhìn bàn cờ (floor=8, bằng đúng TIME_BASE.startup). Với solveTime tối thiểu thực đo được
+// (~13s cho màn 1 mỏ neo đơn giản nhất) ra đúng ~20s theo yêu cầu; màn Dễ dài hơn thì tăng dần
+// theo đúng tỉ lệ 1:1 với thời gian giải ước tính, không bao giờ ngắn hơn thời gian giải ước tính.
 const TIME_CONFIG = [
   null,
-  { key: 'EASY',   mult: null, floor: null },  // Dễ: không giới hạn giờ — đúng GDD mục 2.6
+  { key: 'EASY',   mult: 1.0,  floor: 8 },
   { key: 'NORMAL', mult: 2.5,  floor: 15 },
   { key: 'HARD',   mult: 2.0,  floor: 20 },
   { key: 'SUPER',  mult: 1.8,  floor: 25 }
@@ -900,7 +973,8 @@ function estimateSolveTime(meta) {
 /**
  * Tính Time Limit cuối cùng cho 1 level:
  *   Time Limit = T_giải_ước_tính × hệ_số_nhân(hạng) + sàn_tối_thiểu(hạng)
- * Trả limited:false nếu là hạng Dễ (không có Level Timer theo GDD 2.6).
+ * Cả 4 hạng (kể cả Dễ) đều có Level Timer từ giờ — limited:false chỉ còn xảy ra nếu meta.cls
+ * không khớp bất kỳ hạng nào trong TIME_CONFIG (dữ liệu hỏng), không phải trường hợp bình thường.
  */
 function tinhTimeLimit(meta) {
   const cfg = TIME_CONFIG[meta.cls];
@@ -912,7 +986,7 @@ function tinhTimeLimit(meta) {
     limited: true,
     solveTime: +solveTime.toFixed(1),
     timeLimit,
-    ratio: +(timeLimit / solveTime).toFixed(2)  // soát lại đúng hệ số mong muốn (2.5/2.0/1.8)
+    ratio: +(timeLimit / solveTime).toFixed(2)  // soát lại đúng hệ số mong muốn (1.0/2.5/2.0/1.8)
   };
 }
 
@@ -1225,15 +1299,37 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo, cache) {
   const isIntuitiveWin = greedy.greedyWon;
 
   // 1. Trụ cột 1: Độ Mơ Hồ Thực Tế (Chỉ gây khó khi có bẫy dẫn sai đường)
-  let ambiguityScore = Math.max(0, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 1.5));
+  // Chặn trần 5 cho vế rẽ nhánh — trước đây KHÔNG có trần, wAmbiguity tự học có thể trôi tới 3.5
+  // (xem SCORING.wAmbiguity), avgBranching cao ở bàn lớn/nhiều lối có thể đẩy vế này áp đảo toàn
+  // bộ 4 trụ cột còn lại nếu không chặn (dữ liệu thật hiện tại còn thấp — 0.78 đến 1.57 — nhưng
+  // không có gì đảm bảo bàn lớn hơn sau này không vượt xa, nên chặn phòng xa).
+  let ambiguityScore = Math.max(0, Math.min(5, (brain.avgBranching - 1.0) * (SCORING.wAmbiguity * 1.5)));
   if (brain.falseLeads > 0) ambiguityScore += Math.min(2.2, (brain.falseLeads / N) * 2.0);
 
   // 2. Trụ cột 2: Độ Phức Tạp Không Gian Topo (Chỉ cao khi có xoắn ốc ôm mỏ neo của nhau)
+  // K=1 (1 dây, không có dây khác để "đan xen"): ý nghĩa gốc của trụ cột này (đan xen/ôm mỏ neo
+  // GIỮA CÁC DÂY) không tồn tại — không thể "tái dùng" ý tưởng đó cho 1 dây. Bản cũ dùng L/N (độ
+  // dài dây / số ô hợp lệ) nhưng vì MỌI dây đều phải phủ kín 100% ô đất theo thiết kế, L/N ≈ 1
+  // LUÔN ĐÚNG cho mọi màn 1 dây — công thức cũ (`min(1.5, L/N×1.5)`) vì vậy ra ĐÚNG MỘT HẰNG SỐ
+  // 1.5 cho MỌI màn 1 dây bất kể dễ/khó, không có khả năng phân biệt (đã kiểm chứng bằng dữ liệu
+  // thật + đường đi dựng tay). Đã thử 2 hướng thay thế, cả 2 đều CHỨNG MINH ĐƯỢC là hằng số
+  // toán học cho mọi đường Hamilton phủ kín trên bàn TRỐNG (không phụ thuộc dây lượn thế nào):
+  //   (a) đếm số cặp ô kề nhau trên lưới nhưng cách xa nhau trên đường đi — luôn = (tổng số cạnh
+  //       kề nhau của lưới) − (N−1 cạnh của đường đi, luôn liên tiếp) → hằng số theo HÌNH bàn cờ.
+  //   (b) đếm số lần đường đi đổi hướng — 1 đường quét chữ Z và 1 đường xoắn ốc trên CÙNG 1 bàn
+  //       trống ra ĐÚNG SỐ LẦN ĐỔI HƯỚNG NHAU (cả 2 đều là cách phủ kín tối ưu số lần rẽ).
+  // Tín hiệu THẬT duy nhất còn lại, không phải hằng số: bàn cờ bị khoét rỗng/đá tảng (Rock)
+  // CHIẾM BAO NHIÊU % so với hình chữ nhật bao ngoài (p.RC = R×C). Bàn trống hoàn toàn (0%) thì
+  // dây chỉ cần "quét" đơn giản — không có gì đáng gọi là "phức tạp không gian"; bàn bị khoét
+  // nhiều buộc dây phải len lỏi qua hành lang hẹp, ngoằn ngoèo hơn thật. Đo trên TOÀN BỘ 53 màn
+  // hiện tại: tỉ lệ này dao động thật từ 0% đến 52.8% (không phải hằng số), 15/53 màn có > 0%.
   let spatialComplexityScore = 0;
   if (K > 1) {
     spatialComplexityScore = (topo.knotScore * 1.2) + Math.min(2.0, (topo.intertwineCount / N) * 2.5);
   } else {
-    spatialComplexityScore = Math.min(1.5, (p.anchors[0] ? (p.anchors[0].L / N) * 1.5 : 0));
+    const boundingArea = Math.max(1, p.RC);
+    const obstacleRatio = Math.max(0, (boundingArea - N) / boundingArea);
+    spatialComplexityScore = Math.min(2.5, obstacleRatio * 4.5);
   }
 
   // 3. Trụ cột 3: Bẫy Ngõ Cụt Trễ & Cảm Giác Bực Bội Xóa Nước - YẾU TỐ QUYẾT ĐỊNH ĐỘ KHÓ VỚI CON NGƯỜI
@@ -1254,7 +1350,19 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo, cache) {
   // 5. Cơ chế vật cản
   // Lưu ý: KHÔNG tính p.walls.size vào đây. Thanh Chặn được thêm vào để ép nghiệm duy nhất,
   // càng nhiều thì đường đi càng bị ép buộc → level DỄ đi hơn, không phải khó hơn.
-  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0);
+  // Bomb: chạm trực tiếp = thua ngay lập tức — áp lực rủi ro cao hơn Switch/Prism (vốn chỉ chặn
+  // đường, không làm thua), nên trọng số cao hơn (1.3), nhưng chặn trần (2.5) để 1 màn nhiều Bomb
+  // không kéo HDI vọt quá đà chỉ vì đếm số lượng.
+  // Color Gate: thường đi kèm hàng loạt theo 1 Prism (1 lăng kính có thể tạo ra rất nhiều ô cổng
+  // màu liên tiếp dọc đường đi — xem chỗ gọi p.colorGates.push() lúc sinh màn), nên trọng số mỗi ô
+  // phải NHỎ hơn nhiều so với Prism (chính Prism mới là "quyết định", cổng màu chỉ là hệ quả đi
+  // theo), có chặn trần (2.0) để không bị thổi phồng khi số ô cổng màu lớn.
+  // ⚠️ Cả 2 trọng số này là số KHỞI ĐIỂM (trước đây thiếu hoàn toàn) — cần hiệu chỉnh lại bằng
+  // playtest thật, giống mọi hằng số khác trong file này.
+  const bombCount = p.bombs ? p.bombs.size : 0;
+  let mechScore = (p.pushRocks.length * 1.2) + (p.switches.length * 1.0) + (p.prisms.length * 1.0)
+    + Math.min(2.5, bombCount * 1.3)
+    + Math.min(2.0, p.colorGates.length * 0.15);
 
   // Tổng hợp Human Difficulty Index (HDI)
   let hdi = 1.0 + ambiguityScore + spatialComplexityScore + trapScore + wpScore + mechScore;
@@ -3516,9 +3624,9 @@ function generateOne(cfg, rng) {
     };
 
     // Level Timer: tính sẵn ngay lúc sinh, dùng đúng dữ liệu Solver vừa đo trong p.meta ở trên
-    // (hist/anchorCount/openness/cls) — không cần đo lại hay playtest tay. Hạng Dễ không giới
-    // hạn giờ (timerSec = null) đúng GDD 2.6. buildLevelFromDesigner/ManualDraft đo lại lần nữa
-    // (do có thể có thêm Bom/chỉnh sửa sau generateOne) nên sẽ tính lại timerSec riêng của họ,
+    // (hist/anchorCount/openness/cls) — không cần đo lại hay playtest tay. Cả 4 hạng (kể cả Dễ)
+    // đều có Level Timer từ giờ (xem TIME_CONFIG). buildLevelFromDesigner/ManualDraft đo lại lần
+    // nữa (do có thể có thêm Bom/chỉnh sửa sau generateOne) nên sẽ tính lại timerSec riêng của họ,
     // giá trị ở đây chỉ là mặc định cho ai gọi generateOne() trực tiếp.
     const timeInfo = tinhTimeLimit(p.meta);
     p.meta.estimatedSolveTimeSec = timeInfo.solveTime;
@@ -15228,21 +15336,20 @@ function renderLevelList() {
     if (SUITE_FILTER_CH !== 0 && lvl.chapter !== SUITE_FILTER_CH) return;
     const isCur = idx === SUITE_CUR_IDX;
     const isSolved = SUITE_SOLVED_SET.has(lvl.id);
-    const clsName = (lvl.cognitiveMetrics && lvl.cognitiveMetrics.difficultyClass) ? lvl.cognitiveMetrics.difficultyClass : 'Normal';
-    const isHard = clsName.includes('Khó') && !clsName.includes('Siêu');
-    const isSuper = clsName.includes('Siêu');
-    const badgeColor = isSuper ? '#fef2f2;color:#991b1b;border-color:#fca5a5' : (isHard ? '#fffbeb;color:#92400e;border-color:#fde68a' : '#f0fdf4;color:#166534;border-color:#86efac');
-    
-    html += `<div class="level-list-item ${isCur ? 'active' : ''} ${isSolved ? 'solved' : ''}" data-idx="${idx}">
+    const diff = getDifficultyTag(lvl);
+    const dm = difficultyTagMeta(diff.tag);
+
+    html += `<div class="level-list-item ${isCur ? 'active' : ''} ${isSolved ? 'solved' : ''}" data-idx="${idx}" draggable="true">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div style="display:flex;align-items:center;gap:6px">
+          <span class="drag-handle" title="Kéo để đổi vị trí">☰</span>
           <b style="font-size:12.5px;color:#1e293b">${lvl.id}</b>
           <span style="font-size:11.5px;color:#334155;font-weight:600">${lvl.name || 'Màn ' + (idx+1)}</span>
         </div>
         ${isSolved ? '<span style="color:#16a34a;font-weight:900">✓</span>' : ''}
       </div>
       <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-        <span class="badge" style="background:${badgeColor};font-size:10px;padding:1px 5px">${isSuper ? '🔴 Super' : (isHard ? '🟠 Hard' : '🟢 Normal')}</span>
+        <span class="badge" style="background:${dm.color};font-size:10px;padding:1px 5px" title="${diff.isManual ? 'Tag tay, không phải công cụ tự chấm' : 'Đánh giá tự động theo HDI'}">${dm.shortLabel}${diff.isManual ? ' 📌' : ''}</span>
         ${lvl.pacing ? `<span style="font-size:10px;color:#64748b">${lvl.pacing.split(' ')[0]}</span>` : ''}
         ${lvl.timerSec ? `<span class="badge" style="background:#eff6ff;color:#2563eb;font-size:10px;padding:1px 5px">⏱️ ${lvl.timerSec}s</span>` : '<span class="badge" style="background:#f8fafc;color:#94a3b8;font-size:10px;padding:1px 5px">⏱️ Tắt</span>'}
         ${lvl.unlockBuff ? `<span class="badge" style="background:#fefce8;color:#a16207;font-size:10px;padding:1px 5px">${lvl.unlockBuff.split(' ')[0]} ${lvl.unlockBuff.split(' ')[1] || ''}</span>` : ''}
@@ -15251,13 +15358,61 @@ function renderLevelList() {
   });
   container.innerHTML = html;
 
+  let dragFromIdx = null;
   container.querySelectorAll('.level-list-item').forEach(item => {
     item.onclick = () => {
+      // Kéo-thả (dragstart/drop) cũng đi qua click do trình duyệt tự bắn 1 click sau khi thả —
+      // chặn lại để không vô tình chọn nhầm màn ngay tại vị trí vừa thả xuống.
+      if (item.dataset.justDropped) { delete item.dataset.justDropped; return; }
       selectSuiteLevel(+item.dataset.idx);
     };
+    item.addEventListener('dragstart', (e) => {
+      dragFromIdx = +item.dataset.idx;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', String(dragFromIdx));
+      item.classList.add('dragging');
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+    });
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      item.classList.add('drag-over');
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      item.classList.remove('drag-over');
+      const fromIdx = dragFromIdx != null ? dragFromIdx : +e.dataTransfer.getData('text/plain');
+      const toIdx = +item.dataset.idx;
+      dragFromIdx = null;
+      if (!Number.isFinite(fromIdx) || fromIdx === toIdx) return;
+      item.dataset.justDropped = '1';
+      moveSuiteLevel(fromIdx, toIdx);
+    });
   });
 
   $('statProgress').textContent = `${SUITE_SOLVED_SET.size} / ${SUITE_LEVELS.length}`;
+  if ($('btnMoveLevelUp')) $('btnMoveLevelUp').disabled = SUITE_CUR_IDX <= 0;
+  if ($('btnMoveLevelDown')) $('btnMoveLevelDown').disabled = SUITE_CUR_IDX >= SUITE_LEVELS.length - 1;
+}
+
+// Tách riêng khỏi selectSuiteLevel() để setLevelDifficultyTag() có thể refresh MỖI badge sau khi
+// gắn/bỏ tag tay mà KHÔNG phải gọi lại selectSuiteLevel() — hàm đó nạp lại toàn bộ bàn chơi/board
+// (startStudioPlay), sẽ làm mất tiến trình đang kéo dây thử trên khung chơi giữa màn hình.
+function renderPlayLevelBadges(lvl) {
+  const diff = getDifficultyTag(lvl);
+  const dm = difficultyTagMeta(diff.tag);
+
+  $('playLevelBadges').innerHTML = `
+    <span class="badge" style="background:${dm.color}" title="${diff.isManual ? 'Tag tay, không phải công cụ tự chấm' : 'Đánh giá tự động theo HDI'}">${dm.label}${diff.isManual ? ' 📌 Tag tay' : ''}</span>
+    <span class="badge" style="background:#f1f5f9;color:#475569">Chương ${lvl.chapter}</span>
+    <span class="badge" style="background:#eff6ff;color:#2563eb">HDI ${(lvl.cognitiveMetrics && lvl.cognitiveMetrics.humanDifficultyIndex) || 10}</span>
+    ${pacingBadge(lvl.pacing, lvl.pacingRole)}
+    ${lvl.timerSec ? `<span class="badge" style="background:#fef3c7;color:#92400e">⏱️ Timer ${lvl.timerSec}s</span>` : '<span class="badge" style="background:#f1f5f9;color:#64748b">⏱️ Tắt Timer</span>'}
+    ${lvl.unlockBuff ? `<span class="badge" style="background:#fdf4ff;color:#86198f">${lvl.unlockBuff}</span>` : ''}
+  `;
 }
 
 function selectSuiteLevel(idx) {
@@ -15267,7 +15422,8 @@ function selectSuiteLevel(idx) {
   STUDIO_MANUAL_DRAFT = false; // chọn màn khác (hoặc load lại màn vừa sinh/lưu) -> thoát chế độ Tự Vẽ
 
   $('playLevelTitle').textContent = `${lvl.id} · ${lvl.name || 'Hải Trình ' + (idx+1)}`;
-  
+  if ($('dsRenameInput')) $('dsRenameInput').value = lvl.name || '';
+
   const tutBanner = $('tutBanner');
   const tutText = $('tutText');
   if (lvl.tutorialTip) {
@@ -15276,20 +15432,8 @@ function selectSuiteLevel(idx) {
   } else {
     tutBanner.classList.add('sec-off');
   }
-  
-  const clsName = (lvl.cognitiveMetrics && lvl.cognitiveMetrics.difficultyClass) ? lvl.cognitiveMetrics.difficultyClass : 'Normal';
-  const isHard = clsName.includes('Khó') && !clsName.includes('Siêu');
-  const isSuper = clsName.includes('Siêu');
-  const badgeColor = isSuper ? '#fef2f2;color:#991b1b;border-color:#fca5a5' : (isHard ? '#fffbeb;color:#92400e;border-color:#fde68a' : '#f0fdf4;color:#166534;border-color:#86efac');
-  
-  $('playLevelBadges').innerHTML = `
-    <span class="badge" style="background:${badgeColor}">${isSuper ? '🔴 Super Hard' : (isHard ? '🟠 Hard' : '🟢 Normal')}</span>
-    <span class="badge" style="background:#f1f5f9;color:#475569">Chương ${lvl.chapter}</span>
-    <span class="badge" style="background:#eff6ff;color:#2563eb">HDI ${(lvl.cognitiveMetrics && lvl.cognitiveMetrics.humanDifficultyIndex) || 10}</span>
-    ${pacingBadge(lvl.pacing, lvl.pacingRole)}
-    ${lvl.timerSec ? `<span class="badge" style="background:#fef3c7;color:#92400e">⏱️ Timer ${lvl.timerSec}s</span>` : '<span class="badge" style="background:#f1f5f9;color:#64748b">⏱️ Tắt Timer</span>'}
-    ${lvl.unlockBuff ? `<span class="badge" style="background:#fdf4ff;color:#86198f">${lvl.unlockBuff}</span>` : ''}
-  `;
+
+  renderPlayLevelBadges(lvl);
 
   // Pre-fill re-roll generator inputs to match current level
   $('rrR').value = lvl.grid.rows;
@@ -16619,6 +16763,105 @@ function renumberSuiteLevelIds() {
   SUITE_LEVELS.forEach((lvl, i) => { lvl.id = 'L' + String(i + 1).padStart(2, '0'); });
 }
 
+// ĐỔI THỨ TỰ 1 màn trong Suite: rút khỏi vị trí fromIdx, chèn lại tại toIdx — dùng chung cho cả
+// 2 nút "Đổi Lên/Xuống" (toIdx = fromIdx ∓ 1, tức HOÁN ĐỔI với màn liền kề) và kéo-thả trong
+// danh sách (toIdx = vị trí thả, có thể cách xa fromIdx nhiều bậc). Giống Chèn/Xoá màn: id
+// ('L01'...) LUÔN tự đánh số lại theo vị trí thật, còn `chapter` của TỪNG màn giữ nguyên như cũ
+// (không tự đổi theo vị trí mới) — nếu kéo 1 màn từ Chương 3 chèn giữa Chương 1, màn đó vẫn
+// mang badge/lọc "Chương 3" cho tới khi tự sửa field `chapter` bằng tay; đây là hành vi CỐ Ý,
+// nhất quán với cách "Chèn Level Mới" cũng không đổi chapter của các màn lân cận nó.
+function moveSuiteLevel(fromIdx, toIdx) {
+  if (!Array.isArray(SUITE_LEVELS) || SUITE_LEVELS.length < 2) return false;
+  if (fromIdx < 0 || fromIdx >= SUITE_LEVELS.length) return false;
+  toIdx = Math.max(0, Math.min(SUITE_LEVELS.length - 1, toIdx));
+  if (fromIdx === toIdx) return false;
+
+  const [moved] = SUITE_LEVELS.splice(fromIdx, 1);
+  SUITE_LEVELS.splice(toIdx, 0, moved);
+  renumberSuiteLevelIds();
+
+  SUITE_CUR_IDX = toIdx;
+  renderChaptersTabs();
+  selectSuiteLevel(SUITE_CUR_IDX);
+  saveSuiteDraft();
+  return true;
+}
+
+$('btnMoveLevelUp').onclick = () => {
+  const idx = SUITE_CUR_IDX;
+  if (idx <= 0) { alert('⚠️ Màn này đã ở vị trí đầu Suite — không thể đổi lên nữa.'); return; }
+  const movedName = SUITE_LEVELS[idx].name || SUITE_LEVELS[idx].id;
+  const otherName = SUITE_LEVELS[idx - 1].name || SUITE_LEVELS[idx - 1].id;
+  if (!moveSuiteLevel(idx, idx - 1)) return;
+  alert(`🔄 Đã đổi vị trí "${movedName}" lên trước "${otherName}" — id đã tự đánh số lại theo vị trí mới (giờ là ${SUITE_LEVELS[idx - 1].id}).`);
+};
+
+$('btnMoveLevelDown').onclick = () => {
+  const idx = SUITE_CUR_IDX;
+  if (idx >= SUITE_LEVELS.length - 1) { alert('⚠️ Màn này đã ở vị trí cuối Suite — không thể đổi xuống nữa.'); return; }
+  const movedName = SUITE_LEVELS[idx].name || SUITE_LEVELS[idx].id;
+  const otherName = SUITE_LEVELS[idx + 1].name || SUITE_LEVELS[idx + 1].id;
+  if (!moveSuiteLevel(idx, idx + 1)) return;
+  alert(`🔄 Đã đổi vị trí "${movedName}" xuống sau "${otherName}" — id đã tự đánh số lại theo vị trí mới (giờ là ${SUITE_LEVELS[idx + 1].id}).`);
+};
+
+// Gắn/bỏ tag độ khó TAY cho màn đang chọn — ghi đè lên cognitiveMetrics.difficultyClass mà
+// calculateCognitiveMetrics() tự tính theo HDI. Không đổi chỉ số HDI/cognitiveMetrics gốc (vẫn
+// giữ để tham khảo, hiện trong badge "HDI ..."), chỉ thêm field `difficultyTag` riêng — để bấm
+// "↩️ Bỏ tag" là quay lại đúng đánh giá tự động ban đầu, không mất dữ liệu.
+function setLevelDifficultyTag(tag) {
+  const lvl = SUITE_LEVELS[SUITE_CUR_IDX];
+  if (!lvl) return;
+  if (tag) lvl.difficultyTag = tag; else delete lvl.difficultyTag;
+  renderPlayLevelBadges(lvl);
+  renderLevelList();
+  saveSuiteDraft();
+}
+
+$('btnTagNormal').onclick = () => setLevelDifficultyTag('normal');
+$('btnTagHard').onclick = () => setLevelDifficultyTag('hard');
+$('btnTagSuper').onclick = () => setLevelDifficultyTag('superhard');
+$('btnTagAuto').onclick = () => setLevelDifficultyTag(null);
+
+// Đổi tên (description) MÀN ĐANG CHỌN — tách riêng khỏi mọi luồng sinh/lưu màn khác, không đổi
+// bất kỳ dữ liệu gì ngoài `lvl.name` (grid, anchors, lời giải, độ khó... giữ nguyên hệt).
+function renameCurrentLevel(newName) {
+  const lvl = SUITE_LEVELS[SUITE_CUR_IDX];
+  if (!lvl) return;
+  const trimmed = (newName || '').trim();
+  if (!trimmed) { alert('⚠️ Nhập tên màn trước khi đổi (không được để trống).'); return; }
+  lvl.name = trimmed;
+  $('playLevelTitle').textContent = `${lvl.id} · ${lvl.name}`;
+  renderLevelList();
+  saveSuiteDraft();
+}
+
+$('btnRenameLevel').onclick = () => renameCurrentLevel($('dsRenameInput').value);
+$('dsRenameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); renameCurrentLevel($('dsRenameInput').value); }
+});
+
+// Thu nhỏ/mở rộng ô ghi chú vàng hướng dẫn thao tác — KHÔNG ẩn hẳn, chỉ thu gọn về 1 dòng gợi
+// nhớ, bấm lại là mở ra đầy đủ. Nhớ trạng thái qua localStorage để lần sau mở lại vẫn giữ đúng
+// như lần trước đóng, không lặp lại chiếm chỗ mỗi khi mở công cụ.
+const LEVEL_NOTE_COLLAPSE_KEY = 'pirate_trails_level_note_collapsed';
+function setLevelToolsNoteCollapsed(collapsed) {
+  $('levelToolsNoteText').style.display = collapsed ? 'none' : '';
+  $('levelToolsNoteCollapsedHint').style.display = collapsed ? '' : 'none';
+  const btn = $('btnToggleLevelToolsNote');
+  btn.textContent = collapsed ? '▼' : '▲';
+  btn.title = collapsed ? 'Mở rộng ghi chú' : 'Thu nhỏ ghi chú';
+  try { localStorage.setItem(LEVEL_NOTE_COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+}
+$('btnToggleLevelToolsNote').onclick = () => {
+  setLevelToolsNoteCollapsed($('levelToolsNoteText').style.display !== 'none');
+};
+{
+  let collapsedAtLoad = false;
+  try { collapsedAtLoad = localStorage.getItem(LEVEL_NOTE_COLLAPSE_KEY) === '1'; } catch (e) {}
+  setLevelToolsNoteCollapsed(collapsedAtLoad);
+}
+
 function diagnoseDesignerFailure(result) {
   const K = result.cfg ? result.cfg.anchors : Math.max(1, countAnchors());
   const p0 = new Puzzle(DS_R, DS_C, DS_GRID.map(row => row.map(c => c.type === 'void' ? '0' : '1').join('')));
@@ -16879,18 +17122,36 @@ function initJsonImportModal() {
 // sinh switches theo y hệt {r,c,gateR,gateC,latch}. Chìa Khoá/Cổng Khoá trong Designer cũng xuất
 // qua field switches này (dùng chung cơ chế, chỉ khác icon), KHÔNG có field keys/keyGates riêng.
 // prisms/colorGates: repo KHÔNG có ví dụ Unity thật nào dùng 2 mục này — suy luận giữ {r,c}, đổi
-// color từ tên chữ ("red") sang RGBA cho khớp kiểu Unity Color; nếu Unity thật dùng field khác,
-// chỉ cần sửa đúng 2 chỗ trong hàm dưới đây.
-// Đã bỏ các field schema mà công cụ này KHÔNG BAO GIỜ có dữ liệu để điền (bridges, modifiers,
-// arrows, mirrors, rotors, oneWays, blades, keys, keyGates — theo yêu cầu dev không muốn nhận
-// JSON có field thừa luôn rỗng). Nếu sau này Unity cần lại field nào, thêm thẳng vào return bên
-// dưới là đủ, không cần đổi gì khác.
-const UNITY_COLOR_RGBA = {
-  blue:   { r: 0.18970274925231934, g: 0.24759764969348908, b: 0.8207547068595886,  a: 1.0 }, // xác nhận từ Levels/*.json (anchor #0 mặc định)
-  red:    { r: 0.7924528121948242,  g: 0.1383054405450821,   b: 0.14992421865463258, a: 1.0 }, // xác nhận từ Levels/*.json (anchor #1 mặc định)
-  green:  { r: 0.13,                g: 0.70,                 b: 0.25,                a: 1.0 }, // suy luận cùng thang màu — chưa có ví dụ thật
-  purple: { r: 0.54,                g: 0.24,                 b: 0.83,                a: 1.0 }  // suy luận cùng thang màu — chưa có ví dụ thật
-};
+// Đối chiếu trực tiếp với Levels_0.json (file mẫu THẬT từ dev Unity, 2026-08-21) — khớp lại toàn
+// bộ field/tên field theo đúng file đó, KHÔNG suy đoán thêm ngoài những gì đối chiếu được:
+//  - "difficulty" là SỐ (0/1/2), không phải chuỗi — khớp đúng thứ tự getDifficultyTag() đã dùng
+//    ('normal'/'hard'/'superhard'), xác nhận bằng cách đối chiếu tên màn đã biết hạng trong file
+//    mẫu (VD "Đại Chiến Đảo Đầu Lâu" → 2, "Tam Hải Trình Tranh Chấp" → 1).
+//  - Anchor CHỈ còn {id,row,col,length} — không còn useCustomColor/color/loop/mustEnclose (không
+//    còn field nào trong file mẫu chứa màu riêng cho anchor — có thể Unity tự suy màu theo thứ
+//    tự anchor id, không cần bên ngoài truyền vào nữa).
+//  - prisms/colorGates: "color" là SỐ (0-3) khớp đúng thứ tự COLOR_PALETTE (['red','blue','green',
+//    'purple'] → 0,1,2,3), không phải object {r,g,b,a} như trước.
+//  - waypointGroups: mỗi điểm có thêm "hasColor"/"color" — công cụ này CHƯA có khái niệm Waypoint
+//    gắn màu riêng nên luôn xuất hasColor:false, color:0 (đúng như MỌI ví dụ thật trong file mẫu,
+//    không có màn nào khác 2 giá trị này).
+//  - Đổi tên "solutionPaths" → "recordedSolution", và "points" bên trong → "path".
+//  - KHÔNG còn field "levelTime" trong file mẫu (đã kiểm tra toàn bộ 50 màn, không màn nào có) —
+//    bỏ hẳn field này theo đúng file mẫu. ⚠️ Nghĩa là Level Timer (đã làm ở phần trước) HIỆN
+//    KHÔNG được xuất sang Unity nữa — nếu bên Unity vẫn cần giá trị này, cần hỏi lại dev tên field
+//    mới (có thể họ đổi tên khác, hoặc quản lý giờ ở nơi khác), đừng tự thêm lại "levelTime" mà
+//    không hỏi vì file mẫu xác nhận rõ là KHÔNG có.
+//  - Thêm modifiers/arrows/oneWays: công cụ này chưa có dữ liệu gì cho 3 cơ chế này (không phải
+//    đổi tên từ cái gì đã có) — luôn xuất rỗng [], đúng như mọi ví dụ thật trong file mẫu.
+//  - "keys"/"keyGates": file mẫu có 2 field này (luôn rỗng ở cả 50 màn mẫu — không có ví dụ thật
+//    nào có dữ liệu) nhưng KHÔNG có field "switches" nào cả (dù trước đây tool này export
+//    "switches" với dữ liệu thật — xem lvl.switches). ⚠️ SUY LUẬN (chưa có ví dụ thật để đối
+//    chiếu): tách mỗi switch thành 1 "key" (ô bấm) + 1 "keyGate" (ô cổng) cùng vị trí index, vì
+//    đây là cách map hợp lý duy nhất không làm mất dữ liệu — NÊN XÁC NHẬN LẠI với dev Unity đúng
+//    hình dạng field này (đặc biệt cách liên kết key nào mở keyGate nào) trước khi tin tưởng
+//    hoàn toàn cho các màn có dùng cơ chế Công Tắc & Cổng Ngầm.
+const UNITY_COLOR_INDEX = { red: 0, blue: 1, green: 2, purple: 3 };
+const UNITY_DIFFICULTY_INDEX = { normal: 0, hard: 1, superhard: 2 };
 
 function anchorIdToUnityIndex(idStr) {
   const n = parseInt(String(idStr).replace(/\D/g, ''), 10);
@@ -16898,14 +17159,12 @@ function anchorIdToUnityIndex(idStr) {
 }
 
 function toUnityLevelJSON(lvl, idx) {
-  const colorOf = (name) => UNITY_COLOR_RGBA[name] || UNITY_COLOR_RGBA.blue;
+  const colorOf = (name) => (name in UNITY_COLOR_INDEX) ? UNITY_COLOR_INDEX[name] : UNITY_COLOR_INDEX.blue;
+  const switches = lvl.switches || [];
   return {
     levelName: 'Level' + idx,
     description: lvl.name || '',
-    // levelTime=0 nghĩa là KHÔNG giới hạn giờ (hạng Dễ, xem Level Timer) — chỉ fallback khi
-    // hoàn toàn chưa có dữ liệu (null/undefined), không được dùng "|| 120.0" vì 0 cũng bị coi
-    // là falsy, sẽ biến "không giới hạn" thành có timer 120s.
-    levelTime: lvl.timerSec ?? 0,
+    difficulty: UNITY_DIFFICULTY_INDEX[getDifficultyTag(lvl).tag],
     levelIndex: idx,
     sizeX: lvl.grid.cols,
     sizeY: lvl.grid.rows,
@@ -16914,32 +17173,31 @@ function toUnityLevelJSON(lvl, idx) {
       id: anchorIdToUnityIndex(a.id),
       row: a.row,
       col: a.col,
-      length: a.length,
-      useCustomColor: false,
-      color: colorOf(a.color),
-      loop: false,
-      mustEnclose: []
+      length: a.length
     })),
     walls: (lvl.walls || []).map(w => ({ r1: w.r1, c1: w.c1, r2: w.r2, c2: w.c2 })),
     rocks: (lvl.rocks || []).map(r => ({ r: r.r, c: r.c })),
     pushRocks: (lvl.pushRocks || []).map(pr => ({ r: pr.r, c: pr.c })),
-    switches: (lvl.switches || []).map(s => ({ r: s.r, c: s.c, gateR: s.gateR, gateC: s.gateC, latch: !!s.latch })),
+    modifiers: [],
+    arrows: [],
+    oneWays: [],
     bombs: (lvl.bombs || []).map(b => ({ r: b.r, c: b.c })),
+    keys: switches.map(s => ({ r: s.r, c: s.c })),
+    keyGates: switches.map(s => ({ r: s.gateR, c: s.gateC, latch: !!s.latch })),
     prisms: (lvl.prisms || []).map(pr => ({ r: pr.r, c: pr.c, color: colorOf(pr.color) })),
     colorGates: (lvl.colorGates || []).map(cg => ({ r: cg.r, c: cg.c, color: colorOf(cg.color) })),
     waypointGroups: Object.entries(lvl.waypoints || {})
       .filter(([, pts]) => pts && pts.length > 0)
       .map(([aid, pts]) => ({
         chainId: anchorIdToUnityIndex(aid),
-        points: pts.map(pt => ({ r: pt.r, c: pt.c }))
+        points: pts.map(pt => ({ r: pt.r, c: pt.c, hasColor: false, color: 0 }))
       })),
-    // Đường đi GỢI Ý (Hint) của từng dây — trước đây file Unity gộp 1-file KHÔNG có field này
-    // dù bản nội bộ (lvl.solution) luôn có sẵn, nên bên Unity không cách nào hiện Hint đúng
-    // đường đã lưu. Cùng định dạng nhóm-theo-dây với waypointGroups ở trên cho nhất quán.
-    solutionPaths: Object.entries(lvl.solution || {})
+    // Đường đi GỢI Ý (Hint) của từng dây — bản nội bộ (lvl.solution) luôn có sẵn, xuất theo đúng
+    // tên field "recordedSolution"/"path" của file mẫu Unity thật (Levels_0.json).
+    recordedSolution: Object.entries(lvl.solution || {})
       .map(([aid, pts]) => ({
         chainId: anchorIdToUnityIndex(aid),
-        points: (pts || []).map(([r, c]) => ({ r, c }))
+        path: (pts || []).map(([r, c]) => ({ r, c }))
       }))
   };
 }
@@ -16984,7 +17242,11 @@ $('btnRecalcAllTimers').onclick = () => {
   saveSuiteDraft();
   renderLevelList();
   selectSuiteLevel(SUITE_CUR_IDX);
-  alert(`✅ Đã tính lại Level Timer cho ${SUITE_LEVELS.length} màn: ${limited} màn có giới hạn giờ, ${unlimited} màn hạng Dễ không giới hạn` + (failed ? `, ${failed} màn lỗi (giữ nguyên timerSec cũ).` : '.'));
+  // Từ khi hạng Dễ cũng có Timer (xem TIME_CONFIG), `unlimited` chỉ còn xảy ra nếu meta.cls bị
+  // hỏng/không khớp hạng nào — không phải đường thường, nên chỉ hiện khi thực sự > 0.
+  alert(`✅ Đã tính lại Level Timer cho ${SUITE_LEVELS.length} màn — cả 4 hạng (Dễ/Thường/Khó/Siêu Khó) đều có Timer (${limited} màn).`
+    + (unlimited ? ` ⚠️ ${unlimited} màn không tính được hạng — kiểm tra lại dữ liệu.` : '')
+    + (failed ? ` ${failed} màn lỗi (giữ nguyên timerSec cũ).` : ''));
 };
 
 // EXPORT ACTIONS
@@ -16993,6 +17255,32 @@ $('btnRecalcAllTimers').onclick = () => {
 $('btnExportAllJson').onclick = () => {
   const bundle = { levels: SUITE_LEVELS.map((lvl, idx) => toUnityLevelJSON(lvl, idx)) };
   downloadJsonFile(bundle, 'pirate_trails_unity_levels.json');
+};
+
+// Tải MỘT ĐOẠN level cụ thể (VD 1-15, 1-50) thay vì bắt buộc tải toàn bộ Suite — số nhập vào là
+// số thứ tự 1-based đúng như hiển thị L01, L02... trong danh sách bên trái (không phải index 0-
+// based trong mảng). `levelIndex`/`levelName` trong JSON xuất ra GIỮ ĐÚNG vị trí gốc trong toàn
+// bộ Suite (không renumber về 0), để bên Unity biết đây thực sự là màn số mấy trong tổng thể,
+// không phải màn đầu tiên của 1 file rời.
+$('btnExportRangeJson').onclick = () => {
+  const total = SUITE_LEVELS.length;
+  const fromRaw = parseInt($('exportRangeFrom').value, 10);
+  const toRaw = parseInt($('exportRangeTo').value, 10);
+  if (!Number.isFinite(fromRaw) || !Number.isFinite(toRaw)) {
+    alert(`⚠️ Nhập đủ số Từ và Đến (VD 1 và 15). Suite hiện có ${total} màn (1–${total}).`);
+    return;
+  }
+  const from = Math.max(1, Math.min(fromRaw, toRaw));
+  const to = Math.min(total, Math.max(fromRaw, toRaw));
+  if (from > total || to < 1) {
+    alert(`⚠️ Khoảng bạn nhập nằm ngoài phạm vi — Suite hiện có ${total} màn (1–${total}).`);
+    return;
+  }
+  const slice = SUITE_LEVELS.slice(from - 1, to);
+  const bundle = { levels: slice.map((lvl, i) => toUnityLevelJSON(lvl, from - 1 + i)) };
+  const fromTag = String(from).padStart(2, '0'), toTag = String(to).padStart(2, '0');
+  downloadJsonFile(bundle, `pirate_trails_unity_levels_L${fromTag}-L${toTag}.json`);
+  alert(`✅ Đã tải ${slice.length} màn (L${fromTag}–L${toTag}).`);
 };
 
 $('btnCopyJson').onclick = () => {
