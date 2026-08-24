@@ -642,11 +642,11 @@ progress{width:220px;height:10px}
         <div class="row" style="margin-bottom:8px">
           <div class="f" style="flex:1">
             <label for="rrR">Hàng (R)</label>
-            <input id="rrR" type="number" min="3" max="20" value="6">
+            <input id="rrR" type="number" min="2" max="20" value="6">
           </div>
           <div class="f" style="flex:1">
             <label for="rrC">Cột (C)</label>
-            <input id="rrC" type="number" min="3" max="20" value="5">
+            <input id="rrC" type="number" min="2" max="20" value="5">
           </div>
           <div class="f" style="flex:1">
             <label for="rrK">Số Xích (K)</label>
@@ -712,11 +712,11 @@ progress{width:220px;height:10px}
         <div class="row" style="margin-bottom:6px;gap:6px">
           <div class="f" style="flex:1">
             <label for="dsR">Hàng (R)</label>
-            <input id="dsR" type="number" min="3" max="20" value="6">
+            <input id="dsR" type="number" min="2" max="20" value="6">
           </div>
           <div class="f" style="flex:1">
             <label for="dsC">Cột (C)</label>
-            <input id="dsC" type="number" min="3" max="20" value="5">
+            <input id="dsC" type="number" min="2" max="20" value="5">
           </div>
           <div class="f" style="flex:1">
             <label for="dsK">Số Mỏ Neo</label>
@@ -1987,6 +1987,13 @@ function legalMoves(p, s, k) {
       if (w.k !== k) continue;
       if (w.j !== c.wp + 1) continue;
       if (w.j === nWp && c.len + 1 !== c.L) continue;
+      // BUG ĐÃ SỬA: thiếu chặn chiều ngược lại — trước đây chỉ chặn "vào đúng Mật Mã CUỐI
+      // nhưng chưa phải bước cuối", mà KHÔNG chặn "bước cuối của dây lại rơi vào 1 Mật Mã
+      // CHƯA PHẢI số cuối" (vd dây có 3 mốc, bước cuối cùng của dây lại là mốc số 2). Hệ quả:
+      // dây có thể "hoàn thành" (đủ c.L) ngay tại 1 mốc số giữa, không cần chạm mốc cuối cùng,
+      // mà điều kiện thắng (chỉ check c.len === c.L) vẫn coi là xong — đúng thứ tự nhưng SAI
+      // điểm kết thúc vẫn thắng.
+      if (w.j !== nWp && c.len + 1 === c.L) continue;
     } else if (nWp > 0 && c.len + 1 === c.L) {
       continue;
     }
@@ -2049,6 +2056,7 @@ function explainBlockedMove(p, s, k, j) {
     if (w.k !== k) return 'Ô Mật Mã này thuộc về dây khác.';
     if (w.j !== c.wp + 1) return `Phải đi đúng thứ tự Mật Mã — cần đi vào số ${c.wp + 1} trước đã.`;
     if (w.j === nWp && c.len + 1 !== c.L) return 'Đây là ô Mật Mã cuối — chỉ được vào đúng ở bước đi cuối cùng của dây.';
+    if (w.j !== nWp && c.len + 1 === c.L) return 'Bước cuối cùng của dây phải đúng vào ô Mật Mã cuối, không phải ô này.';
   } else if (nWp > 0 && c.len + 1 === c.L) {
     return 'Bước cuối cùng của dây phải đúng vào ô Mật Mã cuối, không phải ô này.';
   }
@@ -2777,11 +2785,18 @@ function simulateGreedyPlayer(p) {
 }
 
 // --------------------------- Advanced Generator Với 3 Chốt An Toàn ---------------------------
+// Sàn tối thiểu 4 ô hợp lệ (đúng đúng 1 bàn 2×2 trống, không đá tảng) — trước đây chặn cứng ở 6,
+// khiến bàn 2×2 (4 ô) KHÔNG BAO GIỜ sinh được dù không hề yêu cầu đá tảng nào (count=0 vẫn bị
+// chặn ở đây, trước khi kịp chạy tới placeCount=0). placeCount vẫn tự giới hạn về 0 cho bàn nhỏ
+// qua "valid.length - 8" bên dưới nên KHÔNG cần sàn cao ở đây để "để chỗ" cho đá tảng — sàn 4 chỉ
+// để loại bàn 1 ô/2 ô rời rạc vô nghĩa, còn lại đã có kiểm tra liên thông + không cô lập ô ngay
+// dưới đây lo tiếp cho mọi kích thước.
+const MIN_VALID_CELLS_FOR_LAYOUT = 4;
 function placeObstacles(R, C, count, rng, shape = null, maxTry = 60, forcedCells = null) {
   for (let t = 0; t < maxTry; t++) {
     const p = new Puzzle(R, C, shape);
     const valid = p.validCells();
-    if (valid.length < 6) continue;
+    if (valid.length < MIN_VALID_CELLS_FOR_LAYOUT) continue;
     const placeCount = Math.min(count, Math.max(0, valid.length - 8));
     let chosen;
     if (forcedCells && forcedCells.length) {
@@ -2797,7 +2812,7 @@ function placeObstacles(R, C, count, rng, shape = null, maxTry = 60, forcedCells
     }
     for (const c of chosen) p.blocked.add(c);
     const v = p.validCells();
-    if (v.length < 6) continue;
+    if (v.length < MIN_VALID_CELLS_FOR_LAYOUT) continue;
     // Kiểm tra tính liên thông Flood-Fill
     const seen = new Set([v[0]]); const q = [v[0]];
     while (q.length) { const x = q.pop(); for (const y of p.nbrs(x)) if (!seen.has(y)) { seen.add(y); q.push(y); } }
@@ -15497,9 +15512,21 @@ function parseJsonLevel(j) {
     });
   }
   
+  // BUG ĐÃ SỬA: hàm này dựng p.wpOf (thứ tự mốc số) nhưng TRƯỚC ĐÂY KHÔNG hề gán p.wpCount —
+  // p (Puzzle) khởi tạo wpCount = [] và không ai điền lại ở đây, nên legalMoves() luôn đọc
+  // nWp = p.wpCount[k] || 0 ra 0 với MỌI màn nạp qua đường này (chính là đường Play thử trong
+  // Studio — selectSuiteLevel -> parseJsonLevel). Hệ quả: luật "mốc số CUỐI CÙNG chỉ được vào
+  // đúng ở bước đi cuối cùng của dây" (so sánh w.j === nWp) không bao giờ khớp, dây đi ĐÚNG THỨ
+  // TỰ nhưng có thể "hoàn thành" (đủ số bước) ngay tại 1 mốc số GIỮA, không cần chạm mốc cuối —
+  // đúng chính xác lỗi người dùng báo cáo. Điền lại theo cùng công thức đã dùng đúng ở nơi khác
+  // trong file (xem "đúng định dạng game thật dùng" gần buildPuzzleFromDesignerDraft).
+  p.wpCount = p.anchors.map(() => 0);
   if (j.waypoints) {
     Object.entries(j.waypoints).forEach(([aid, wps], k) => {
-      wps.forEach((wp, jIdx) => p.wpOf.set(wp.r * p.C + wp.c, { k, j: jIdx + 1 }));
+      wps.forEach((wp, jIdx) => {
+        p.wpOf.set(wp.r * p.C + wp.c, { k, j: jIdx + 1 });
+        p.wpCount[k] = Math.max(p.wpCount[k] || 0, jIdx + 1);
+      });
     });
   }
   if (j.solution) {
@@ -15737,7 +15764,16 @@ function bindStudioPlay(p) {
     // Chế độ Tự Vẽ nới a.L lên maxFree (xem btnDsPlayManual) nên c.len === c.L gần như
     // không bao giờ đúng — dùng cùng điều kiện thắng với "Lưu Đúng Đường Đi Vừa Vẽ" (mỗi dây
     // đi ít nhất 2 ô, không cần khớp đúng L).
-    const manualWin = STUDIO_MANUAL_DRAFT ? s.chains.every(c => c.len >= 2) : s.chains.every(c => c.len === c.L);
+    // Chốt chặn kép (belt-and-suspenders) cho Mật Mã Số: dù legalMoves() đã chặn đúng, vẫn
+    // tự kiểm tra lại ở đây — mỗi dây có mốc số phải chạm ĐẾN mốc CUỐI CÙNG (c.wp === nWp)
+    // trước khi được tính thắng, không chỉ dựa vào c.len === c.L (xem BUG ĐÃ SỬA ở legalMoves).
+    const wpDone = c => {
+      const nWp = p.wpCount ? (p.wpCount[c.k] || 0) : 0;
+      return nWp === 0 || c.wp === nWp;
+    };
+    const manualWin = STUDIO_MANUAL_DRAFT
+      ? s.chains.every(c => c.len >= 2)
+      : s.chains.every((c, k) => c.len === c.L && wpDone({ ...c, k }));
     if (s.free === 0 && manualWin) {
       STUDIO_PLAY.done = true;
       STUDIO_PLAY.t1 = performance.now();
@@ -15967,8 +16003,8 @@ let DS_UNDO_STACK = [];
 function initCustomDesigner() {
   bindDesignerBrushes();
   $('btnDsResize').onclick = () => {
-    DS_R = Math.max(3, Math.min(20, +$('dsR').value));
-    DS_C = Math.max(3, Math.min(20, +$('dsC').value));
+    DS_R = Math.max(2, Math.min(20, +$('dsR').value));
+    DS_C = Math.max(2, Math.min(20, +$('dsC').value));
     DS_K = Math.max(1, Math.min(4, +$('dsK').value));
     resetDesignerGrid(DS_R, DS_C);
   };

@@ -811,6 +811,11 @@ function legalMoves(p, s, k) {
       if (w.k !== k) continue;
       if (w.j !== c.wp + 1) continue;
       if (w.j === nWp && c.len + 1 !== c.L) continue;
+      // BUG ĐÃ SỬA (đồng bộ với Pirate_Trails_50_Levels.html): thiếu chặn chiều ngược lại —
+      // bước cuối cùng của dây (c.len+1===c.L) rơi vào 1 Mật Mã CHƯA PHẢI số cuối vẫn được
+      // coi là hợp lệ, khiến dây "hoàn thành" đúng thứ tự nhưng dừng sai điểm (không phải mốc
+      // cuối cùng) mà vẫn được tính thắng ở nơi chỉ check c.len === c.L.
+      if (w.j !== nWp && c.len + 1 === c.L) continue;
     } else if (nWp > 0 && c.len + 1 === c.L) {
       continue;
     }
@@ -2192,7 +2197,13 @@ function bindPlay(p) {
       PLAY.moveHistory.push(u);
       PLAY.moves++;
     } else return;
-    if (s.free === 0 && s.chains.every(c => c.len === c.L)) PLAY.done = true;
+    // Chốt chặn kép cho Mật Mã Số (xem BUG ĐÃ SỬA ở legalMoves): mỗi dây có mốc số phải
+    // chạm đến mốc CUỐI CÙNG (c.wp === nWp) mới được tính thắng, không chỉ dựa vào c.len===c.L.
+    const wpDone = (c, k) => {
+      const nWp = p.wpCount ? (p.wpCount[k] || 0) : 0;
+      return nWp === 0 || c.wp === nWp;
+    };
+    if (s.free === 0 && s.chains.every((c, k) => c.len === c.L && wpDone(c, k))) PLAY.done = true;
     renderDetail();
   };
   svg.addEventListener('pointerdown', e => { PLAY.drag = true; svg.setPointerCapture(e.pointerId); act(cellAt(e)); });
