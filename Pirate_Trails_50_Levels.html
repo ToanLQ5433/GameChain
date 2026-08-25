@@ -3919,9 +3919,33 @@ function boardSVG(p, o) {
       if (c.path.length < 2) return;
       const d = c.path.map(i => `${cx(i)},${cy(i)}`).join(' ');
       s += `<polyline points="${d}" fill="none" stroke="#ffffff" stroke-width="${cs * 0.34 + 4}" stroke-linecap="round" stroke-linejoin="round"/>`;
-      s += `<polyline points="${d}" fill="none" stroke="${anchorHex(k)}" stroke-width="${cs * 0.34}" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+      // MEC-02: Lăng Kính chỉ đổi màu ĐOẠN DÂY ĐI QUA SAU nó — đoạn đã đi TRƯỚC khi chạm Lăng
+      // Kính vẫn giữ đúng màu cũ, không tô ngược cả dây về 1 màu duy nhất như trước đây (trước
+      // đây toàn bộ nét vẽ luôn dùng cố định anchorHex(k), không hề phản ánh colorTag). Cắt
+      // path thành từng đoạn tại đúng ô Lăng Kính (ô biên dùng chung cho 2 đoạn liền để không hở).
+      const baseColor = anchorHex(k);
+      const segments = [];
+      let segStart = 0, segColor = baseColor;
+      c.path.forEach((cell, i) => {
+        if (i === 0) return;
+        const pr = p.prisms.find(x => x.cell === cell);
+        if (pr) {
+          segments.push({ from: segStart, to: i, color: segColor });
+          segStart = i;
+          segColor = COLOR_HEX_MAP[pr.color] || baseColor;
+        }
+      });
+      segments.push({ from: segStart, to: c.path.length - 1, color: segColor });
+
+      segments.forEach(seg => {
+        if (seg.to <= seg.from) return;
+        const dd = c.path.slice(seg.from, seg.to + 1).map(i => `${cx(i)},${cy(i)}`).join(' ');
+        s += `<polyline points="${dd}" fill="none" stroke="${seg.color}" stroke-width="${cs * 0.34}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      });
+
       const h = c.path[c.path.length - 1];
-      if (c.len < c.L) s += `<circle cx="${cx(h)}" cy="${cy(h)}" r="${cs * 0.16}" fill="#ffffff" stroke="${anchorHex(k)}" stroke-width="2.5"/>`;
+      if (c.len < c.L) s += `<circle cx="${cx(h)}" cy="${cy(h)}" r="${cs * 0.16}" fill="#ffffff" stroke="${segColor}" stroke-width="2.5"/>`;
     });
   }
 
