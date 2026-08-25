@@ -105,7 +105,8 @@ Không có nơi nào gọi trong code hiện tại (xem ghi chú ở bảng tổ
 
 | Tên | File | Đặc tính | Khi nào phát |
 |---|---|---|---|
-| Music loop | `music_loop.wav` | Arpeggio êm 4 nốt (C4-E4-G4-E4), sine, lặp mỗi 1.4s, peak 0.45 (chuẩn hoá riêng, thấp hơn nhóm SFX vì chạy liên tục dưới gameplay) | Bật khi vào game nếu chưa tắt Music (`BootScene.js:14` gọi `startMusic()`); dừng/mở lại khi bật tắt toggle Music trong Settings (`settingsModal.js:106`) |
+| Music loop (web) | `music_loop.wav` | Arpeggio êm 4 nốt (C4-E4-G4-E4), sine, lặp mỗi 1.4s, peak 0.45 (chuẩn hoá riêng, thấp hơn nhóm SFX vì chạy liên tục dưới gameplay) | Bật khi vào game nếu chưa tắt Music (`BootScene.js:14` gọi `startMusic()`); dừng/mở lại khi bật tắt toggle Music trong Settings (`settingsModal.js:106`) |
+| Music loop (Unity export) | `music_loop.ogg` | ⚠️ KHÔNG còn là bản render của `music_loop.wav` — đã thay bằng 1 track nhạc thật ~1:43, stereo 44.1kHz (nguồn gốc: `New.mp3`, giữ lại trong cùng thư mục làm bản gốc), chỉ dùng riêng cho bản build Unity | Chỉ ảnh hưởng file xuất cho Unity — bản web vẫn phát đúng arpeggio tự sinh như trên, không đổi gì |
 
 ## Ghi chú cho dev
 

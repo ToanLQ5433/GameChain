@@ -36,13 +36,15 @@ file thật (.wav / .png) để kéo thẳng vào Unity.
 | `sfx_freeze.wav` / `.ogg` | Kích hoạt buff đóng băng |
 | `sfx_timerTick.wav` / `.ogg` | Tick đồng hồ đếm giờ (<20% thời gian) |
 | `sfx_timeout.wav` / `.ogg` | Hết giờ |
-| `music_loop.wav` / `.ogg` | Nhạc nền — arpeggio 4 nốt, dài ~5.8s, lặp lại |
+| `music_loop.ogg` | Nhạc nền cho bản Unity — track thật ~1:43, stereo (⚠️ không còn khớp `music_loop.wav`, xem `SOUND_MAP.md`) |
 
 **Cách import vào Unity:**
 1. Kéo cả thư mục `sounds/` vào `Assets/Audio/` trong project Unity — **chỉ cần bản `.ogg`**,
    không cần kéo cả `.wav` vào Unity (giữ `.wav` ngoài project để nghe thử/chỉnh sửa thôi).
-2. Chọn từng file `.ogg` → Inspector → `Force To Mono` đã sẵn mono, `Load Type` =
-   `Decompress On Load` cho SFX ngắn, `Streaming` cho `music_loop.ogg`.
+2. Chọn từng file `.ogg` → Inspector → SFX đã sẵn mono (không cần `Force To Mono`);
+   riêng `music_loop.ogg` là stereo (track thật, không phải SFX tự sinh) — để nguyên stereo,
+   không force mono. `Load Type` = `Decompress On Load` cho SFX ngắn, `Streaming` cho
+   `music_loop.ogg`.
 3. Gắn mỗi clip vào `AudioSource.clip` tương ứng với sự kiện, hoặc dùng chung
    một `AudioSource` + `PlayOneShot(clip)` cho SFX; `music_loop.ogg` gắn vào
    một `AudioSource` riêng với `Loop = true`.
