@@ -935,9 +935,17 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo, cache) {
   let expectedUndos = Math.max(0, eff.choicePoints - eff.earlyChoices);
 
   // 4. Trụ cột 4: Bẫy Mật Mã Số (Ảo giác khoảng cách)
+  // BUG ĐÃ SỬA: trụ cột này là TRỤ CỘT DUY NHẤT không có trần, trong khi mọi trụ cột khác đều
+  // bị chặn (ambiguityScore ~5.2, trapScore chặn ở Math.min(7.0, eff.effort)+1). wpDeceptionScore
+  // cộng dồn "độ trễ" qua TỪNG cặp mốc số liên tiếp trên toàn đường đi — màn có nhiều mốc số
+  // trải dài (không cần mỗi mốc lệch nhiều, chỉ cần NHIỀU mốc) dễ dàng cộng dồn tới 15-25+, gấp
+  // nhiều lần base+4 trụ cột khác cộng lại. Đo được trên bộ sinh thật: nhiều màn "sol:1" (chỉ 1
+  // lời giải), playerEffort chỉ 0.7-1.3 (rất thấp) vẫn bị đẩy hdi lên 27-40 (cls Siêu Khó) CHỈ vì
+  // trụ cột này — đúng hiện tượng "HDI cao nhưng gần như chỉ có 1 đường đi nên thực ra rất dễ".
+  // Chặn trần cùng bậc với trapScore để 1 trụ cột không thể áp đảo 4 trụ cột còn lại.
   let wpScore = 0;
   if (wpData.totalWp > 0) {
-    wpScore = (wpData.wpDeceptionScore * 0.8) + (wpData.maxWpLag * 0.4);
+    wpScore = Math.min(6.0, (wpData.wpDeceptionScore * 0.8) + (wpData.maxWpLag * 0.4));
   }
 
   // 5. Cơ chế vật cản
@@ -975,11 +983,20 @@ function calculateCognitiveMetrics(p, rated, greedy, solInfo, cache) {
   //     Càng nhiều cách giải thì càng dễ mò trúng.
   //     NHƯNG chỉ áp khi màn KHÔNG bị đắp nhiều Vách Ngăn: nghiệm duy nhất có được nhờ
   //     đắp tường thì đường đi bị ép cứng, thực tế lại DỄ (đo được: công sức chỉ 1.3).
+  // BUG ĐÃ SỬA: giả định "đắp nhiều tường ép nghiệm duy nhất = dễ" áp dụng MÙ, không kiểm tra
+  // lại bằng bất kỳ tín hiệu thực nào — đo lại trên bộ sinh thật: nhóm "nhiều tường" và nhóm
+  // "ít tường" trong các màn nghiệm duy nhất có tỉ lệ hội đồng người chơi thắng GẦN NHƯ GIỐNG
+  // NHAU (~9-10%, không hề dễ hơn), và nhiều màn "nhiều tường + nghiệm duy nhất" có
+  // eff.maxRefuteDepth sâu tới 10-25 bước — đúng định nghĩa "Bẫy Ngõ Cụt Trễ" (TIER_INFO tier 5,
+  // hạng khó nhất) mà tool này tự định nghĩa — nhưng vẫn bị ép hạ xuống Thường/Dễ chỉ vì có
+  // tường. Chỉ coi "nghiệm duy nhất nhờ tường" là dễ khi bẫy sai CŨNG lộ sớm (cùng ngưỡng
+  // eff.maxRefuteDepth <= 3 đã dùng ở luật chặn phía trên) — tường ép nghiệm duy nhất KHÔNG tự
+  // động xoá được 1 bẫy sâu có thật.
   if (solInfo) {
     const manyWalls = p.walls.size >= 4;
     if (solInfo.capped || solInfo.count > 40) hdi = Math.min(hdi, T_EASY_CAP);
     else if (solInfo.count > 10) hdi = Math.min(hdi, T_NORMAL_CAP);
-    if (solInfo.count === 1 && manyWalls) hdi = Math.min(hdi, T_NORMAL_CAP);   // duy nhất "giả tạo"
+    if (solInfo.count === 1 && manyWalls && eff.maxRefuteDepth <= 3) hdi = Math.min(hdi, T_NORMAL_CAP);   // duy nhất "giả tạo"
   }
 
   hdi = Math.max(1.0, Math.round(hdi * 10) / 10);
