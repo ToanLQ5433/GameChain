@@ -17226,6 +17226,13 @@ function toUnityLevelJSON(lvl, idx) {
     description: lvl.name || '',
     difficulty: UNITY_DIFFICULTY_INDEX[getDifficultyTag(lvl).tag],
     levelIndex: idx,
+    // Đối chiếu mẫu Unity mới (2 màn Level0/Level1) do người dùng cung cấp: có field "hasTimer"
+    // (boolean) ngay sau levelIndex mà bản đối chiếu Levels_0.json trước đây không phát hiện ra.
+    // Cả 2 ví dụ có sẵn đều là false và KHÔNG kèm field số giây nào — nên tạm suy ra true/false
+    // theo đúng lvl.timerSec đã tính (xem btnRecalcAllTimers), CHƯA có ví dụ thật nào timerSec
+    // dương để biết chắc field số giây (nếu có) tên gì — cần hỏi lại dev Unity trước khi tin
+    // tưởng hoàn toàn cho các màn có Timer.
+    hasTimer: !!lvl.timerSec,
     sizeX: lvl.grid.cols,
     sizeY: lvl.grid.rows,
     shapeRows: (lvl.shape && lvl.shape.some(row => row.includes('0'))) ? lvl.shape.slice() : [],
